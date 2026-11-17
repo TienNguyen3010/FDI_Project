@@ -28,6 +28,13 @@ test('00-governance/checklist.md có Nhật ký xác minh', () => {
   assert.ok(read('docs/00-governance/checklist.md').includes('Nhật ký xác minh'))
 })
 
+test('DD C-09: proxy.ts có rewrite /api/v1 -> /api', () => {
+  const proxy = read('proxy.ts')
+  assert.ok(proxy.includes('/api/v1/'), 'thiếu điều kiệnrewrite /api/v1')
+  assert.ok(proxy.includes("'/api'"), 'thiếu đích rewrite /api')
+  assert.ok(proxy.includes('NextResponse.rewrite'), 'phải dùng rewrite internal, không redirect')
+})
+
 test('đủ migration 001-004', () => {
   const files = readdirSync(resolve(root, 'migrations'))
   for (const f of ['001_initial_schema.sql', '002_rls_policies.sql',

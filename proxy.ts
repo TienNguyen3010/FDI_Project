@@ -83,6 +83,15 @@ async function isAuthenticated(token: string | undefined): Promise<boolean> {
 }
 
 export async function proxy(request: NextRequest) {
+  // DD C-09: /api/v1 là contract prefix chuẩn (api_spec/tech_spec), code nội bộ
+  // vẫn dùng /api/*. Rewrite internal — browser/client thấy /api/v1, không redirect.
+  // Ví dụ: GET /api/v1/auth/session -> /api/auth/session.
+  if (request.nextUrl.pathname === '/api/v1' || request.nextUrl.pathname.startsWith('/api/v1/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = url.pathname.replace(/^\/api\/v1(?=\/|$)/, '/api')
+    return NextResponse.rewrite(url)
+  }
+
   const response = NextResponse.next()
   const { pathname } = request.nextUrl
 
