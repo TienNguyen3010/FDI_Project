@@ -1,5 +1,9 @@
 # ✅ Checklist Tiến Hành Code — FDI_Project (Bản 1)
 
+> 📁 **Vị trí tài liệu:** file này nằm trong `docs/` (di chuyển từ repo root ngày 2026-11-17).
+> Các tham chiếu dạng `ten_file.md:line` trong nội dung bên dưới đều chỉ tới các file cùng thư mục `docs/`.
+
+
 > Dành cho nhóm phát triển & QA  
 > Mục đích: chuẩn bị tài liệu, môi trường, cơ sở dữ liệu, phân quyền, giao diện, vận hành cho lần build đầu tiên.  
 > Không chứa code, chỉ liệt kê checklist bằng ý nghĩa nghiệp vụ & kỹ thuật.

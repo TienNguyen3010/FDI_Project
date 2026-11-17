@@ -1,5 +1,9 @@
 # 🔌 FDI_Project – API Specification
 
+> 📁 **Vị trí tài liệu:** file này nằm trong `docs/` (di chuyển từ repo root ngày 2026-11-17).
+> Các tham chiếu dạng `ten_file.md:line` trong nội dung bên dưới đều chỉ tới các file cùng thư mục `docs/`.
+
+
 > Phiên bản 1.0 · Dành cho nhóm backend  
 > Ngôn ngữ: Tiếng Việt / English · Không chứa code thực thi
 

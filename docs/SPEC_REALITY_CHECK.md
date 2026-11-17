@@ -1,5 +1,9 @@
 # SPEC_REALITY_CHECK — FDI_Project: tài liệu thiết kế vs code thật
 
+> 📁 **Vị trí tài liệu:** file này nằm trong `docs/` (di chuyển từ repo root ngày 2026-11-17).
+> Các tham chiếu dạng `ten_file.md:line` trong nội dung bên dưới đều chỉ tới các file cùng thư mục `docs/`.
+
+
 > Reviewer: subagent (read-only) · Ngày: 2026-11-17 · Target: `/opt/data/FDI_Project`
 > Phạm vi: `product.md`, `roadmap.md`, `rbac_matrix.md`, `api_spec.md`, `ui_ux_spec.md`, `checklist.md`, `tech_spec.md`, `database_schema.sql`, `project_structure.md` ↔ code trong `app/`, `components/`, `lib/`, `middleware.ts`, `package.json`.
 > **Không sửa file source, không commit.** Không đụng `migrations/` (đang do subagent khác tạo).

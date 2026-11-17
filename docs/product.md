@@ -1,5 +1,9 @@
 # 🏗️ FDI_Project – Website Quản Lý Tất Cả Dự Án, Khách Hàng, Site (Bản Toàn Quyền)
 
+> 📁 **Vị trí tài liệu:** file này nằm trong `docs/` (di chuyển từ repo root ngày 2026-11-17).
+> Các tham chiếu dạng `ten_file.md:line` trong nội dung bên dưới đều chỉ tới các file cùng thư mục `docs/`.
+
+
 > Phiên bản 1.0 · Dành cho nhóm phát triển  
 > Ngôn ngữ: Tiếng Việt · Không chứa code  
 > Phạm vi: Website nội bộ (CNTT, VoIP, Viễn thông, Network Infrastructure)  
