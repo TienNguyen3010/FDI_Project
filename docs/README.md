@@ -47,6 +47,7 @@
 
 | Tài liệu | Vai trò |
 |---|---|
+| [DD_DECISIONS_P0.md](DD_DECISIONS_P0.md) | **8 mâu thuẫn P0 đã chốt** bởi Dev Director (override lên v2) |
 | [EVIDENCE_REGISTER.md](EVIDENCE_REGISTER.md) | 23 dòng đối chiếu v2 ↔ code/DB tại SHA `29dc349` |
 | [CONTRADICTIONS_V2.md](CONTRADICTIONS_V2.md) | 15 mâu thuẫn nội bộ + câu hỏi cho PO/Tech Lead |
 | [checklist.md](checklist.md) | Tiến độ code theo ✅/❌/⏳ + Nhật ký xác minh (§12) |
