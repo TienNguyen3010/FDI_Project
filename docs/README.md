@@ -21,8 +21,17 @@
 ## Kiểm soát & theo dõi
 | Tài liệu | Nội dung |
 |---|---|
-| [checklist.md](checklist.md) | **Checklist tiến độ chính** — cập nhật ✅/❌/⏳ + Nhật ký xác minh (§12) |
+| [checklist.md](checklist.md) | **Checklist tiến độ chính** — trạng thái ✅/❌/⏳ + Nhật ký xác minh (§12) |
 | [SPEC_REALITY_CHECK.md](SPEC_REALITY_CHECK.md) | Rà soát tài liệu vs code thật (có `file:line`) |
+
+## Thiết kế & vận hành
+| Tài liệu | Nội dung |
+|---|---|
+| [DESIGN_WIREFRAMES.md](DESIGN_WIREFRAMES.md) | User flow 4 role + wireframe desktop/mobile + component map (thay Figma) |
+| [BACKUP_RESTORE.md](BACKUP_RESTORE.md) | Quy trình pg_dump/pg_restore + verify (§3 #7, §5 #14) |
+| [PRD_OWNERSHIP.md](PRD_OWNERSHIP.md) | Owner, requirement, acceptance criteria, test plan cho mọi module (§9) |
+| [RELEASE_NOTES.md](RELEASE_NOTES.md) | Release note v1.0 + pre-release/hotfix (§8 #9) |
+| [USER_GUIDE.md](USER_GUIDE.md) | Hướng dẫn sử dụng theo 4 role |
 
 > Schema CSDL nằm ở [`database_schema.sql`](../database_schema.sql) (root).
 > Hướng dẫn migration nằm ở [`migrations/README.md`](../migrations/README.md).

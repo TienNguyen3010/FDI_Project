@@ -9,6 +9,7 @@ import {
   Input,
   Label,
   Select,
+  Textarea,
   Modal,
   ModalContent,
   ModalHeader,
@@ -16,6 +17,9 @@ import {
   ModalBody,
   ModalFooter,
   Badge,
+  Spinner,
+  EmptyState,
+  useToast,
 } from '@/components/ui/ui'
 import { Plus, Pencil, Trash2, Search, RefreshCw } from 'lucide-react'
 
@@ -67,6 +71,7 @@ const toDisplay = (v: unknown): string => {
 }
 
 export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
+  const toast = useToast()
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -95,7 +100,15 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
   }, [config])
 
   useEffect(() => {
-    load()
+    // Không gọi load() trực tiếp: load() setLoading(true) đồng bộ trong effect
+    // -> React 19 cảnh báo cascade render. Đẩy vào microtask.
+    let cancelled = false
+    void Promise.resolve().then(() => {
+      if (!cancelled) void load()
+    })
+    return () => {
+      cancelled = true
+    }
   }, [load])
 
   const visibleRows = useMemo(() => {
@@ -160,6 +173,7 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
     setSaving(false)
     if (err) {
       setError(err.message)
+      toast.error({ title: 'Lưu không thành công', description: err.message })
       return
     }
     void logAudit({
@@ -168,6 +182,10 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
       resourceId: auditResourceId,
     })
     setOpen(false)
+    toast.success({
+      title: editing ? 'Cập nhật thành công' : 'Thêm mới thành công',
+      description: `${config.title} đã được lưu.`,
+    })
     await load()
   }
 
@@ -179,6 +197,7 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
       .eq('id', row.id as string)
     if (err) {
       setError(err.message)
+      toast.error({ title: 'Xóa không thành công', description: err.message })
       return
     }
     void logAudit({
@@ -186,6 +205,7 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
       resourceType: config.table,
       resourceId: row.id as string | null,
     })
+    toast.success({ title: 'Xóa thành công', description: `${config.title} đã được xóa.` })
     await load()
   }
 
@@ -255,16 +275,22 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
                     colSpan={tableFields.length + (editable ? 1 : 0)}
                     className="h-32 text-center text-muted-foreground"
                   >
-                    Đang tải...
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner label="Đang tải dữ liệu" /> Đang tải dữ liệu...
+                    </span>
                   </td>
                 </tr>
               ) : visibleRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={tableFields.length + (editable ? 1 : 0)}
-                    className="h-32 text-center text-muted-foreground"
-                  >
-                    Chưa có dữ liệu
+                  <td colSpan={tableFields.length + (editable ? 1 : 0)} className="p-0">
+                    <EmptyState
+                      title={query.trim() ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'}
+                      description={
+                        query.trim()
+                          ? `Không có ${config.title.toLowerCase()} nào khớp với "${query}".`
+                          : `Chưa có ${config.title.toLowerCase()} nào. Nhấn "Thêm mới" để tạo bản ghi đầu tiên.`
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -337,12 +363,11 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
                       ))}
                     </Select>
                   ) : f.type === 'textarea' ? (
-                    <textarea
+                    <Textarea
                       id={`f-${f.key}`}
                       value={form[f.key] ?? ''}
                       onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
-                      placeholder={f.placeholder}
-                      className="flex min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                      placeholder={f.placeholder ?? `Nhập ${f.label.toLowerCase()}`}
                     />
                   ) : (
                     <Input
@@ -350,7 +375,7 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
                       type={f.type ?? 'text'}
                       value={form[f.key] ?? ''}
                       onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
-                      placeholder={f.placeholder}
+                      placeholder={f.placeholder ?? `Nhập ${f.label.toLowerCase()}`}
                     />
                   )}
                 </div>

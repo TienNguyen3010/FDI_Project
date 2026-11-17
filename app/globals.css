@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Backgrounds */
+  /* Backgrounds — 12 màu gốc, GIỮ NGUYÊN theo ui_ux_spec.md §7.1 */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #263244;
@@ -23,6 +23,25 @@
 
   /* Border */
   --border: #334155;
+
+  /* Spacing scale — checklist §7 #13/#14 (đồng bộ khoảng cách) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+
+  /* Border radius — checklist §7 #14 (đồng bộ bo góc) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Motion — checklist §1 #18 (hiệu ứng đồng bộ) */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
 }
 
 * {
@@ -40,4 +59,21 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus indicator rõ, nhất quán cho mọi phần tử tương tác (checklist §7 #4, §8 #5) */
+:where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tôn trọng cài đặt giảm chuyển động của hệ điều hành */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

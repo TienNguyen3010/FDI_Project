@@ -1,9 +1,8 @@
-import { type NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getSupabaseClient } from '@/lib/supabase/server'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const cookieStore = await cookies()
   const accessToken = cookieStore.get('sb-access-token')?.value
 

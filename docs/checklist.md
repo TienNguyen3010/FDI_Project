@@ -20,23 +20,23 @@
 |---|---|---|---|
 | 1 | Dashboard hiển thị KPI chính: Số dự án, sự cố đang mở, SLA, bảo trì đủ hạn | Thử nghiệm | ✅ |
 | 2 | Dashboard hiển thị sự cố theo mức độ (Critical/Major/Minor) | Thử nghiệm | ✅ |
-| 3 | Người dùng không có vai trò Quản trị không xem phân là mục admin/đăng nhập | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 4 | Khi đăng nhập đúng tài khoản, giao diện chỉ hiển thị menu phù hợp vai trò | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 3 | Người dùng không có vai trò Quản trị không xem phân là mục admin/đăng nhập | Thử nghiệm | ✅ |
+| 4 | Khi đăng nhập đúng tài khoản, giao diện chỉ hiển thị menu phù hợp vai trò | Thử nghiệm | ✅ |
 | 5 | Tất cả nút nhấn có thao tác rõ ràng, không dead button | Thử nghiệm | ✅ |
-| 6 | Nhóm chức năng nhóm: Dashboard, Project, Khách hàng, Sự cố, Vận hành, Site Report, Quản trị | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 6 | Nhóm chức năng nhóm: Dashboard, Project, Khách hàng, Sự cố, Vận hành, Site Report, Quản trị | Thử nghiệm | ✅ |
 | 7 | Tiêu đề, menu, icon, thành phần hiển thị không bị chồng lên nhau (dense layout) | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 8 | Màn hình responsive: tablet, laptop, desktop, mobile | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 8 | Màn hình responsive: tablet, laptop, desktop, mobile | Thử nghiệm | ✅ |
 | 9 | Tất cả form có đầy đủ label, placeholder, văn bản hỗ trợ (tool tip, ngắn gọn) | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 10 | Ngôn ngữ: tiếng Việt đầy đủ; không có khóa ngôn ngữ bị thiếu (ví dụ: “Add”, “SAVE”) | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 10 | Ngôn ngữ: tiếng Việt đầy đủ; không có khóa ngôn ngữ bị thiếu (ví dụ: “Add”, “SAVE”) | Thử nghiệm | ✅ |
 | 11 | Phân loại: offline-first, mobile-first, điện thoại phát hiện & redirect | Thử nghiệm | ✅ / ❌ / ⏳ |
 | 12 | Màu sắc, icon, cỡ chữ, khoảng cách không vi phạm design guide | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 13 | Lỗi (error) được hiển thị rõ ràng, không tràn màn hình | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 14 | Silent/fail state (ảnh không hiện, file không upload) cần thông báo rõ | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 15 | Thông báo (toast/notification) hiển thị đúng thông tin, thời gian phù hợp | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 16 | Nút xác nhận, nút đăng xuất, nút xóa, nút khóa có xác nhận cẩn thận | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 17 | Đồng bộ font chữ, màu sắc, spacing, border radius giữa tất cả các màn hình | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 18 | Hiệu ứng (loading, error, success) đồng bộ, không lặp lại | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 19 | Thanh tìm kiếm (search), bộ lọc (filter), sắp xếp được hiển thị đúng | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 13 | Lỗi (error) được hiển thị rõ ràng, không tràn màn hình | Thử nghiệm | ✅ |
+| 14 | Silent/fail state (ảnh không hiện, file không upload) cần thông báo rõ | Thử nghiệm | ✅ |
+| 15 | Thông báo (toast/notification) hiển thị đúng thông tin, thời gian phù hợp | Thử nghiệm | ✅ |
+| 16 | Nút xác nhận, nút đăng xuất, nút xóa, nút khóa có xác nhận cẩn thận | Thử nghiệm | ✅ |
+| 17 | Đồng bộ font chữ, màu sắc, spacing, border radius giữa tất cả các màn hình | Thử nghiệm | ✅ |
+| 18 | Hiệu ứng (loading, error, success) đồng bộ, không lặp lại | Thử nghiệm | ✅ |
+| 19 | Thanh tìm kiếm (search), bộ lọc (filter), sắp xếp được hiển thị đúng | Thử nghiệm | ✅ |
 | 20 | Hoa văn, placeholder, label rõ ràng, không lộ văn bản cứng | Thử nghiệm | ✅ / ❌ / ⏳ |
 
 ---
@@ -45,20 +45,20 @@
 
 | # | Nội dung kiểm tra | Loại | Trạng thái |
 |---|---|---|---|
-| 1 | Sơ đồ dàn trang (user flow) cho từng vai trò: Employee, Leader, Manager, Director | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 2 | Sơ đồ màn hình (wireframe) cho Dashboard, Project, Site Report, Sự cố, Vận hành, Customer, Admin | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 3 | Quy trình: Login, Dashboard, chọn dự án, xem chi tiết, xử lý sự cố, báo cáo | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 1 | Sơ đồ dàn trang (user flow) cho từng vai trò: Employee, Leader, Manager, Director | Thử nghiệm | ✅ |
+| 2 | Sơ đồ màn hình (wireframe) cho Dashboard, Project, Site Report, Sự cố, Vận hành, Customer, Admin | Thử nghiệm | ✅ |
+| 3 | Quy trình: Login, Dashboard, chọn dự án, xem chi tiết, xử lý sự cố, báo cáo | Thử nghiệm | ✅ |
 | 4 | Style Guide: màu sắc, font, kích thước, khoảng cách, icon | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 5 | Component system: button, input, textarea, table, dropdown, modal, badge, chip | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 5 | Component system: button, input, textarea, table, dropdown, modal, badge, chip | Thử nghiệm | ✅ |
 | 6 | Form làm việc: tạo dự án, thêm thiết bị, tạo sự cố, tạo công việc, nhập báo cáo | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 7 | Tiêu đề cấu trúc màn hình (Header, Sidebar, Main, Footer) rõ ràng | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 7 | Tiêu đề cấu trúc màn hình (Header, Sidebar, Main, Footer) rõ ràng | Thử nghiệm | ✅ |
 | 8 | Hiển thị hình ảnh (upload, preview, thumbnail, full view) | Thử nghiệm | ✅ / ❌ / ⏳ |
 | 9 | Bảng tài liệu, tệp tin, lịch sự, ảnh onsite | Thử nghiệm | ✅ / ❌ / ⏳ |
 | 10 | Giao diện mobile: offline, bottom nav, sticky bar | Thử nghiệm | ✅ / ❌ / ⏳ |
 | 11 | Prototype: thử tất cả flow trên thực tế (click), không thao tác form thực tế | Thử nghiệm | ✅ / ❌ / ⏳ |
 | 12 | Viết lại tài liệu: cần biết thiết kế UI từ file Figma, chuyển sang code | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 13 | Đồng bộ với design tokens (color, spacing, radius, typography) | Thử nghiệm | ✅ / ❌ / ⏳ |
-| 14 | Font chữ: Inter, sans-serif, không lỗi ký tự tiếng Việt | Thử nghiệm | ✅ / ❌ / ⏳ |
+| 13 | Đồng bộ với design tokens (color, spacing, radius, typography) | Thử nghiệm | ✅ |
+| 14 | Font chữ: Inter, sans-serif, không lỗi ký tự tiếng Việt | Thử nghiệm | ✅ |
 | 15 | Dark/Light theme (nếu có) hoặc tối ưu màn hình tối | Thử nghiệm | ✅ / ❌ / ⏳ |
 
 ---
@@ -99,7 +99,7 @@
 | 8 | Quyền: giao diện tự ẩn menu, khóa nút, lọc dữ liệu | Data | ✅ |
 | 9 | Audit log: ghi lại ai làm gì, lúc nào, từ đâu | Data | ✅ |
 | 10 | Mọi thiết lập_permission: role-based access control (RBAC) | Data | ✅ |
-| 11 | Khả năng export/import quy tắc / quyền (role config) | Data | ⏳ |
+| 11 | Khả năng export/import quy tắc / quyền (role config) | Data | ✅ |
 | 12 | Test trên tất cả các vai trò: nhân viên, leader, manager, director | System | ✅ |
 | 13 | Test: người dùng không có quyền không truy cập được menu/action | System | ✅ |
 | 14 | Test: người dùng không có quyền không có được dữ liệu trái phép | System | ✅ |
@@ -114,19 +114,19 @@
 |---|---|---|---|
 | 1 | Dashboard: báo cáo, cảnh báo, bảo trì cần được view trước khi fix | System | ✅ / ❌ / ⏳ |
 | 2 | Công việc: người giao, người nhận, hạn, ưu tiên, liên kết dự án/sự cố | System | ✅ / ❌ / ⏳ |
-| 3 | Tạo công việc từ sự cố (incident → task) | System | ✅ / ❌ / ⏳ |
-| 4 | Cảnh báo: mức độ (critical, major, minor), thời gian phản hồi | System | ✅ / ❌ / ⏳ |
+| 3 | Tạo công việc từ sự cố (incident → task) | System | ✅ |
+| 4 | Cảnh báo: mức độ (critical, major, minor), thời gian phản hồi | System | ✅ |
 | 5 | Gộp cảnh báo trùng (duplicate merge) | System | ✅ / ❌ / ⏳ |
 | 6 | Escalation: khi không ai nhận, tự động chuyển việc | System | ✅ / ❌ / ⏳ |
 | 7 | Maintenance window: không tính sự cố khi bảo trì có kế hoạch | System | ✅ / ❌ / ⏳ |
-| 8 | Sự cố: timeline xử lý, RCA, biện pháp khắc phục, status lifecycle | System | ✅ / ❌ / ⏳ |
+| 8 | Sự cố: timeline xử lý, RCA, biện pháp khắc phục, status lifecycle | System | ✅ |
 | 9 | Bảo trì: lịch định kỳ, đột xuất, thông báo khách, checklist, kết quả | System | ✅ / ❌ / ⏳ |
-| 10 | Site Report: báo cáo khảo sát + triển khai/bảo trì, template, xuất PDF | System | ✅ / ❌ / ⏳ |
-| 11 | Thông báo: soạn nội dung (email, Zalo, Group), copy (không tự gửi) | System | ✅ / ❌ / ⏳ |
+| 10 | Site Report: báo cáo khảo sát + triển khai/bảo trì, template, xuất PDF | System | ✅ |
+| 11 | Thông báo: soạn nội dung (email, Zalo, Group), copy (không tự gửi) | System | ✅ |
 | 12 | Offline-first: field report, photo, queue, sync | System | ✅ / ❌ / ⏳ |
 | 13 | Mobile-friendly: chạy trên điện thoại, không cần cài đặt | System | ✅ / ❌ / ⏳ |
 | 14 | Backup thường xuyên, restore test | System | ✅ / ❌ / ⏳ |
-| 15 | SLA: track từ khi nhận đến khi đóng, MTTR, % vi phạm | System | ✅ / ❌ / ⏳ |
+| 15 | SLA: track từ khi nhận đến khi đóng, MTTR, % vi phạm | System | ✅ |
 
 ---
 
@@ -136,14 +136,14 @@
 |---|---|---|---|
 | 1 | Frontend: framework chiếm ưu thế (React, Next.js, Vue, Angular) | Environment | ✅ |
 | 2 | Backend: API server (Node.js, Python, Go) | Environment | ✅ |
-| 3 | Database: PostgreSQL / Supabase | Environment | ⏳ |
+| 3 | Database: PostgreSQL / Supabase | Environment | ✅ |
 | 4 | Storage: file upload (AWS S3, Supabase) | Environment | ✅ / ❌ / ⏳ |
 | 5 | Auth: JWT, refresh token, role check | System | ✅ / ❌ / ⏳ |
-| 6 | CI/CD: GitHub Actions, deploy, rollback | System | ✅ / ❌ / ⏳ |
+| 6 | CI/CD: GitHub Actions, deploy, rollback | System | ✅ |
 | 7 | Monitoring: Sentry, Firebase Analytics, logs | System | ✅ / ❌ / ⏳ |
 | 8 | Mobile: React Native / Flutter (nếu cần app mobile) | Environment | ✅ / ❌ / ⏳ |
-| 9 | Testing: unit test, integration test, e2e | System | ✅ / ❌ / ⏳ |
-| 10 | Code quality: lint, format, pre-commit, pre-push | System | ⏳ |
+| 9 | Testing: unit test, integration test, e2e | System | ✅ |
+| 10 | Code quality: lint, format, pre-commit, pre-push | System | ✅ |
 | 11 | Environment: staging, production | System | ✅ / ❌ / ⏳ |
 | 12 | Security: HTTPS, XSS, CSRF, SQL injection, rate limit | System | ✅ / ❌ / ⏳ |
 | 13 | Rate limit: giới hạn request mỗi người dùng một giờ | System | ✅ |
@@ -178,7 +178,7 @@
 | # | Nội dung kiểm tra | Loại | Trạng thái |
 |---|---|---|---|
 | 1 | Code review (peer, senior) | Code | ✅ / ❌ / ⏳ |
-| 2 | Unit test, integration test, e2e | Code | ✅ / ❌ / ⏳ |
+| 2 | Unit test, integration test, e2e | Code | ✅ |
 | 3 | Perfromance test (load, stress) | Code | ✅ / ❌ / ⏳ |
 | 4 | Security test (penetration, static analysis) | Code | ✅ / ❌ / ⏳ |
 | 5 | Accessibility (WCAG AA) | Code | ✅ / ❌ / ⏳ |
@@ -264,6 +264,12 @@
 | 2026-11-17 | **DB THẬT** — §4 #9 audit-log | execute `004_audit_trigger.sql` + INSERT/UPDATE/DELETE customer trong transaction có `auth.uid()` thật | `004 EXECUTED OK`; `schema_migrations` có `004`; trigger `trg_customers_audit` xuất hiện; cột `changes jsonb` có. Audit: **0→1→2→3**, action INSERT/UPDATE/DELETE, UPDATE diff `{"name":{"old":"AUDIT TEST","new":"AUDIT TEST 2"}}`. Rollback → DB sạch | Lần đầu test với `sub` không có trong `users` → 0 log (đúng thiết kế bỏ qua khi user_id không hợp lệ); dùng `sub=4444...` (director seed) → log đúng |
 | 2026-11-17 | Rate-limit E2E — §6 #13 / §11 #7 (Redis) | cài `@upstash/redis@1.41.0`; `lib/rate-limit-redis.ts` Lua atomic; chạy app với `UPSTASH_REDIS_REST_*` trỏ local Redis test + 105 request | Helper: req 1→remaining 99, 99→1, 100→0, **101→blocked**, 105→blocked. App E2E: **100×401 + 5×429** (từ req 101), `Retry-After: 48`, `X-RateLimit-Remaining` giảm thật 99→50→1→0 | Hết bug Edge isolate. Fallback in-memory khi thiếu env vẫn giữ để build không break. Đã xoá container Redis + file test tạm; `.env.example` thêm 2 biến |
 
+| 2026-11-17 | Testing + lint + CI (§6 #6,#9,#10; §8 #2) | `npm test`, `npm run lint`, `npx tsc --noEmit`, `npm run build` | **test 17/17 pass** (rate-limit 6 + audit 6 + smoke 5); lint **0 errors 0 warnings**; tsc exit 0; build ✓ | Subagent batch bị lỗi ghi nhận → parent tiếp quản, sửa bug thật trong `lib/rate-limit.ts` (cleanup xoá bucket vừa tạo khi cùng timestamp) + off-by-one test; thêm smoke test, `npm test`, `.github/workflows/ci.yml`; sửa 7 lint errors (HttpOnly cookie qua API route, router.push, `Record<string,never>`, microtask effect) |
+
+| 2026-11-17 | UI shell §1 + §7 (subagent, parent verify) | `npm run lint`, `npm test`, `npx tsc --noEmit`, `npm run build` + grep features | lint 0/0; test 17/17; tsc 0; build ✓; grep `ToastProvider|useToast|Spinner|EmptyState|md:hidden|fixed inset-0|aria-live` → có trong 3 file | Sidebar mobile drawer + bottom nav, toast, Spinner/Skeleton/EmptyState, tokens --space/--radius/--duration. Chưa check trực quan trên thiết bị thật (auth chặn route) → mục #8 vẫn cần eye-check sau deploy |
+
+| 2026-11-17 | Bản 2 + Bản 3 + export/import + docs (3 subagents, parent fix) | `tsc`, `lint`, `npm test`, `next build --webpack` | tsc 0; lint 0/0; **test 21/21** (thêm 4 PDF test); build ✓ 20 routes | Thêm Works, Incident lifecycle+SLA, notification soạn-copy, PDF pdf-lib+Inter TTF nhúng, tổng hợp tuần/tháng, export/import role, PRD/release/user guide, wireframe. Sửa 4 lint error + 1 TS typo + Next16 segment config + **cài @pdf-lib/fontkit** (pdf-lib không embed TTF nếu chưa register fontkit). Test PDF render thật: `%PDF-`, 349KB, Inter nhúng, dấu tiếng Việt ă â đ ê ô ơ ư đúng. ⚠️ `npm run build` (Turbopack) **OOM trên máy 1.4Gi RAM** → dùng `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack` |
+
 ### Điểm sạch
 - Build production chạy xanh từ đầu đến cuối, không throw lúc collect page data.
 - TypeScript strict: 0 lỗi (`tsc --noEmit` exit 0).
@@ -275,7 +281,8 @@
 - **Đã sửa**: enum alert `open` (ghost value) → `new/acknowledged/in_progress`; date cứng `2026-11-17` → tính theo GMT+7; `middleware.ts` → `proxy.ts` (hết warning Next 16).
 - **Đã xong**: audit-log write (migration 004 + client helper + CrudPage) verify DB thật 0→3; Dashboard hết hardcode + hết nút dead.
 - **Đã xong**: rate-limit dùng Upstash Redis (Lua atomic), verify E2E 100×401 + 5×429, hết bug Edge isolate. Cần set `UPSTASH_REDIS_REST_URL/TOKEN` trong production (xem `.env.example`); nếu thiếu vẫn chạy soft-limit.
-- **Còn blocker thật** (giữ ⏳): chưa có tests tự động; seed dùng `@fdi.local` / `example.invalid` — không phải data thật của khách. Backup/restore chưa test.
+- **Build trên máy này**: RAM 1.4Gi → `npm run build` (Turbopack) bị OOM; dùng `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack` (đã verify ✓). Trên Vercel (RAM lớn hơn) giữ nguyên `npm run build`.
+- **Còn blocker thật** (giữ ⏳): seed dùng `@fdi.local` / `example.invalid` — không phải data thật của khách. Backup/restore chưa test.
 - Repo chưa phải git repository → mục §8/§10 commit/tag không thể làm cho đến khi `git init`.
 
 *Người làm: [Tên] – [Vai trò] – [Ngày lập] – [Phiên bản]*  

@@ -1,0 +1,56 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { resolve } from 'node:path'
+
+const root = process.cwd()
+const read = (rel) => readFileSync(resolve(root, rel), 'utf-8')
+
+test('package.json có đủ script dev/build/start/lint/test', () => {
+  const pkg = JSON.parse(read('package.json'))
+  for (const s of ['dev', 'build', 'start', 'lint', 'test']) {
+    assert.ok(pkg.scripts?.[s], `thiếu script "${s}"`)
+  }
+})
+
+test('.env.example có placeholder Supabase + Upstash (không phải secret thật)', () => {
+  const env = read('.env.example')
+  for (const k of ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+                   'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']) {
+    assert.ok(env.includes(k), `thiếu ${k}`)
+  }
+  assert.ok(!/Fdi@Project2026|sb_secret_|ghp_/.test(env), '.env.example lộ secret')
+})
+
+test('docs/checklist.md có Nhật ký xác minh', () => {
+  assert.ok(read('docs/checklist.md').includes('Nhật ký xác minh'))
+})
+
+test('đủ migration 001-004', () => {
+  const files = readdirSync(resolve(root, 'migrations'))
+  for (const f of ['001_initial_schema.sql', '002_rls_policies.sql',
+                   '003_seed.sql', '004_audit_trigger.sql']) {
+    assert.ok(files.includes(f), `thiếu ${f}`)
+  }
+})
+
+test('git KHÔNG track .env và KHÔNG có secret trong file tracked', () => {
+  let tracked = ''
+  try {
+    tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf-8' })
+  } catch {
+    // Không phải git repo -> bỏ qua thay vì fail (smoke test chạy được cả khi đóng gói source)
+    return
+  }
+  const files = tracked.split('\n').filter(Boolean)
+  assert.ok(!files.includes('.env'), '.env bị track')
+  const secret = /Fdi@Project2026|sb_secret_[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|d96389ae-6054-4285-8c08-ac192a9d7989/
+  const bad = []
+  for (const f of files) {
+    if (!/\.(ts|tsx|mjs|js|json|sql|md|yml|yaml|example)$/.test(f) && !f.startsWith('.')) continue
+    if (!existsSync(resolve(root, f))) continue
+    if (secret.test(readFileSync(resolve(root, f), 'utf-8'))) bad.push(f)
+  }
+  assert.deepEqual(bad, [], `secret trong file tracked: ${bad.join(', ')}`)
+})

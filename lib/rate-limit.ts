@@ -60,9 +60,11 @@ export function checkRateLimit(
   bucket.touched = now
   buckets.set(key, bucket)
 
-  // Dọn entry rỗng (đã hết hạn) trước khi xét cap.
+  // Dọn bucket ĐÃ HẾT HẠN — KHÔNG xoá bucket vừa tạo dù hits tạm thời rỗng.
+  // (Bug đã được unit test phát hiện: cleanup mọi bucket có hits=0 từng xoá ngay
+  //  bucket hiện tại khi nhiều request cùng timestamp → mỗi request tạo bucket mới.)
   for (const [k, b] of buckets) {
-    if (b.hits.length === 0) buckets.delete(k)
+    if (k !== key && now - b.touched > DEFAULT_WINDOW_MS) buckets.delete(k)
   }
   evictIfNeeded(now)
 

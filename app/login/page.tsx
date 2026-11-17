@@ -65,8 +65,17 @@ export default function LoginPage({
       } else {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.access_token) {
-          document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${session.expires_in || 86400}; SameSite=Lax; Secure`
-          window.location.href = callbackUrl
+          // Lưu token qua route handler -> cookie HttpOnly (không cho JS đọc).
+          const res = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: session.access_token }),
+          })
+          if (!res.ok) {
+            setMessage({ type: 'error', text: 'Không lưu được phiên đăng nhập.' })
+            return
+          }
+          router.replace(callbackUrl)
         } else {
           setMessage({ type: 'error', text: 'Không nhận được session sau đăng nhập.' })
         }

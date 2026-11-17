@@ -1,7 +1,25 @@
 'use client'
 
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { cn } from "@/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Inbox,
+  Info,
+  X,
+} from 'lucide-react'
 
 export const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -50,6 +68,21 @@ export function Input({ className, type, ...props }: React.InputHTMLAttributes<H
       type={type}
       className={cn(
         "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function Textarea({
+  className,
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      className={cn(
+        "flex min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -284,4 +317,210 @@ export function ModalBody({ className, ...props }: React.HTMLAttributes<HTMLDivE
 
 export function ModalFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("flex justify-end gap-2 p-6 pt-0", className)} {...props} />
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Trạng thái hiển thị: loading / empty — checklist §7 #7, #9                */
+/* -------------------------------------------------------------------------- */
+
+/** Spinner — chỉ báo đang tải, màu theo token --accent. */
+export function Spinner({
+  className,
+  label = 'Đang tải',
+}: {
+  className?: string
+  label?: string
+}) {
+  return (
+    <span
+      role="status"
+      aria-label={label}
+      className={cn(
+        'inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-t-[var(--accent)] text-[var(--text-secondary)] align-middle',
+        className
+      )}
+    />
+  )
+}
+
+/** Skeleton — khối xương nhấp nháy trong lúc tải dữ liệu. */
+export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn('animate-pulse rounded-md bg-[var(--bg-secondary)]', className)}
+      {...props}
+    />
+  )
+}
+
+/** EmptyState — icon + tiêu đề + mô tả + nút hành động tuỳ chọn. */
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+  className,
+}: {
+  icon?: ReactNode
+  title: string
+  description?: string
+  action?: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center gap-2 px-4 py-10 text-center',
+        className
+      )}
+    >
+      <div className="mb-1 text-[var(--text-secondary)]" aria-hidden="true">
+        {icon ?? <Inbox size={32} strokeWidth={1.5} />}
+      </div>
+      <p className="text-base font-medium text-[var(--text-primary)]">{title}</p>
+      {description && (
+        <p className="max-w-sm text-sm text-[var(--text-secondary)]">{description}</p>
+      )}
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Toast / notification — checklist §1 #15, §7 #8                           */
+/* -------------------------------------------------------------------------- */
+
+export type ToastKind = 'success' | 'error' | 'info' | 'warning'
+
+export interface ToastOptions {
+  title: string
+  description?: string
+  duration?: number
+}
+
+interface ToastItem extends ToastOptions {
+  id: number
+  kind: ToastKind
+}
+
+interface ToastContextValue {
+  toast: (kind: ToastKind, options: ToastOptions) => number
+  success: (options: ToastOptions) => number
+  error: (options: ToastOptions) => number
+  info: (options: ToastOptions) => number
+  warning: (options: ToastOptions) => number
+  dismiss: (id: number) => void
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null)
+
+const TOAST_STYLE: Record<ToastKind, { accent: string; icon: ReactNode }> = {
+  success: { accent: 'var(--success)', icon: <CheckCircle2 size={18} /> },
+  error: { accent: 'var(--danger)', icon: <AlertCircle size={18} /> },
+  info: { accent: 'var(--info)', icon: <Info size={18} /> },
+  warning: { accent: 'var(--warning)', icon: <AlertTriangle size={18} /> },
+}
+
+const DEFAULT_TOAST_DURATION = 4000
+
+/** Bọc ứng dụng để cung cấp vùng hiển thị toast (góc phải trên). */
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<ToastItem[]>([])
+  const idRef = useRef(0)
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+
+  const dismiss = useCallback((id: number) => {
+    const timer = timersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      timersRef.current.delete(id)
+    }
+    setItems((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  const toast = useCallback(
+    (kind: ToastKind, options: ToastOptions) => {
+      const id = ++idRef.current
+      const duration = options.duration ?? DEFAULT_TOAST_DURATION
+      setItems((prev) => [...prev, { ...options, id, kind }])
+      const timer = setTimeout(() => dismiss(id), duration)
+      timersRef.current.set(id, timer)
+      return id
+    },
+    [dismiss]
+  )
+
+  // Dọn hết timer khi provider unmount để tránh setState sau khi huỷ.
+  useEffect(() => {
+    const timers = timersRef.current
+    return () => {
+      timers.forEach((t) => clearTimeout(t))
+      timers.clear()
+    }
+  }, [])
+
+  const value = useMemo<ToastContextValue>(
+    () => ({
+      toast,
+      success: (options) => toast('success', options),
+      error: (options) => toast('error', options),
+      info: (options) => toast('info', options),
+      warning: (options) => toast('warning', options),
+      dismiss,
+    }),
+    [toast, dismiss]
+  )
+
+  return (
+    <ToastContext.Provider value={value}>
+      {children}
+      <div
+        aria-live="polite"
+        aria-atomic="false"
+        className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2"
+      >
+        {items.map((item) => {
+          const style = TOAST_STYLE[item.kind]
+          return (
+            <div
+              key={item.id}
+              role={item.kind === 'error' ? 'alert' : 'status'}
+              className="pointer-events-auto flex items-start gap-3 rounded-lg border bg-[var(--bg-card)] p-3 text-[var(--text-primary)] shadow-lg"
+              style={{ borderColor: style.accent, borderLeftWidth: 4 }}
+            >
+              <span className="mt-0.5 shrink-0" style={{ color: style.accent }} aria-hidden="true">
+                {style.icon}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{item.title}</p>
+                {item.description && (
+                  <p className="mt-0.5 break-words text-xs text-[var(--text-secondary)]">
+                    {item.description}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => dismiss(item.id)}
+                aria-label="Đóng thông báo"
+                className="shrink-0 rounded p-0.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </ToastContext.Provider>
+  )
+}
+
+/** Hook dùng trong component con của ToastProvider. */
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext)
+  if (!ctx) {
+    throw new Error('useToast phải được dùng bên trong <ToastProvider>')
+  }
+  return ctx
 }
