@@ -1,112 +1,124 @@
-# 📁 FDI Project Management – Project Structure
+# FDI Project Management — Project Structure Review & Proposed v2
 
-> 📁 **Vị trí tài liệu:** file này nằm trong `docs/` (di chuyển từ repo root ngày 2026-11-17).
-> Các tham chiếu dạng `ten_file.md:line` trong nội dung bên dưới đều chỉ tới các file cùng thư mục `docs/`.
+**Status:** Proposal / Requires repository verification  
+**Architecture:** Single-organization, one Next.js 16 application, Supabase PostgreSQL, optional Upstash Redis  
+**Not in scope:** SaaS, multi-tenancy, separate frontend/backend services
 
+## 1. Scope and evidence
+This review is based solely on `project_structure.md` v1.0 (17 Nov 2026), not a source-code audit. Paths in that document are reported structure, not independently verified. Do not rename or relocate modules until imports, tests, deployment and migrations are checked.
 
-> Phiên bản 1.0 · Dành cho group devops & frontend  
-> Ngôn ngữ: Tiếng Việt · Không chứa code
+## 2. Critical findings
+| Priority | Finding | Risk | Action |
+|---|---|---|---|
+| P0 | `useProfile.ts` described as soft RBAC | UI visibility may be mistaken for authorization | Enforce permissions server-side and validate RLS on every table/action |
+| P0 | Supabase service-role usage unspecified | Privileged access may bypass RLS | Keep service role server-only, narrow usage, test access paths |
+| P0 | `database_schema.sql` and `migrations/` coexist | Schema drift | Migrations authoritative; snapshot generated or verified |
+| P1 | One `components/crud/CrudPage.tsx` for seven domains | Business rules may become coupled | Extract per-feature schemas/actions while keeping generic table/form primitives |
+| P1 | `components/ui/ui.tsx` aggregates primitives | Harder component ownership and testing | Incrementally split only frequently changed primitives |
+| P1 | Test and CI folders not shown | No verifiable quality gate | Add unit, integration, E2E, permission tests and CI |
+| P1 | Audit logging described without tamper guarantees | Missing or mutable history | DB-side audit for critical mutations, least privilege and retention |
+| P2 | In-memory rate-limit fallback | Not reliable across instances | Fail policy documented; Redis if multi-instance or public auth endpoints |
+| P2 | Naming conventions conflict with existing PascalCase components | Inconsistent repository style | Explicit conventions by file category |
 
----
-
-## 1. Mục đích
-
-Tổ chức thư mục dự án rõ ràng để dễ mở rộng, deploy, và maintain.
-
----
-
-## 2. Cấu trúc thư mục thực tế (monorepo Next.js 16)
-
-> Cập nhật 2026-11-17: dự án là **một** Next.js app, KHÔNG tách `backend/` + `frontend/`.
-> Toàn bộ tài liệu `.md` (trừ README root, AGENTS.md và migrations/README.md) nằm trong `docs/`.
-
-```
+## 3. Proposed target layout (incremental, not an assertion of current repo)
+```text
 FDI_Project/
-├── README.md                 # Entry point + link tới docs/
-├── AGENTS.md                 # Next.js 16 tự sinh (giữ ở root)
-├── .env.example              # Placeholder env (Supabase + Upstash)
-├── database_schema.sql       # Lược đồ CSDL thiết kế
-│
-├── docs/                     # 📚 TOÀN BỘ TÀI LIỆU
-│   ├── README.md             # Index tài liệu
-│   ├── product.md            # PRD
-│   ├── checklist.md          # Checklist tiến độ + nhật ký xác minh
-│   ├── roadmap.md            # Lộ trình Bản 1/2/3
-│   ├── ui_ux_spec.md         # Giao diện & component
-│   ├── rbac_matrix.md        # Ma trận phân quyền
-│   ├── tech_spec.md          # Kiến trúc & công nghệ
-│   ├── api_spec.md           # API specification
-│   ├── project_structure.md  # File này
-│   └── SPEC_REALITY_CHECK.md # Đối chiếu spec vs code thật
-│
-├── app/                      # Next.js App Router
-│   ├── dashboard/, login/    # Trang chính & đăng nhập
-│   ├── customers/, projects/, devices/,
-│   │   alerts/, maintenance/, reports/, admin/   # 7 module CRUD
-│   ├── api/auth/             # Auth routes
-│   ├── layout.tsx, globals.css
-│
+├── README.md
+├── AGENTS.md
+├── .env.example
+├── app/
+│   ├── (auth)/login/page.tsx
+│   ├── (workspace)/layout.tsx
+│   ├── (workspace)/dashboard/page.tsx
+│   ├── (workspace)/customers/page.tsx
+│   ├── (workspace)/projects/page.tsx
+│   ├── (workspace)/devices/page.tsx
+│   ├── (workspace)/alerts/page.tsx
+│   ├── (workspace)/maintenance/page.tsx
+│   ├── (workspace)/reports/page.tsx
+│   ├── (workspace)/admin/page.tsx
+│   ├── api/                    # Route handlers only when needed
+│   ├── layout.tsx
+│   └── globals.css
+├── features/
+│   ├── customers/
+│   ├── projects/
+│   ├── devices/
+│   ├── alerts/
+│   ├── maintenance/
+│   ├── reports/
+│   └── admin/
+│       # Each feature may contain components/, schemas/, actions/, queries/
 ├── components/
-│   ├── ui/ui.tsx             # UI library (Button/Input/Card/Table/Badge/Modal...)
-│   ├── crud/CrudPage.tsx     # CRUD dùng chung cho 7 module
-│   └── ClientBody.tsx        # Sidebar + header + logout
-│
+│   ├── ui/                     # Shared presentational primitives
+│   ├── data-table/
+│   └── layout/
 ├── lib/
-│   ├── supabase/             # Client lazy (server + shared)
-│   ├── hooks/useProfile.ts   # RBAC mềm (role/team)
-│   ├── audit.ts              # Ghi audit_logs
-│   ├── rate-limit.ts         # Sliding window in-memory (fallback)
-│   ├── rate-limit-redis.ts   # Upstash Redis Lua atomic (chính)
-│   ├── types.ts, utils.ts, cookies.ts
-│
-├── migrations/               # SQL chạy tuần tự 001→004
-│   ├── 001_initial_schema.sql
-│   ├── 002_rls_policies.sql
-│   ├── 003_seed.sql
-│   ├── 004_audit_trigger.sql
-│   └── README.md             # Hướng dẫn chạy (giữ cạnh migration)
-│
-├── public/                   # Static assets
-├── package.json, package-lock.json
-├── next.config.ts, tsconfig.json, eslint.config.mjs
-└── proxy.ts                  # Edge proxy (thay middleware.ts, Next 16)
+│   ├── auth/                   # Server authorization helpers
+│   ├── supabase/               # Server/client separation
+│   ├── audit/
+│   ├── rate-limit/
+│   └── utils/
+├── migrations/                # Canonical, ordered schema changes
+├── tests/
+│   ├── integration/
+│   ├── permissions/
+│   └── e2e/
+├── docs/
+│   ├── README.md
+│   ├── product.md
+│   ├── ui_ux_spec.md
+│   ├── rbac_matrix.md
+│   ├── tech_spec.md
+│   ├── api_spec.md
+│   ├── project_structure.md
+│   ├── SPEC_REALITY_CHECK.md
+│   └── adr/                    # Architecture decisions
+└── .github/workflows/          # CI after adoption
 ```
+Route groups `(auth)` and `(workspace)` do not alter public URL paths. This tree is a design target, not a request to move everything immediately. Keep existing routes working during refactor.
 
----
+## 4. Dependency boundaries
+- `app/`: routing, request/response orchestration and layouts; no domain-heavy logic.
+- `features/<domain>/`: business rules, domain-specific forms, validation, queries and actions.
+- `components/ui/`: generic presentation only; must not import domain features.
+- `lib/auth/`: server-only authorization; checks role and project/site assignment.
+- `lib/supabase/`: isolate client/server configuration; never expose privileged credentials.
+- `migrations/`: schema change history, with reproducible application and rollback plans.
+- Shared abstractions only after at least two actual use cases; avoid premature layering.
 
-## 2. Quy ước
+## 5. Security acceptance criteria
+1. A signed-in engineer cannot read/write a project or site outside assigned scope, including direct API/Server Action calls.
+2. Unauthenticated access to protected routes and APIs is rejected.
+3. Admin-only actions are rejected server-side for non-admin users.
+4. Every table storing restricted records has verified RLS or equivalent server-enforced authorization; service-role bypass is controlled and tested.
+5. Sensitive mutations create auditable events without exposing secrets.
+6. Uploaded files are authorized by ownership/scope, not merely obscured URLs.
 
-| Mục | Quy ước |
-|---|---|
-| Tên thư mục | Lowercase, underscore |
-| Tên file | kebab-case |
-| Branch | feat/feature-x, bugfix/x, release/x |
-| Commit | Conventional Commits |
-| Version | Semantic versioning |
-| Deploy | CI/CD, staging → production |
+## 6. CI quality gates
+- Typecheck, lint and build on pull request.
+- Unit tests for validation/business rules.
+- Integration tests for database constraints and RLS.
+- E2E smoke tests for login, project access, reports and alerts.
+- Migration rehearsal against disposable database; backup/restore drill before production release.
+- No deployment when required checks fail.
 
----
+## 7. Rollout plan
+**P0 (before refactor):** inventory actual repository; inspect `SPEC_REALITY_CHECK.md`, RLS SQL, API handlers, Supabase clients, `CrudPage.tsx`, CI and test coverage. Record gaps; do not assume missing paths are absent.
 
-## 3. Checklist thiết lập repo
+**P1:** fix authorization and schema ownership; add permission tests and CI baseline.
 
-- [ ] `.gitignore` (node_modules, env, database)
-- [ ] `package.json` (scripts)
-- [ ] README (overview, setup, deploy)
-- [ ] API docs (Swagger/OpenAPI)
-- [ ] Database migration folder
-- [ ] Seed folder
-- [ ] Test folder
-- [ ] CI/CD config
-- [ ] Environment variables (.env.example)
-- [ ] Security config (rate limit, RBAC, audit)
+**P2:** extract one complex module (recommend Alerts or Reports) into `features/`, preserving URLs and behavior. Measure duplicated code, test coverage and regression rate.
 
----
+**P3:** gradually move other modules only if benefits are demonstrated. Split UI primitives as needed; keep shared CRUD for genuinely generic operations.
 
-## 4. Giới hạn & Best Practice
+## 8. Decisions to confirm
+- Is Supabase Auth used for all users, and are server-side policies applied to every mutation?
+- Which tables and storage buckets have RLS policies? Who may use the service-role key?
+- Does `CrudPage.tsx` contain business logic or only configurable presentation?
+- Which routes are already implemented and tested?
+- Is deployment one instance or multiple instances, and is Upstash required for production?
+- Who owns schema migrations, deployment approvals and rollback?
 
-- Không lưu mật khẩu, IP quản trị, thông tin truy cập vào DB
-- Không commit `.env`
-- Phân quyền rõ ràng, audit log
-- Backup & restore định kỳ
-
----
+## 9. Definition of Done
+A structural change is done only when URLs remain stable, permissions are tested, migrations are reproducible, existing functionality passes regression tests, documentation reflects actual code, and the change can be rolled back safely.

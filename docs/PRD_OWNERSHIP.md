@@ -1,215 +1,366 @@
-# 📋 FDI_Project — PRD Ownership, Acceptance Criteria & Test Plan
+# FDI_Project — PRD Ownership, Acceptance Criteria & Test Governance
 
-> 📁 **Vị trí tài liệu:** `docs/PRD_OWNERSHIP.md`  
-> Phiên bản 1.0 · Ngày lập 2026-11-17 · Ngôn ngữ: Tiếng Việt  
-> Bám sát `checklist.md` §9 (7 mục) + `rbac_matrix.md` + `roadmap.md` + `product.md`.
+**Phiên bản:** 2.0 (đề xuất review)  
+**Ngày:** 2026-11-17  
+**Đường dẫn đề xuất:** `docs/PRD_OWNERSHIP.md`  
+**Trạng thái:** DRAFT — chưa phê duyệt, chưa xác nhận triển khai  
+**Nguồn:** `PRD_OWNERSHIP.md` v1.0 do nhóm cung cấp; các tham chiếu `product.md`, `rbac_matrix.md`, `roadmap.md`, `checklist.md`, `database_schema.sql` chưa được đối chiếu trực tiếp trong lần biên tập này.
 
----
+> **Nguyên tắc:** Tài liệu này quản trị ownership, nghiệm thu và bằng chứng kiểm thử. `product.md` là nguồn yêu cầu nghiệp vụ; `rbac_matrix.md` là nguồn ma trận quyền; `tech_spec.md`/`api_spec.md` là nguồn contract kỹ thuật. Nếu mâu thuẫn, ghi **OPEN / cần quyết định**, không tự giả định đã được chốt.
 
-## 1. Mục đích & Phạm vi
+## 1. Phạm vi và nguyên tắc
 
-Tài liệu này gán **owner rõ ràng** cho mọi module hiện có, đồng thời định nghĩa
-**requirement**, **acceptance criteria (AC)**, **test plan (test case + test data)**,
-**risk/dependency/constraint** cho từng module — đáp ứng §9 #1–7.
+- Ứng dụng **nội bộ của một tổ chức**, không SaaS, không Multi-Tenant; kiến trúc dự kiến **một Next.js 16 app + Supabase PostgreSQL**, theo định hướng đã thống nhất. Không phát sinh tenant/billing/subscription.
+- Quản lý các module hiện có trong v1: Dashboard; Login/Auth/RBAC; Customers; Projects; Devices; Alerts; Maintenance; Reports/Site Report; Admin; Works; Notifications.
+- Bốn **vai trò người dùng nghiệp vụ**: Employee, Leader, Manager, Director. **Vai trò delivery** (Product Owner, Tech Lead, QA, Designer, Developer, Release Owner) là khái niệm khác.
+- Mỗi yêu cầu có ID, nguồn, người quyết định, acceptance criteria, test cases và bằng chứng. Không đánh dấu PASS chỉ vì đã viết tài liệu.
+- Các mục có nhãn **[PROPOSED]** cần xác nhận; **[SOURCE v1]** là thông tin từ tài liệu gốc; **[OPEN]** chưa quyết định.
 
-- §9 #1: mọi module có owner (PM/Leader/Manager/Director/Engineer).
-- §9 #2: requirement rõ ràng, không mơ hồ.
-- §9 #3: acceptance criteria (cách kiểm tra, standard).
-- §9 #4: test plan (test cases, test data).
-- §9 #5: owner theo vai trò dự án (dev, QA, PM, design).
-- §9 #6: plan gồm scope, team, timeline, budget.
-- §9 #7: risk, dependency, constraint.
+## 2. Document control và trạng thái
 
-> ⚠️ **Ghi chú về số liệu:** các cột "Timeline/Budget" là ước tính theo `roadmap.md`
-> (Bản 1 = 10 tuần, Bản 2 = 4 tuần, Bản 3 = 2 tuần). Budget không được ghi cụ thể
-> vì không có số liệu thật — để `TBD (chưa có số liệu))`, KHÔNG bịa.
+| Trường | Giá trị |
+|---|---|
+| Business sponsor | [OPEN: cá nhân cụ thể] |
+| Product Owner | [OPEN: cá nhân cụ thể] |
+| Technical Owner | [OPEN: cá nhân cụ thể] |
+| QA Owner | [OPEN: cá nhân cụ thể] |
+| Release Owner | [OPEN: cá nhân cụ thể] |
+| Quyền phê duyệt | Business DRI duyệt nghiệp vụ; Technical DRI duyệt kỹ thuật; QA xác nhận test; Release Owner quyết định phát hành [PROPOSED] |
+| Trạng thái tài liệu | Draft → In Review → Approved → Superseded [PROPOSED] |
+| Thay đổi yêu cầu | Ghi change request, impact, người duyệt, phiên bản, ngày hiệu lực [PROPOSED] |
 
----
+### 2.1 Phân biệt các trạng thái
 
-## 2. Bảng ký hiệu owner
+- **Documented:** đã có nội dung mô tả.
+- **Reviewed:** đã có review và xử lý comments.
+- **Approved:** được người có thẩm quyền phê duyệt.
+- **Implemented:** có code/DB migration liên kết.
+- **Tested:** có test run và kết quả.
+- **Accepted:** Business DRI ký nghiệm thu.
+- **Released:** triển khai production và có release evidence.
 
-| Ký hiệu | Vai trò dự án | Trách nhiệm chính |
+Không suy ra một trạng thái từ trạng thái khác. Đặc biệt, `Documented ≠ Tested ≠ Accepted`.
+
+## 3. Quy tắc Ownership / RACI
+
+**DRI (Directly Responsible Individual)** phải là **một cá nhân được chỉ định** cho mỗi trách nhiệm; role dưới đây chỉ là vị trí đề xuất. Không dùng ký hiệu `TL` làm Business Owner chỉ vì TL phát triển tính năng.
+
+| Vai trò delivery | Trách nhiệm | Quyền quyết định |
 |---|---|---|
-| PM | Product Manager | Scope, requirement, priority, acceptance |
-| TL | Tech Lead / Leader | Kiến trúc, review code, kỹ thuật |
-| MGR | Manager (nghiệp vụ) | Duyệt kế hoạch, SLA, dữ liệu phòng |
-| DIR | Director | Duyệt nghiệm thu, bức tranh tổng thể |
-| ENGR | Engineer (dev) | Implement, unit test |
-| QA | QA | Test plan, test case, báo lỗi |
-| DES | Design | UI/UX, design token |
+| Business DRI | Mục tiêu, scope, business rules, UAT | Phê duyệt AC nghiệp vụ |
+| Technical DRI | Thiết kế, API/DB, security, review | Phê duyệt thiết kế kỹ thuật |
+| Implementation Owner | Code, migration, unit/integration test | Đề xuất hoàn thành implementation |
+| QA Owner | Test strategy, test evidence, defect triage | Xác nhận QA pass/fail |
+| Designer | UX flows, usability, accessibility | Sign-off UI theo phạm vi phân công |
+| Release Owner | Release gate, rollback, monitoring | Go / No-Go production |
 
----
+### 3.1 Ma trận module ownership (đề xuất, cần bổ nhiệm người)
 
-## 3. Ma trận Ownership tổng hợp (§9 #1, #5)
-
-| Module | Owner (nghiệp vụ) | Owner (dev) | QA | Design | Bản |
+| Module | Business DRI đề xuất | Technical DRI | QA | UAT approver đề xuất | Phase theo v1 |
 |---|---|---|---|---|---|
-| Dashboard | DIR | TL | QA | DES | Bản 3 |
-| Login / Auth & RBAC | MGR | TL | QA | DES | Bản 1 |
-| Customers (Khách hàng) | MGR | ENGR | QA | DES | Bản 1 |
-| Projects (Dự án) | TL | ENGR | QA | DES | Bản 1 |
-| Devices (Thiết bị/Serial) | TL | ENGR | QA | DES | Bản 1 |
-| Alerts (Cảnh báo/Sự cố) | MGR | ENGR | QA | DES | Bản 2 |
-| Maintenance (Bảo trì) | MGR | ENGR | QA | DES | Bản 2 |
-| Reports (Site Report) | MGR | ENGR | QA | DES | Bản 1/3 |
-| Admin (Quản trị) | DIR | TL | QA | DES | Bản 1 |
-| Works (Công việc) | TL | ENGR | QA | DES | Bản 2 |
-| Notifications (Thông báo) | MGR | ENGR | QA | DES | Bản 2 |
+| Dashboard | Director | Tech Lead | QA Lead | Director | Bản 3 |
+| Login / Auth / RBAC | System Owner **[OPEN]** | Tech Lead | QA Lead | System Owner | Bản 1 |
+| Customers | Business Manager | Engineering Lead | QA Lead | Business Manager | Bản 1 |
+| Projects | Project Manager | Engineering Lead | QA Lead | Project Manager | Bản 1 |
+| Devices | Operations Manager | Engineering Lead | QA Lead | Operations Manager | Bản 1 |
+| Alerts / Incidents | Operations Manager | Engineering Lead | QA Lead | Operations Manager | Bản 2 |
+| Maintenance | Operations Manager | Engineering Lead | QA Lead | Operations Manager | Bản 2 |
+| Site Reports | Project Manager | Engineering Lead | QA Lead | Project Manager | Bản 1 cơ bản / Bản 3 PDF |
+| Admin | System Owner **[OPEN]** | Tech Lead | QA Lead | System Owner | Bản 1 |
+| Works | Project Manager | Engineering Lead | QA Lead | Project Manager | Bản 2 |
+| Notifications | Operations Manager | Engineering Lead | QA Lead | Operations Manager | Bản 2 |
 
----
+**Lưu ý:** Bảng v1 gán Business Owner của Projects/Devices/Works cho `TL` và gán Auth cho `MGR`. Bảng trên là **đề xuất phân vai**, không tự động thay thế các bổ nhiệm hiện hành. Cần xác nhận với người quản lý sản phẩm.
 
-## 4. Chi tiết từng module
+### 3.2 RACI cho các quyết định trọng yếu [PROPOSED]
 
-### 4.1 Dashboard
+| Hoạt động | Business DRI | Technical DRI | QA | Release Owner |
+|---|---|---|---|---|
+| Chốt scope/AC | A/R | C | C | I |
+| Chốt API/DB/security | C | A/R | C | I |
+| Xây test plan và chạy test | C | C | A/R | I |
+| Business UAT | A/R | C | R | I |
+| Go/No-Go | C | C | C | A/R |
 
-| Mục | Nội dung |
+*A = accountable; R = responsible; C = consulted; I = informed.*
+
+## 4. Traceability: yêu cầu → AC → Test → Evidence
+
+### 4.1 Mẫu bắt buộc cho mỗi requirement
+
+| Trường | Ví dụ / quy tắc |
 |---|---|
-| **Owner** | DIR (nghiệp vụ) / TL (dev) / QA / DES |
-| **Requirement (§9 #2)** | KPI: tổng dự án, sự cố đang mở theo mức độ, SLA, bảo trì đủ hạn; lọc theo phòng/mức độ/trạng thái; bấm KPI tới chi tiết; scope 4 role (employee→việc của mình, director→toàn công ty). |
-| **Acceptance Criteria (§9 #3)** | (1) Mọi số liệu query từ DB thật, không hardcode; (2) scope đúng 4 role qua `fdi_current_role()`; (3) giờ hiển thị GMT+7 (`Intl`); (4) KPI clicks điều hướng đúng; (5) không có nút dead. |
-| **Test Cases (§9 #4)** | TC1: login từng role → số KPI đúng scope. TC2: đổi severity → lọc đúng. TC3: kiểm tra không còn chuỗi hardcode cũ (`VN Telecom`, `-2 %`, `98%`). TC4: bấm KPI → route chi tiết. |
-| **Test Data** | Seed migration `003`: 4 user, 1 customer, 1 site, 1 project, 3 device, 3 alert, 2 maintenance, 2 work, 1 report. |
-| **Risk / Dependency / Constraint (§9 #7)** | Rủi ro: lệch scope do JWT stale. Dependency: RPC `fdi_current_role()`, bảng alerts/projects/maintenances. Constraint: Director = "Xem toàn công ty" (quyết định Dev Director 2026-11-17). |
-| **Scope / Team / Timeline / Budget (§9 #6)** | Scope: KPI + lọc + drill-down. Team: TL+ENGR+QA+DES. Timeline: Bản 3 (2 tuần, roadmap §2.3). Budget: TBD. |
+| Requirement ID | `PRJ-REQ-001` |
+| Module / source | Projects / `product.md` mục tương ứng |
+| Requirement | Hành vi có thể quan sát, không mô tả mơ hồ |
+| Priority | P0 / P1 / P2 |
+| Business DRI | Họ tên, không chỉ role |
+| AC IDs | `PRJ-AC-001...` |
+| Test Case IDs | `PRJ-TC-001...` |
+| API / DB / UI references | Endpoint, migration, screen (nếu có) |
+| Evidence | Link CI run, screenshot, logs đã che dữ liệu, test report |
+| Status | Documented / Reviewed / Approved / Implemented / Tested / Accepted / Released |
+| Decision / open questions | ID quyết định, ngày, người duyệt |
 
-### 4.2 Login / Auth & RBAC
+### 4.2 AC format
 
-| Mục | Nội dung |
+`Given [điều kiện và quyền] / When [hành động] / Then [kết quả cụ thể]`.
+
+AC phải có positive, negative, boundary, access-control và failure/retry cases khi liên quan. Các con số, HTTP status, cookie name, SQL policy count là **technical test assertions**, không mặc định là business AC.
+
+## 5. Module requirements & minimum acceptance coverage
+
+> Đây là **baseline kiểm thử đề xuất**, không khẳng định tính năng đã được implement. Các quyết định còn mâu thuẫn được liệt kê tại §8.
+
+### 5.1 Dashboard (`DASH`)
+
+**[SOURCE v1]** KPI projects, alerts, SLA, maintenance; lọc và drill-down theo scope vai trò.
+
+- `DASH-AC-01`: Given người dùng có quyền, When mở dashboard, Then KPI được tính từ dữ liệu hợp lệ trong phạm vi được cấp; không hardcode.
+- `DASH-AC-02`: Given dữ liệu có ít nhất hai team/phòng, When đăng nhập các vai trò khác nhau, Then chỉ trả KPI thuộc scope hợp lệ.
+- `DASH-AC-03`: Given người dùng chọn bộ lọc, When drill-down, Then danh sách chi tiết nhất quán với KPI, bộ lọc và quyền.
+- `DASH-AC-04`: Given không có dữ liệu hoặc API lỗi, Then hiển thị empty/error state, không hiển thị số liệu sai.
+- **Test data:** ≥2 departments, ≥2 teams, nhiều projects, alerts ở nhiều trạng thái; timezone boundary.
+- **Dependency:** chốt công thức KPI, quyền xem và nguồn dữ liệu.
+
+### 5.2 Login / Auth / RBAC (`AUTH`)
+
+**[SOURCE v1]** 4 roles; JWT/refresh; server-side access control; RLS; rate limit; audit.
+
+- `AUTH-AC-01`: Người chưa xác thực không đọc được dữ liệu được bảo vệ.
+- `AUTH-AC-02`: Người dùng thiếu quyền bị từ chối **tại server/database**, kể cả khi gọi API trực tiếp hoặc sửa request.
+- `AUTH-AC-03`: User chỉ truy cập được project/team/department theo ma trận quyền đã phê duyệt; không rò dữ liệu qua count, export, search, storage URL.
+- `AUTH-AC-04`: Logout/revocation/expiry có hành vi xác định; không để session cũ tiếp tục thao tác trái phép.
+- `AUTH-AC-05`: Rate-limit áp dụng đúng đối tượng, cửa sổ và hành vi đã chốt; không cố định `100/60s` khi chưa có quyết định.
+- **Test data:** tối thiểu 4 roles × nhiều teams/departments, user inactive, user không assignment, user có role vừa thay đổi.
+- **Technical verification:** kiểm tra `proxy.ts`, server handlers, Supabase RLS và service-role usage; tên cookie, redirect status, số policy cần xác minh với code thực tế.
+
+### 5.3 Customers (`CUS`)
+
+- `CUS-AC-01`: Người có quyền tạo/sửa khách hàng; dữ liệu bắt buộc được validate và lỗi trả rõ.
+- `CUS-AC-02`: Người chỉ có quyền xem không thể sửa qua UI, API hoặc DB policy.
+- `CUS-AC-03`: Giá trị hợp đồng và thông tin nhạy cảm chỉ hiển thị cho vai trò được phê duyệt.
+- `CUS-AC-04`: Thay đổi dữ liệu có audit trail đầy đủ, không ghi trùng một hành động nghiệp vụ do cả trigger và helper.
+- **Test:** duplicate handling, invalid email, cross-scope access, audit actor/diff, archived customer.
+- **[OPEN]:** định nghĩa khách hàng trùng và quyền xem hợp đồng.
+
+### 5.4 Projects (`PRJ`)
+
+- `PRJ-AC-01`: Project thuộc customer hợp lệ, trạng thái đúng enum đã chốt.
+- `PRJ-AC-02`: Progress nhận giá trị từ 0 đến 100; giá trị ngoài miền bị từ chối tại server.
+- `PRJ-AC-03`: Chuyển `deployed` chỉ khi checklist bắt buộc được hoàn thành và người dùng có quyền.
+- `PRJ-AC-04`: User ngoài project/team/department không đọc/sửa project ngoài phạm vi.
+- `PRJ-AC-05`: Nhiều site trong một project được xử lý theo quan hệ đã chốt, không mất lịch sử khi cập nhật.
+- **Test:** transition hợp lệ/bất hợp lệ, concurrency, missing checklist, upload failure.
+- **[OPEN]:** quan hệ Project–Site và quy trình nghiệm thu cuối.
+
+### 5.5 Devices (`DEV`)
+
+- `DEV-AC-01`: Serial và MAC tuân thủ quy tắc unique được phê duyệt, có chuẩn hóa định dạng.
+- `DEV-AC-02`: Device có site/customer hiện hành hợp lệ và lịch sử thay đổi vị trí khi cần.
+- `DEV-AC-03`: Alert, maintenance, warranty truy ngược được đúng device.
+- `DEV-AC-04`: Người không có quyền không sửa/xóa device; các thay đổi nhạy cảm được audit.
+- **Test:** duplicate serial khác project/site, device move, warranty boundary, soft-delete/history.
+- **[OPEN]:** `serial unique within project` từ v1 có phù hợp khi chuyển thiết bị hay không; `expired` là warranty hay operational status?
+
+### 5.6 Alerts / Incidents (`ALT`)
+
+- `ALT-AC-01`: Alert có severity/status hợp lệ và nguồn/timestamp được ghi nhận.
+- `ALT-AC-02`: Gộp trùng không làm mất lịch sử alert gốc; quy tắc dedupe có thể kiểm chứng.
+- `ALT-AC-03`: Acknowledge/assign/escalate ghi actor và thời điểm; không thể chuyển trạng thái trái quy tắc.
+- `ALT-AC-04`: SLA tính theo timestamp, lịch làm việc, hợp đồng và maintenance window đã được phê duyệt.
+- `ALT-AC-05`: Không xóa (`purge`) cảnh báo do maintenance window; nếu suppress, phải giữ dấu vết và lý do.
+- **Test:** duplicate arrival, out-of-order events, SLA boundary, escalation, unauthorized closure.
+- **[OPEN]:** tách `Alert` và `Incident` hay sử dụng một entity; `SLA response` đo tới acknowledgement hay tới first response; mục tiêu 15 phút/1 giờ trong v1 cần xác nhận theo hợp đồng.
+
+### 5.7 Maintenance (`MNT`)
+
+- `MNT-AC-01`: Lịch bảo trì có due date/window, phạm vi site/device, người phụ trách và checklist hợp lệ.
+- `MNT-AC-02`: Người thực hiện chỉ cập nhật được hạng mục được giao; người duyệt tuân theo matrix.
+- `MNT-AC-03`: Completed/skipped có lý do, bằng chứng và lịch sử thay đổi.
+- `MNT-AC-04`: Maintenance window tác động SLA theo policy, không xóa alert.
+- **Test:** recurrence boundary, timezone, overlap, missed maintenance, rejected checklist.
+- **[OPEN]:** cách lưu recurrence và định nghĩa maintenance window.
+
+### 5.8 Reports / Site Report (`RPT`)
+
+- `RPT-AC-01`: Engineer có quyền tạo và lưu draft báo cáo đúng project/site.
+- `RPT-AC-02`: Submit chỉ thành công khi các trường/ảnh bắt buộc hợp lệ; lỗi phải chỉ rõ trường.
+- `RPT-AC-03`: Review/approve/reject chỉ do vai trò được phân quyền thực hiện; lưu actor/time/comment.
+- `RPT-AC-04`: Báo cáo đã duyệt không thể bị sửa âm thầm; revision có lịch sử.
+- `RPT-AC-05`: Upload kiểm tra MIME/type/size/access; file lỗi không tạo bản ghi giả thành công.
+- `RPT-AC-06`: PDF khi thuộc phase được duyệt phải khớp nội dung và phiên bản báo cáo.
+- **Test:** 0/1/20/21 ảnh, 5MB boundary, offline/retry (nếu được duyệt), permission, PDF content.
+- **[OPEN]:** có bắt buộc ≥1 ảnh cho mọi loại report không; workflow approval và PDF thuộc bản nào.
+
+### 5.9 Admin (`ADM`)
+
+- `ADM-AC-01`: Chỉ người được phân quyền quản trị có thể đọc/sửa role và cấu hình.
+- `ADM-AC-02`: Import/export role config có schema validation, dry-run, preview diff, audit và cơ chế chống privilege escalation **[PROPOSED]**.
+- `ADM-AC-03`: Không thể tự nâng quyền, hạ quyền người khác trái chính sách hoặc vô hiệu hóa tài khoản quản trị cuối cùng **[PROPOSED]**.
+- `ADM-AC-04`: API và UI thực thi cùng một policy; không dựa vào ẩn menu.
+- **Test:** invalid JSON, duplicate email, privilege escalation, rollback, audit.
+- **[OPEN]:** Manager được phép truy cập phần nào của Admin; role import có thực sự nằm trong MVP; `password_hash` thuộc Supabase Auth hay bảng ứng dụng.
+
+### 5.10 Works (`WRK`)
+
+- `WRK-AC-01`: Work có title, assignee, due date/status theo quy tắc được chốt.
+- `WRK-AC-02`: Leader/Manager chỉ giao việc trong phạm vi quyền.
+- `WRK-AC-03`: Work liên kết đúng project hoặc incident/alert đã quyết định, không tạo orphan reference.
+- `WRK-AC-04`: Chuyển completed ghi thời gian và người thực hiện; lỗi cập nhật không làm mất dữ liệu.
+- **Test:** cross-team assignment, overdue boundary, deleted assignee, invalid transition.
+- **[OPEN]:** `incident_id` trong schema nhưng flow v1 tạo work từ alert.
+
+### 5.11 Notifications (`NTF`)
+
+**[SOURCE v1]** Chỉ soạn nội dung để copy; **không tự gửi** email/Zalo/group. V1 ghi chưa có bảng `notifications`.
+
+- `NTF-AC-01`: Người có quyền tạo nội dung thông báo từ alert/maintenance, xem trước và copy.
+- `NTF-AC-02`: Không có request tự động gửi đến hệ thống bên ngoài khi người dùng chỉ soạn/copy.
+- `NTF-AC-03`: Thông tin khách hàng nhạy cảm không xuất hiện với người không có quyền.
+- `NTF-AC-04`: Nếu lưu template/kênh, schema và quyền truy cập phải được duyệt trước khi migration.
+- **Test:** copy content, malformed address, role restriction, no outbound network call.
+- **[OPEN]:** cần lưu notification history hay chỉ template; không tự thêm DB table nếu chưa có yêu cầu.
+
+## 6. Test strategy và dữ liệu kiểm thử
+
+### 6.1 Các lớp test
+
+| Loại | Mục đích | Evidence tối thiểu |
+|---|---|---|
+| Unit | Business rule, validation, state transition | CI test report |
+| Integration | DB constraints, RLS, API, storage | Test run + schema version |
+| E2E | User journey, negative/empty/error states | Browser run/video/screenshots |
+| Security | Auth bypass, IDOR, privilege escalation, file access | Security checklist + kết quả |
+| UAT | Nghiệp vụ theo role và workflow | Biên bản sign-off |
+| Recovery | Backup/restore, upload retry, rollback | Restore/rollback evidence |
+
+### 6.2 Dataset tối thiểu [PROPOSED]
+
+- 2 departments; mỗi department ≥2 teams; ≥4 role types; người dùng được/không được gán project; một tài khoản inactive.
+- ≥2 customers; mỗi customer ≥2 sites; ≥3 projects có trạng thái khác nhau; một project nhiều site.
+- Devices có serial trùng ở các phạm vi khác nhau để kiểm tra unique rule; thiết bị đã di chuyển; thiết bị sắp/hết bảo hành.
+- Alerts có duplicate, maintenance window, SLA boundary, escalation và reopened; works có quá hạn và không assignee.
+- Reports có draft/submitted/approved/rejected, file hợp lệ/không hợp lệ và các boundary sizes.
+- Dữ liệu test giả lập, không sử dụng thông tin khách hàng thật trong môi trường không được phép.
+
+### 6.3 Test case record template
+
+| Field | Yêu cầu |
 |---|---|
-| **Owner** | MGR (nghiệp vụ) / TL (dev) / QA / DES |
-| **Requirement** | 4 role (employee/leader/manager/director); JWT + refresh; cookie HttpOnly (`sb-access-token`); RBAC cứng tầng edge (`proxy.ts`) chặn `/admin` với employee/leader; RLS 47 policy; audit log mọi thay đổi. |
-| **Acceptance Criteria** | (1) Token giả/hết hạn → 307 về `/login?callbackUrl=`; (2) employee/leader vào `/admin` → redirect `/dashboard`; (3) security headers present (`X-Content-Type-Options`, `X-Frame-Options`, ...); (4) rate-limit 100 req/60s (req 101 → 429). |
-| **Test Cases** | TC1: login đúng → cookie HttpOnly set. TC2: fake token → 307. TC3: mỗi role truy cập `/admin`. TC4: curl `-D -` kiểm tra header. TC5: 105 request → 100×401 + 5×429. TC6: RLS set claims → employee thấy 0 dòng, manager/director thấy 4/1/1/3/3. |
-| **Test Data** | 4 user seed (`@fdi.local`); JWT có `app_metadata.role`. |
-| **Risk / Dependency / Constraint** | Rủi ro: lộ secret (đã yêu cầu rotate 2026-11-17). Dependency: Supabase Auth, Upstash Redis. Constraint: internal trust model — not high-security multi-tenant (`rbac_matrix.md` §7). |
-| **Scope / Team / Timeline / Budget** | Scope: login, RBAC, audit, rate-limit. Team: TL+ENGR+QA. Timeline: Bản 1 (10 tuần). Budget: TBD. |
+| Test ID | `AUTH-TC-001` |
+| Linked AC | `AUTH-AC-02` |
+| Preconditions | Role, project assignment, schema revision |
+| Steps | Các bước tái lập rõ ràng |
+| Expected | HTTP/DB/UI result theo contract đã phê duyệt |
+| Actual | Kết quả quan sát |
+| Status | Not Run / Pass / Fail / Blocked |
+| Evidence | URL CI/report/screenshot/log |
+| Defect | Ticket ID, severity, owner |
+| Tester / timestamp | Cá nhân và thời gian |
 
-### 4.3 Customers (Khách hàng)
+## 7. Delivery plan, dependencies, estimation
 
-| Mục | Nội dung |
-|---|---|
-| **Owner** | MGR / ENGR / QA / DES |
-| **Requirement** | Hồ sơ khách (tên, ngành, đầu mối), site/chi nhánh, dịch vụ, hợp đồng (giá trị/SLA/bảo trì), lịch sử dự án/sự cố/ticket, "sức khỏe khách hàng". |
-| **Acceptance Criteria** | (1) CRUD đầy đủ, form có label/placeholder; (2) chỉ manager/director thêm/sửa (theo matrix); (3) employee/leader chỉ xem; (4) mọi thay đổi ghi audit (DB trigger + client helper). |
-| **Test Cases** | TC1: manager tạo customer → row xuất hiện. TC2: employee cố sửa → nút ẩn/blocked. TC3: INSERT/UPDATE/DELETE → audit 0→1→2→3 với diff đúng. TC4: validate tên trùng, email format. |
-| **Test Data** | Seed: 1 customer (`AUDIT TEST` trong transaction rollback). |
-| **Risk / Dependency / Constraint** | Rủi ro: dữ liệu nhạy cảm (bank, NDA) phải ẩn (`rbac_matrix.md` §5.3). Dependency: bảng `customers`, `sites`. Constraint: giá trị hợp đồng chỉ Director thấy đầy đủ. |
-| **Scope / Team / Timeline / Budget** | Scope: hồ sơ + site + hợp đồng. Team: ENGR+QA+DES. Timeline: Bản 1. Budget: TBD. |
+### 7.1 Roadmap baseline từ v1 — chưa được xác nhận lại
 
-### 4.4 Projects (Dự án)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | TL / ENGR / QA / DES |
-| **Requirement** | Tab: tổng quan, tiến độ & milestone, ảnh onsite, sơ đồ mạng, tủ rack, thiết bị & serial, tài liệu, rủi ro. Progress 0–100%; chỉ chuyển "Deployed" khi đủ checklist bàn giao. |
-| **Acceptance Criteria** | (1) Status enum đúng `planned/in_progress/deployed/paused/ended`; (2) progress trong [0,100]; (3) rule checklist bàn giao khi chuyển deployed; (4) scope theo role (leader sửa team, director duyệt nghiệm thu). |
-| **Test Cases** | TC1: tạo project → milestone hiển thị. TC2: progress=150 → reject. TC3: đổi status thiếu checklist → block. TC4: employee chỉ thấy dự án được gán (RLS). |
-| **Test Data** | Seed: 1 project. |
-| **Risk / Dependency / Constraint** | Dependency: `customers`, `sites`, `devices`. Constraint: checklist bàn giao bắt buộc (`product.md` §4.3). |
-| **Scope / Team / Timeline / Budget** | Scope: CRUD + milestone + checklist + upload. Team: ENGR+QA+DES. Timeline: Bản 1. Budget: TBD. |
-
-### 4.5 Devices (Thiết bị / Serial)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | TL / ENGR / QA / DES |
-| **Requirement** | Serial (xương sống): type, model, MAC, rack, vị trí, bảo hành từ–đến, status `active/inactive/expired`. Liên kết alert/maintenance/warranty. |
-| **Acceptance Criteria** | (1) serial unique trong project; (2) MAC unique; (3) ngày bảo hành `timestamptz`/date đúng; (4) quyền: employee nhập khi được gán, manager sửa/xóa, director chỉ xem. |
-| **Test Cases** | TC1: serial trùng → reject. TC2: gán device → xem được alert/maintenance liên quan. TC3: director cố xóa → blocked. TC4: hạn bảo hành hết → status=expired. |
-| **Test Data** | Seed: 3 device. |
-| **Risk / Dependency / Constraint** | Dependency: `projects`, `sites`, `alerts`, `maintenances`. Rủi ro: serial trùng gây nhầm bảo hành. |
-| **Scope / Team / Timeline / Budget** | Scope: CRUD + liên kết. Team: ENGR+QA+DES. Timeline: Bản 1. Budget: TBD. |
-
-### 4.6 Alerts (Cảnh báo / Sự cố)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | MGR / ENGR / QA / DES |
-| **Requirement** | Nhập tay/dán email; severity `critical/major/minor`; status `new/acknowledged/in_progress/resolved/closed`; ma trận thời gian phản hồi (Critical 15p, Major 1h); gộp trùng; escalation; maintenance window không tính sự cố. |
-| **Acceptance Criteria** | (1) Enum hợp lệ (không có ghost `open` — đã sửa); (2) sort theo severity/status; (3) SLA track từ nhận→đóng; (4) leader giao việc/đóng, manager duyệt RCA. |
-| **Test Cases** | TC1: tạo alert severity=critical → hiện đúng badge. TC2: filter severity. TC3: escalation leader→manager→director. TC4: maintenance window → không tính vi phạm. TC5: gộp alert trùng. |
-| **Test Data** | Seed: 3 alert. |
-| **Risk / Dependency / Constraint** | Dependency: `devices`, `projects`, `works`. Rủi ro: trễ SLA. Constraint: maintenance window logic (`product.md` §4.2). |
-| **Scope / Team / Timeline / Budget** | Scope: alert + severity + SLA + escalation. Team: ENGR+QA+DES. Timeline: Bản 2 (4 tuần). Budget: TBD. |
-
-### 4.7 Maintenance (Bảo trì)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | MGR / ENGR / QA / DES |
-| **Requirement** | Lịch định kỳ/đột xuất (`regular`/`emergency`), thông báo khách, checklist, kết quả; trạng thái `planned/in_progress/completed/skipped`. |
-| **Acceptance Criteria** | (1) Type/schedule/checklist/result lưu đúng; (2) manager duyệt kế hoạch; (3) employee thực hiện; (4) bảo trì trong window không tính sự cố. |
-| **Test Cases** | TC1: tạo lịch định kỳ → due_date đúng. TC2: employee cập nhật result. TC3: manager duyệt. TC4: maintenance window purge alert. |
-| **Test Data** | Seed: 2 maintenance. |
-| **Risk / Dependency / Constraint** | Dependency: `devices`, `projects`, `alerts`. Constraint: thông báo khách phải soạn tay (không tự gửi). |
-| **Scope / Team / Timeline / Budget** | Scope: lịch + checklist + kết quả. Team: ENGR+QA+DES. Timeline: Bản 2. Budget: TBD. |
-
-### 4.8 Reports (Site Report)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | MGR / ENGR / QA / DES |
-| **Requirement** | Báo cáo khảo sát/triển khai/bảo trì; template chuẩn (thông tin site, hiện trạng, công việc, ảnh, tồn đọng, đề xuất, chữ ký); xuất PDF; tổng hợp tuần/tháng. |
-| **Acceptance Criteria** | (1) Type `survey/deployment/maintenance`; (2) ảnh 1–20, mỗi ≤5MB; (3) PDF export đúng template; (4) leader/manager duyệt, director chỉ xem. |
-| **Test Cases** | TC1: tạo report + upload ảnh. TC2: export PDF → nội dung đúng. TC3: file >5MB → reject. TC4: employee tạo, leader duyệt. |
-| **Test Data** | Seed: 1 report. |
-| **Risk / Dependency / Constraint** | Dependency: `projects`, `pdf-lib`, storage. Rủi ro: upload fail → retry queue (`product.md` §10.3). |
-| **Scope / Team / Timeline / Budget** | Scope: form + ảnh + PDF. Team: ENGR+QA+DES. Timeline: Bản 1 (cơ bản) / Bản 3 (PDF). Budget: TBD. |
-
-### 4.9 Admin (Quản trị)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | DIR / TL / QA / DES |
-| **Requirement** | Người dùng, team, vai trò; danh mục dùng chung; cấu hình SLA; audit log; **export/import role config** (§4 #11, API `/api/admin/roles` + UI `/admin/roles`). |
-| **Acceptance Criteria** | (1) Chỉ manager/director truy cập (edge + API check → 403); (2) export JSON có users + roleMatrix; (3) import validate role, upsert theo email, không tự hạ quyền; (4) audit log ghi lại thao tác; (5) UI ẩn với employee/leader. |
-| **Test Cases** | TC1: employee GET → 403. TC2: director GET → 200 JSON đúng schema. TC3: POST role=invalid → 400. TC4: POST upsert → updated count. TC5: manager tự hạ role → skipped. TC6: UI ẩn với employee. |
-| **Test Data** | 4 user seed + file JSON export mẫu. |
-| **Risk / Dependency / Constraint** | Dependency: bảng `users` (password_hash NOT NULL → chỉ update user có sẵn), RLS policies. Constraint: không tạo user mới qua import (phải qua màn hình đặt mật khẩu). |
-| **Scope / Team / Timeline / Budget** | Scope: user/team/role CRUD + export/import + audit. Team: TL+ENGR+QA+DES. Timeline: Bản 1 + §4 #11. Budget: TBD. |
-
-### 4.10 Works (Công việc)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | TL / ENGR / QA / DES |
-| **Requirement** | Người giao/nhận, hạn, ưu tiên, liên kết project/incident; type `maintenance/bug/task`; status `todo/in_progress/completed/on_hold`; tạo từ sự cố. |
-| **Acceptance Criteria** | (1) Liên kết `incident_id`/`project_id` đúng; (2) leader giao team, manager giao leader; (3) employee chỉ thấy việc của mình; (4) incident→task activity. |
-| **Test Cases** | TC1: tạo work từ alert. TC2: gán assignee. TC3: đổi status. TC4: employee chỉ thấy việc mình. |
-| **Test Data** | Seed: 2 work. |
-| **Risk / Dependency / Constraint** | Dependency: `projects`, `alerts`. Constraint: scope theo assignee (`rbac_matrix.md` §3 Work). |
-| **Scope / Team / Timeline / Budget** | Scope: CRUD + giao việc + link. Team: ENGR+QA+DES. Timeline: Bản 2. Budget: TBD. |
-
-### 4.11 Notifications (Thông báo)
-
-| Mục | Nội dung |
-|---|---|
-| **Owner** | MGR / ENGR / QA / DES |
-| **Requirement** | Soạn nội dung email/Zalo/group để **copy** (không tự gửi); đăng ký kênh notification; gắn với alert/maintenance. |
-| **Acceptance Criteria** | (1) Nội dung soạn hiển thị để copy; (2) không có hành vi tự gửi thật; (3) chỉ manager+ soạn/thêm kênh (theo matrix). |
-| **Test Cases** | TC1: soạn nội dung → copy được. TC2: employee cố gửi → blocked. TC3: validate kênh (email format). |
-| **Test Data** | Nội dung mẫu soạn tay (không gửi thật). |
-| **Risk / Dependency / Constraint** | ⚠️ **Chưa có bảng `notifications` trong schema hiện tại** — module này mới ở dạng spec (`roadmap.md` Bản 2), chưa implement. Constraint: KHÔNG tự gửi (rủi ro gửi nhầm khách). |
-| **Scope / Team / Timeline / Budget** | Scope: soạn + copy + registry (cần migration mới). Team: ENGR+QA+DES. Timeline: Bản 2. Budget: TBD (cần migration bảng). |
-
----
-
-## 5. Checklist §9 — đối chiếu nhanh
-
-| §9 # | Yêu cầu | Trạng thái | Bằng chứng |
+| Phase | Phạm vi theo v1 | Duration tham chiếu | Trạng thái |
 |---|---|---|---|
-| 1 | Owner rõ cho mọi module | ✅ | Bảng §3 + §4 (11 module, mỗi module có owner) |
-| 2 | Requirement rõ ràng | ✅ | Dòng "Requirement" mỗi module |
-| 3 | Acceptance criteria | ✅ | Dòng "Acceptance Criteria" mỗi module |
-| 4 | Test plan (case + data) | ✅ | Dòng "Test Cases" + "Test Data" mỗi module |
-| 5 | Owner dev/QA/PM/design | ✅ | Bảng §3 (cột dev, QA, design) |
-| 6 | Scope/team/timeline/budget | ✅ | Dòng cuối mỗi module (budget = TBD, không bịa) |
-| 7 | Risk/dependency/constraint | ✅ | Dòng "Risk / Dependency / Constraint" mỗi module |
+| Bản 1 | Auth/RBAC, Customers, Projects, Devices, Admin, Site Report cơ bản | 10 tuần | **Estimate inherited / unvalidated** |
+| Bản 2 | Alerts, Maintenance, Works, Notifications | 4 tuần | **Estimate inherited / unvalidated** |
+| Bản 3 | Dashboard, Site Report PDF | 2 tuần | **Estimate inherited / unvalidated** |
 
-> **Lưu ý trung thực:** budget để `TBD` vì không có số liệu thật; module Notifications
-> **chưa có bảng DB** (mới spec). Không ghi ✅ cho items chưa có bằng chứng.
+**Mâu thuẫn cần xử lý:** Dashboard được nhắc là tính năng cốt lõi trong tài liệu sản phẩm nhưng bảng ownership xếp Bản 3; Site Report xuất hiện Bản 1 và Bản 3. Không tự đổi lịch khi chưa được phê duyệt.
+
+### 7.2 Estimation template
+
+| Module | Complexity | Dev person-days | QA person-days | Design person-days | Dependency | Confidence |
+|---|---|---|---|---|---|---|
+| Mỗi module | S/M/L/XL | TBD | TBD | TBD | Ticket/ADR | Low/Med/High |
+
+**Budget = TBD**, chỉ tính sau khi xác nhận headcount, availability, đơn giá, hạ tầng, license và contingency. Không dùng tổng tuần làm bằng chứng đã đủ nguồn lực.
+
+## 8. Decision log / unresolved issues (bắt buộc chốt trước khi ký AC)
+
+| ID | Vấn đề | Tác động | Owner quyết định đề xuất | Trạng thái |
+|---|---|---|---|---|
+| DEC-01 | Ai là System Owner và các DRI cá nhân? | Governance | Sponsor | OPEN |
+| DEC-02 | Quyền Manager đối với `/admin` và export/import role | Security | System Owner | OPEN |
+| DEC-03 | Quy tắc Project–Site nhiều-nhiều | Data integrity | Business + Tech DRI | OPEN |
+| DEC-04 | Serial unique toàn tổ chức, theo site hay project? | Asset lifecycle | Operations + Tech DRI | OPEN |
+| DEC-05 | Tách Alert và Incident; work FK nào? | Workflow, SLA | Operations + Tech DRI | OPEN |
+| DEC-06 | SLA start/stop, maintenance window, escalation | Contract compliance | Operations Manager | OPEN |
+| DEC-07 | Site Report workflow, required photo, PDF phase | Delivery UAT | Project Manager | OPEN |
+| DEC-08 | Auth/session/RLS contract thực tế và Supabase Auth schema | Security | Tech Lead | OPEN |
+| DEC-09 | Notification chỉ copy hay lưu lịch sử/template? | Scope/DB | Operations Manager | OPEN |
+| DEC-10 | Dashboard bản nào; KPI formula và scope | Roadmap | Product Owner | OPEN |
+| DEC-11 | Audit trigger + helper có ghi trùng? | Compliance | Tech Lead | OPEN |
+| DEC-12 | Bản 1/2/3 duration, capacity và budget | Planning | Product Owner + Delivery Lead | OPEN |
+
+## 9. Risk register
+
+| ID | Risk | Impact | Likelihood | Mitigation | Owner đề xuất |
+|---|---|---|---|---|---|
+| R-01 | RBAC UI-only hoặc RLS bypass | Critical | TBD | Server/DB negative tests, service-role review | Tech Lead |
+| R-02 | Test seed chỉ một project không phát hiện scope leak | High | High | Cross-department dataset | QA Lead |
+| R-03 | Alert bị xóa khi bảo trì | High | TBD | Suppress with audit, không purge | Operations Lead |
+| R-04 | Audit log trùng hoặc thiếu actor | High | TBD | One canonical audit mechanism + integration test | Tech Lead |
+| R-05 | Report upload mất ảnh/dữ liệu | High | TBD | Atomic metadata flow, retry, orphan cleanup | Engineering Lead |
+| R-06 | Scope creep và roadmap không nhất quán | High | High | Change control, one approved roadmap | Product Owner |
+| R-07 | Nhầm role nghiệp vụ với role delivery | Medium | High | DRI matrix và RACI | Product Owner |
+
+*Likelihood/Impact chưa có bằng chứng phải để TBD; các mức nêu trên là đánh giá rủi ro sơ bộ, không phải sự cố đã xảy ra.*
+
+## 10. Release gates & Definition of Done [PROPOSED]
+
+Một module **chỉ được đánh dấu Accepted** khi:
+
+1. Requirement và AC đã được Business DRI phê duyệt; không còn blocker P0.
+2. Implementation được review; migration có rollback/forward-fix plan nếu có thay đổi schema.
+3. Unit/integration/E2E tests áp dụng đã chạy, có evidence; negative RBAC tests pass.
+4. Không có defect Critical/High chưa được chấp nhận rủi ro bằng văn bản; các ngoại lệ được ghi decision log.
+5. QA xác nhận test result, Business DRI ký UAT; Release Owner chấp thuận production.
+6. Monitoring, backup/restore và runbook được kiểm tra theo mức độ thay đổi.
+
+### Release sign-off record
+
+| Field | Value |
+|---|---|
+| Release version / commit | TBD |
+| Included requirement IDs | TBD |
+| CI / test evidence | TBD |
+| Security / RLS verification | TBD |
+| UAT signer / date | TBD |
+| Known defects / accepted risks | TBD |
+| Rollback plan / owner | TBD |
+| Go / No-Go / date | TBD |
+
+## 11. Checklist §9 — trạng thái trung thực
+
+| # | Nhóm nội dung | Có trong tài liệu? | Đủ điều kiện Approved/Accepted? |
+|---|---|---|---|
+| 1 | Module ownership | Có role đề xuất | **Chưa** — thiếu cá nhân DRI |
+| 2 | Requirements | Có baseline | **Chưa** — cần chốt open decisions |
+| 3 | Acceptance criteria | Có AC đề xuất | **Chưa** — cần business sign-off |
+| 4 | Test plan & test data | Có strategy/cases | **Chưa** — chưa có test run evidence |
+| 5 | Dev/QA/PM/Design owners | Có phân vai | **Chưa** — thiếu bổ nhiệm cá nhân |
+| 6 | Scope/team/timeline/budget | Có baseline, TBD | **Chưa** — thiếu effort/capacity/budget |
+| 7 | Risk/dependency/constraint | Có register | **Chưa** — thiếu xác nhận owner/mitigation |
+
+**Kết luận:** 7/7 nhóm nội dung **đã được mô tả**, **0/7 được xác nhận hoàn tất ở mức phê duyệt và bằng chứng** trong phạm vi tài liệu này. Đây không phải kết luận hệ thống chưa triển khai; cần đối chiếu repo, CI và biên bản UAT để cập nhật trạng thái.
+
+## 12. Hành động tiếp theo
+
+1. **P0:** Bổ nhiệm DRI cá nhân; chốt DEC-02, 05, 06, 08 về quyền, Alert/Incident, SLA và Auth.
+2. **P0:** Tạo dataset cross-role/cross-project; chạy kiểm thử server/API/RLS và lưu evidence.
+3. **P1:** Chốt data model Project–Site–Device; đồng bộ `product.md`, `api_spec.md`, `rbac_matrix.md`.
+4. **P1:** Duyệt workflow Site Report và tiêu chí PDF; xác nhận roadmap/effort.
+5. **P1:** Thiết lập requirement-to-test traceability và UAT sign-off cho từng module.
 
 ---
 
-*Người lập: [Tên] – [Vai trò] – 2026-11-17 – v1.0*  
-*Nguồn: `checklist.md` §9, `rbac_matrix.md`, `product.md`, `roadmap.md`, `database_schema.sql`.*
+**Change log**
+
+| Version | Date | Summary |
+|---|---|---|
+| 1.0 | 2026-11-17 | Source ownership/test plan |
+| 2.0 | 2026-11-17 | Tách role và DRI, bổ sung AC testable, test data cross-scope, decision/risk registers, release gates; bỏ giả định 7/7 đã đạt |

@@ -1,156 +1,59 @@
-# 📝 FDI_Project — Release Notes & Release Procedure
+# FDI Project Management — Release Candidate & Release Governance v2.0
 
-> 📁 **Vị trí tài liệu:** `docs/RELEASE_NOTES.md`  
-> Phiên bản tài liệu 1.0 · Ngày lập 2026-11-17 · Ngôn ngữ: Tiếng Việt  
-> Bám sát `checklist.md` §8 #9 (release: pre-release, release note, hotfix), §10 (lưu trữ & conference), `roadmap.md`.
+> Document revision 2.0 (2026-11-17). Proposed version: `1.0.0-rc.1` **unverified**. Production release: **NOT CONFIRMED**. Commit/tag/deploy evidence: **NOT PROVIDED**.
 
----
+## 1. Release status
+**NO-GO pending evidence.** The supplied original release notes claim many features implemented, but an uploaded code-review report contradicts them. No current repository SHA, CI run, staging verification or UAT approval is attached. Do not promote `v1.0.0` or advertise completed features until verified.
 
-## 1. Thông tin bản phát hành
-
-| Trường | Giá trị |
-|---|---|
-| Phiên bản | **v1.0.0** |
-| Ngày phát hành | Dự kiến 2026-11-17 (chưa tag — xem §6) |
-| Tên bản | Bản 1 (MVP) + tính năng Bản 2/3 đã code |
-| Môi trường | Internal (website nội bộ) |
-| Base URL API | `/api/v1` (quyết định Dev Director 2026-11-17) |
-| Trạng thái | Pre-release (xem §3 — còn hạng mục ⏳) |
-
----
-
-## 2. Tính năng phát hành
-
-### 2.1 Bản 1 — MVP (theo `roadmap.md` §2.1)
-
-| Module | Trạng thái code | Ghi chú |
-|---|---|---|
-| Login & RBAC (4 role, scope, audit) | ✅ | JWT + cookie HttpOnly; RLS 47 policy; audit migration 004 |
-| Customer (hồ sơ, site, liên hệ) | ✅ | `/customers` — CrudPage + useProfile |
-| Project (milestone, progress, status) | ✅ | `/projects` |
-| Device (serial, rack, bảo hành) | ✅ | `/devices` |
-| Quản trị (gán role, cấu hình) | ✅ | `/admin` + `/admin/roles` (export/import §4 #11) |
-| Site Report (cơ bản) | ✅ | `/reports` |
-
-**Target Bản 1:** chạy thử với 1 dự án + 1 khách thật.
-
-### 2.2 Bản 2/3 — tính năng đã code (theo `roadmap.md` §2.2–2.3)
-
-| Module | Trạng thái code | Ghi chú |
-|---|---|---|
-| Alerts / Sự cố (severity, SLA, escalation) | ✅ | `/alerts`; enum `open` ghost đã sửa → `new/acknowledged/in_progress` |
-| Maintenance (lịch, checklist, kết quả) | ✅ | `/maintenance` |
-| Works (giao việc, ưu tiên, link alert) | ✅ | qua CrudPage; chưa route riêng |
-| Notifications (soạn email/Zalo/group) | ⏳ | Mới ở dạng spec — **chưa có bảng DB** |
-| Dashboard (KPI, lọc, drill-down) | ✅ | `/dashboard`; số liệu query thật, GMT+7, scope 4 role |
-| Site Report PDF | ✅ | Dùng `pdf-lib` |
-
-### 2.3 Hạ tầng & chất lượng
-
-- ✅ Supabase Auth + RLS (13 bảng, 47 policy, 8 helper `SECURITY DEFINER`).
-- ✅ Audit log (DB trigger + client helper; verify DB thật 0→3).
-- ✅ Rate-limit Upstash Redis Lua atomic — verify E2E `100×401 + 5×429`, `Retry-After: 48`.
-- ✅ Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS).
-- ✅ `proxy.ts` (Next.js 16) — hết warning deprecated `middleware`.
-- ✅ CI GitHub Actions; `npm test` 17/17 pass; lint 0 error; `tsc --noEmit` exit 0; build ✓.
-- ✅ Export/import role config §4 #11: `GET/POST /api/admin/roles` + `/admin/roles`.
-- ✅ Tài liệu §9: `docs/PRD_OWNERSHIP.md`; §10: `docs/RELEASE_NOTES.md`, `docs/USER_GUIDE.md`.
-
----
-
-## 3. Pre-release checklist (§8 #9)
-
-| # | Hạng mục | Trạng thái | Ghi chú / lệnh verify |
+## 2. Candidate scope and proof needed
+| Module | Claim in original notes | Current document status | Evidence required |
 |---|---|---|---|
-| 1 | Code review (peer/senior) | ⏳ | Chưa có bằng chứng review chính thức |
-| 2 | Unit + integration + E2E test | ✅ | `npm test` → 17/17 pass |
-| 3 | Performance test (load/stress) | ⏳ | Chưa có bằng chứng |
-| 4 | Security test (penetration/static) | ⏳ | Một phần: headers + rate-limit verified; chưa pen-test |
-| 5 | Accessibility (WCAG AA) | ⏳ | Chưa có bằng chứng |
-| 6 | Document: README/API docs/user guide | ✅/⏳ | `docs/README.md`, `docs/api_spec.md`, `docs/USER_GUIDE.md` có; API export/import chưa trong `api_spec.md` |
-| 7 | DB migration: schema/seed/backup | ✅/⏳ | 001–004 executed thật; **backup/restore chưa test** |
-| 8 | Environment: staging/production config | ⏳ | Chưa set env production (xem `.env.example`) |
-| 9 | **Pre-release + release note + hotfix** | ✅ | File này (release note + hotfix procedure §4) |
-| 10 | Monitoring (alert/log/crash) | ⏳ | Chưa cấu hình Sentry |
-| 11 | Post-release (bug/feedback/next iteration) | ⏳ | Chưa release nên chưa có |
-| 12 | Final commit, merge main, tag version | ⏳ | Theo yêu cầu task: **KHÔNG commit/push** |
+| Auth/RBAC | Implemented, RLS and audit | Unverified | auth E2E, RLS negative tests, migration logs |
+| Customers, Projects, Devices | Implemented | Unverified | CRUD + scope E2E |
+| Admin/role import | Implemented | Unverified / high risk | escalation tests, dry-run, audit |
+| Site Reports and PDF | Implemented | Unverified | upload/download/export tests |
+| Alerts, Maintenance, Works | Implemented/partial | Unverified | workflow tests and DB records |
+| Dashboard | Scoped live KPI | Unverified | role-scope reconciliation |
+| Rate limit/CI | Tests reported passing | Unverified at release SHA | test output, CI run link |
+| Notifications | Not implemented | Out of release scope | none unless added to candidate |
 
-**Quyết định release:** chỉ tag v1.0.0 sau khi các mục ⏳ #1, #3, #4, #5, #7(backup), #8, #10 hoàn tất.
+## 3. Hard release gates
+- [ ] Named Release Owner and Product Owner sign-off
+- [ ] Candidate commit SHA + immutable artifact recorded
+- [ ] Secrets rotated after reported insecure sharing; environment access reviewed
+- [ ] No critical/high unresolved auth/RBAC/RLS issues
+- [ ] Unit, integration and E2E tests green on candidate SHA
+- [ ] Migration tested on staging snapshot; backup AND restore verified
+- [ ] Staging smoke test: login, cross-scope access, CRUD, report, upload, PDF
+- [ ] Production environment variables, monitoring, alerts, logs configured
+- [ ] Accessibility and basic performance assessed against agreed thresholds
+- [ ] User guide/screenshots reflect verified release behavior
+- [ ] Rollback and incident owner confirmed
 
-### Blockers thật cần xử lý trước release
-- 🔴 **Xoay vòng secret**: Supabase → Rotate secret key & JWT key; Database → Reset password (đã gửi qua kênh không an toàn ngày 2026-11-17).
-- 🔴 **Seed dùng `@fdi.local` / `example.invalid`** — không phải data khách thật. Phải thay trước demo khách.
-- 🟡 Backup/restore chưa test (xem `docs/BACKUP_RESTORE.md`).
-- 🟡 `UPSTASH_REDIS_REST_URL/TOKEN` phải set trong production, nếu thiếu → fallback soft-limit (per-instance).
+## 4. Release approval record
+| Field | Value |
+|---|---|
+| Version | TBD (candidate `1.0.0-rc.1`) |
+| Git SHA / CI run | TBD |
+| Staging URL | TBD |
+| Database migration version | TBD |
+| QA evidence | TBD |
+| Product Owner UAT | TBD |
+| Security review | TBD |
+| Release Owner decision | **NO-GO pending verification** |
+| Production deployment time | Not established |
 
----
+## 5. Hotfix and rollback
+1. Triage severity and customer impact; declare incident owner.
+2. Branch from deployed production tag/commit, not an arbitrary main branch.
+3. Reproduce, add regression test, implement smallest safe fix.
+4. Run typecheck/lint/tests/build and security regression; obtain review.
+5. Deploy staging, smoke test, approve production, monitor and document.
+6. Roll back application artifact when safe. **Do not automatically roll back a destructive database migration**; use tested forward-fix/restore procedures with explicit data-loss review.
+7. Post-incident review and corrective actions.
 
-## 4. Hotfix procedure (§8 #9)
+## 6. Release note template (publish only after GO)
+Version; release date; commit; deployment environment; verified features; known limitations; migrations; user-visible changes; security changes (without secrets); rollback plan; support contact; sign-offs.
 
-Quy trình xử lý lỗi sau release (không tự đẩy — cần phê duyệt):
-
-1. **Phát hiện & phân loại**
-   - Nguồn: monitoring/Sentry, báo cáo người dùng, QA.
-   - Phân mức: `P0` (production down / mất data / lộ bảo mật), `P1` (lỗi chức năng chính), `P2` (lỗi nhẹ).
-2. **Tạo hotfix branch**
-   - `git checkout -b hotfix/v1.0.1 <tag v1.0.0>` (từ tag đang chạy, KHÔNG từ main nếu main đã có commit mới).
-3. **Reproduce & fix tối thiểu**
-   - Viết failing test trước (`npm test`), sửa ít dòng nhất, KHÔNG refactor trong hotfix.
-4. **Verify (bắt buộc)**
-   - `npx tsc --noEmit` → exit 0
-   - `npm run lint` → 0 error
-   - `npm test` → pass
-   - `npm run build` → exit 0
-5. **Review & approve** — tối thiểu 1 senior (§8 #1).
-6. **Deploy lên staging trước**, smoke test các flow bị ảnh hưởng.
-7. **Deploy production** → tag `v1.0.1` → cập nhật mục §5 "Lịch sử phiên bản".
-8. **Post-mortem** (§8 #11): ghi nguyên nhân, cách phòng tránh, thêm regression test.
-9. **Rollback** nếu hotfix gây lỗi mới: redeploy tag trước đó `v1.0.0`; DB rollback theo `docs/BACKUP_RESTORE.md` (chỉ khi có migration phá dữ liệu).
-
-> ⚠️ Với dự án này: KHÔNG commit/push khi chưa có phê duyệt. Mọi deploy production cần xác nhận Dev Director.
-
----
-
-## 5. Lịch sử phiên bản & Semantic Versioning
-
-### 5.1 Quy ước version (SemVer 2.0.0)
-
-Định dạng `MAJOR.MINOR.PATCH`:
-
-| Thay đổi | Tăng | Ví dụ |
-|---|---|---|
-| Không tương thích ngược (đổi schema/API contract) | **MAJOR** | `1.0.0 → 2.0.0` |
-| Thêm tính năng, tương thích ngược | **MINOR** | `1.0.0 → 1.1.0` (Bản 2 thêm Notifications) |
-| Sửa lỗi, tương thích ngược | **PATCH** | `1.0.0 → 1.0.1` (hotfix) |
-| Pre-release | hậu tố | `1.1.0-rc.1`, `1.1.0-beta.1` |
-| Build metadata | `+` | `1.0.0+20261117` |
-
-### 5.2 Lịch sử
-
-| Phiên bản | Ngày | Thay đổi chính |
-|---|---|---|
-| `0.1.0` | 2026-11-16 | Khung Next.js 16 + TS + Supabase, login + RBAC cơ bản |
-| `1.0.0-rc.1` | 2026-11-17 | Bản 1 + Dashboard + audit + rate-limit + export/import role config (pre-release) |
-| `1.0.0` | Dự kiến 2026-11-17 | Release chính thức sau khi pre-release checklist xong |
-| `1.1.0` | TBD | Bản 2 đầy đủ: Notifications (cần migration bảng) |
-| `2.0.0` | TBD | Bản 3 mở rộng / thay đổi contract (nếu có) |
-
-### 5.3 Tag & git
-
-- Tag theo `v` prefix: `v1.0.0`, `v1.0.1`.
-- Tag chỉ tạo sau khi merge vào `main` và CI xanh.
-- **Task hiện tại: KHÔNG commit/push** — chỉ tạo file, chờ parent agent quyết định.
-
----
-
-## 6. Ghi chú trung thực
-
-- Build/timestamp trong file này lấy từ bằng chứng `docs/checklist.md` §12 (Verification Log) — KHÔNG suy diễn.
-- "Dự kiến 2026-11-17" là ngày lập tài liệu, không phải ngày deploy thật (chưa deploy).
-- Các mục ⏳ ở §3 là hạng mục **chưa có bằng chứng**, không đánh dấu ✅.
-- Budget/ngày phát hành chính thức để TBD thay vì bịa số.
-
----
-
-*Người lập: [Tên] – [Vai trò] – 2026-11-17 – v1.0*  
-*Nguồn: `checklist.md` §8 #9 / §10, `roadmap.md`, `SPEC_REALITY_CHECK.md`.*
+## 7. Historical context
+Original `RELEASE_NOTES.md` listed 13 DB tables, 47 RLS policies, 17 passing tests, Upstash limit, PDF and role import/export as complete. These are **historical claims** that require verification against the actual release candidate. Its own pre-release list marks review, performance, security, accessibility, backup, production configuration and monitoring incomplete.

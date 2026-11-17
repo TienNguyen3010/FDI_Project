@@ -277,7 +277,7 @@
 ### Điểm cần làm rõ
 - ~~Chưa có file `.env`~~ → **đã verify DB thật trực tiếp** qua pooler (không cần file .env). Migration đã execute; RLS đã test. Các mục còn ⏳ là: backup/restore, audit-log write, export/import quyền, rate-limit, tests.
 - 🔴 **Bảo mật**: user đã gửi DB password + secret key + JWT key qua Telegram. Tôi **không lưu vào file nào** (chỉ env tạm), nhưng bắt buộc **xoay vòng**: Supabase → Settings → API → Rotate secret key & JWT key; Database → Reset password. Test user `director@fdi.local` đã xóa.
-- **Đã chốt (Dev Director 2026-11-17)**: base URL `/api/v1`; Admin = Manager (hạn chế, `product.md:381`) + Director; Dashboard Director = "Xem toàn công ty". Đã sửa `database_schema.sql` + `ClientBody.tsx`.
+- **Đã chốt (Dev Director 2026-11-17)**: base URL `/api/v1`; Admin = Manager (hạn chế, `product.md §6 FR-03`) + Director; Dashboard Director = "Xem toàn công ty". Đã sửa `database_schema.sql` + `ClientBody.tsx`.
 - **Đã sửa**: enum alert `open` (ghost value) → `new/acknowledged/in_progress`; date cứng `2026-11-17` → tính theo GMT+7; `middleware.ts` → `proxy.ts` (hết warning Next 16).
 - **Đã xong**: audit-log write (migration 004 + client helper + CrudPage) verify DB thật 0→3; Dashboard hết hardcode + hết nút dead.
 - **Đã xong**: rate-limit dùng Upstash Redis (Lua atomic), verify E2E 100×401 + 5×429, hết bug Edge isolate. Cần set `UPSTASH_REDIS_REST_URL/TOKEN` trong production (xem `.env.example`); nếu thiếu vẫn chạy soft-limit.
