@@ -16,7 +16,7 @@
 | Môi trường local | Linux 6.1.0-amd64, Node + npm, RAM ~1.4 Gi; `next@16.4.6`, `react@19.3.0`, `typescript@^5`, `eslint@^9` |
 | Môi trường DB | Supabase/PostgreSQL **17.12**, pooler `aws-0-ap-northeast-1` (Tokyo) — theo `docs/checklist.md:261`; phiên này **không có credential DB trong shell** nên không re-query DB thật |
 | Git remote | **Không có** (`git remote -v` → rỗng) |
-| Phạm vi | Đối chiếu `RELEASE_NOTES.md`, `SPEC_REALITY_CHECK.md`, `tech_spec.md`, `product.md`, `rbac_matrix.md`, `project_structure.md`, `README.md` (+ 4 file v2 còn lại) với `app/`, `lib/`, `migrations/`, `package.json`, `tests/`, `docs/checklist.md` mục "Nhật ký xác minh" |
+| Phạm vi | Đối chiếu `../05-release/RELEASE_NOTES.md`, `SPEC_REALITY_CHECK.md`, `../03-architecture/tech_spec.md`, `../01-product/product.md`, `../04-security/rbac_matrix.md`, `../03-architecture/project_structure.md`, `README.md` (+ 4 file v2 còn lại) với `app/`, `lib/`, `migrations/`, `package.json`, `tests/`, `docs/checklist.md` mục "Nhật ký xác minh" |
 
 ### Phân loại nhãn
 - **VERIFIED** — có output thật từ lệnh chạy trong phiên này tại SHA `29dc349`.
@@ -73,7 +73,7 @@
 3. **🟠 Live DB chưa re-verify (E-06/E-07)**: phiên này không có credential DB; các số 13 bảng/47 policy/RLS 0-vs-all/audit 0→3 chỉ có trong nhật ký xác minh. Muốn nâng lên VERIFIED cần chạy lại query trên Supabase thật tại SHA này với secret đã rotate (không lưu vào file).
 4. **🟠 E2E / Redis live / build chưa re-run (E-05/E-08/E-09/E-19)**: các bằng chứng 100×401+5×429, render PDF 349 KB, build `--webpack` là từ phiên trước. Không tự nhận đã re-chạy.
 5. **🟠 Chưa có Incidents riêng & SLA chưa apply (E-13/E-14)**: incident chỉ là KPI/dòng ma trận; view `v_alert_sla` nằm trong migration 005 chưa execute. Không ghi SLA là "live".
-6. **🟠 Release gates vẫn GAP (E-19/E-20)**: không E2E test, không staging deploy, không backup/restore drill, không CI workflow/remote. `RELEASE_NOTES.md` giữ NO-GO là chính xác.
+6. **🟠 Release gates vẫn GAP (E-19/E-20)**: không E2E test, không staging deploy, không backup/restore drill, không CI workflow/remote. `../05-release/RELEASE_NOTES.md` giữ NO-GO là chính xác.
 7. **🟡 11 file v2 chưa commit**: artifact này cũng là working-tree modification; Anchor SHA ở trên là của **code/HEAD**, không phải của nội dung v2 (v2 chưa có SHA riêng).
 
 ---

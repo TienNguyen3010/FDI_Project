@@ -281,7 +281,7 @@
 - **Đã sửa**: enum alert `open` (ghost value) → `new/acknowledged/in_progress`; date cứng `2026-11-17` → tính theo GMT+7; `middleware.ts` → `proxy.ts` (hết warning Next 16).
 - **Đã xong**: audit-log write (migration 004 + client helper + CrudPage) verify DB thật 0→3; Dashboard hết hardcode + hết nút dead.
 - **Đã xong**: rate-limit dùng Upstash Redis (Lua atomic), verify E2E 100×401 + 5×429, hết bug Edge isolate. Cần set `UPSTASH_REDIS_REST_URL/TOKEN` trong production (xem `.env.example`); nếu thiếu vẫn chạy soft-limit.
-- **CI/CD (§6 #6)**: file workflow đã soạn tại [`docs/CI_WORKFLOW.yml.example`](CI_WORKFLOW.yml.example) nhưng **chưa push lên `.github/workflows/`** — PAT không có scope `workflow`. Để bật: copy file vào `.github/workflows/ci.yml` trên GitHub UI (Settings → Actions → General hoặc tạo file trực tiếp), hoặc cấp scope `workflow` rồi push. Deploy/rollback chưa cấu hình.
+- **CI/CD (§6 #6)**: file workflow đã soạn tại [`docs/CI_WORKFLOW.yml.example`](../05-release/examples/ci.yml) nhưng **chưa push lên `.github/workflows/`** — PAT không có scope `workflow`. Để bật: copy file vào `.github/workflows/ci.yml` trên GitHub UI (Settings → Actions → General hoặc tạo file trực tiếp), hoặc cấp scope `workflow` rồi push. Deploy/rollback chưa cấu hình.
 - **Build trên máy này**: RAM 1.4Gi → `npm run build` (Turbopack) bị OOM; dùng `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack` (đã verify ✓). Trên Vercel (RAM lớn hơn) giữ nguyên `npm run build`.
 - **Còn blocker thật** (giữ ⏳): seed dùng `@fdi.local` / `example.invalid` — không phải data thật của khách. Backup/restore chưa test.
 - Repo chưa phải git repository → mục §8/§10 commit/tag không thể làm cho đến khi `git init`.

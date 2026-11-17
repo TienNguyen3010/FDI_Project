@@ -10,7 +10,7 @@
 
 FDI Project Management is an **internal, single-organization web application** for managing customers, sites, projects, equipment, incidents, maintenance, work and field reports. **No SaaS, subscription billing, tenant provisioning or multi-tenant architecture.**
 
-Preserve four business roles: **Employee, Leader, Manager, Director**. Technical system administrators are a **separate operational privilege**, not automatically equivalent to Director. The implementation baseline described in `project_structure.md` is **one Next.js 16 App Router application, Supabase/PostgreSQL and object storage**; verify actual code before adopting any change.
+Preserve four business roles: **Employee, Leader, Manager, Director**. Technical system administrators are a **separate operational privilege**, not automatically equivalent to Director. The implementation baseline described in `../03-architecture/project_structure.md` is **one Next.js 16 App Router application, Supabase/PostgreSQL and object storage**; verify actual code before adopting any change.
 
 **Clarification needed:** Original PRD says the website runs “inside Claude”; project structure says standalone Next.js. The target hosting, deployment and runtime must be confirmed. Do not treat an AI development assistant as the production runtime.
 
@@ -171,6 +171,6 @@ Identifiers use UUIDs. Store timestamps in UTC, render in user-configured timezo
 
 ## 12. Document governance
 
-This PRD owns **why, who, what, priority and acceptance**. Detailed implementation belongs in `tech_spec.md`; API schemas in `api_spec.md`; UI behavior in `ui_ux_spec.md`; permissions in `rbac_matrix.md`; migrations in versioned SQL; actual-versus-planned status in `SPEC_REALITY_CHECK.md`.
+This PRD owns **why, who, what, priority and acceptance**. Detailed implementation belongs in `../03-architecture/tech_spec.md`; API schemas in `../03-architecture/api_spec.md`; UI behavior in `../02-design/ui_ux_spec.md`; permissions in `../04-security/rbac_matrix.md`; migrations in versioned SQL; actual-versus-planned status in `SPEC_REALITY_CHECK.md`.
 
 **Change control:** Every approved scope change updates this PRD, its decision log, impacted specs, tests and roadmap. Existing source code is not automatically compliant with this proposal.

@@ -90,6 +90,6 @@
 
 - Không đặt mốc tuần cụ thể vì phụ thuộc dữ liệu & vòng chỉnh sửa
 - Ưu tiên module có ích tức thì, tránh bắt đầu bằng nhập tài sản nhàm chán
-- Dùng checklist `checklist.md` cho mỗi phase
+- Dùng checklist `../00-governance/checklist.md` cho mỗi phase
 
 ---

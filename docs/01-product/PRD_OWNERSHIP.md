@@ -4,9 +4,9 @@
 **Ngày:** 2026-11-17  
 **Đường dẫn đề xuất:** `docs/PRD_OWNERSHIP.md`  
 **Trạng thái:** DRAFT — chưa phê duyệt, chưa xác nhận triển khai  
-**Nguồn:** `PRD_OWNERSHIP.md` v1.0 do nhóm cung cấp; các tham chiếu `product.md`, `rbac_matrix.md`, `roadmap.md`, `checklist.md`, `database_schema.sql` chưa được đối chiếu trực tiếp trong lần biên tập này.
+**Nguồn:** `PRD_OWNERSHIP.md` v1.0 do nhóm cung cấp; các tham chiếu `product.md`, `../04-security/rbac_matrix.md`, `roadmap.md`, `../00-governance/checklist.md`, `database_schema.sql` chưa được đối chiếu trực tiếp trong lần biên tập này.
 
-> **Nguyên tắc:** Tài liệu này quản trị ownership, nghiệm thu và bằng chứng kiểm thử. `product.md` là nguồn yêu cầu nghiệp vụ; `rbac_matrix.md` là nguồn ma trận quyền; `tech_spec.md`/`api_spec.md` là nguồn contract kỹ thuật. Nếu mâu thuẫn, ghi **OPEN / cần quyết định**, không tự giả định đã được chốt.
+> **Nguyên tắc:** Tài liệu này quản trị ownership, nghiệm thu và bằng chứng kiểm thử. `product.md` là nguồn yêu cầu nghiệp vụ; `../04-security/rbac_matrix.md` là nguồn ma trận quyền; `../03-architecture/tech_spec.md`/`../03-architecture/api_spec.md` là nguồn contract kỹ thuật. Nếu mâu thuẫn, ghi **OPEN / cần quyết định**, không tự giả định đã được chốt.
 
 ## 1. Phạm vi và nguyên tắc
 
@@ -352,7 +352,7 @@ Một module **chỉ được đánh dấu Accepted** khi:
 
 1. **P0:** Bổ nhiệm DRI cá nhân; chốt DEC-02, 05, 06, 08 về quyền, Alert/Incident, SLA và Auth.
 2. **P0:** Tạo dataset cross-role/cross-project; chạy kiểm thử server/API/RLS và lưu evidence.
-3. **P1:** Chốt data model Project–Site–Device; đồng bộ `product.md`, `api_spec.md`, `rbac_matrix.md`.
+3. **P1:** Chốt data model Project–Site–Device; đồng bộ `product.md`, `../03-architecture/api_spec.md`, `../04-security/rbac_matrix.md`.
 4. **P1:** Duyệt workflow Site Report và tiêu chí PDF; xác nhận roadmap/effort.
 5. **P1:** Thiết lập requirement-to-test traceability và UAT sign-off cho từng module.
 

@@ -23,8 +23,9 @@ test('.env.example có placeholder Supabase + Upstash (không phải secret th�
   assert.ok(!/Fdi@Project2026|sb_secret_|ghp_/.test(env), '.env.example lộ secret')
 })
 
-test('docs/checklist.md có Nhật ký xác minh', () => {
-  assert.ok(read('docs/checklist.md').includes('Nhật ký xác minh'))
+test('00-governance/checklist.md có Nhật ký xác minh', () => {
+  // Đường dẫn cập nhật theo cấu trúc /docs phân lớp (00-governance).
+  assert.ok(read('docs/00-governance/checklist.md').includes('Nhật ký xác minh'))
 })
 
 test('đủ migration 001-004', () => {

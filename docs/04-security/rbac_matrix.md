@@ -2,7 +2,7 @@
 
 **Status:** REVIEW REQUIRED · **Single-Organization, internal use only** · **No SaaS / Multi-Tenant** · **Date:** 2026-11-17
 
-> This document revises `rbac_matrix.md` v1 in coordination with `api_spec.md` v1. It defines a **proposed authorization contract**; no assertion is made that RLS policies or API guards currently implement it. Validate against actual code, DB policies and business owners.
+> This document revises `rbac_matrix.md` v1 in coordination with `../03-architecture/api_spec.md` v1. It defines a **proposed authorization contract**; no assertion is made that RLS policies or API guards currently implement it. Validate against actual code, DB policies and business owners.
 
 ## 1. Core security principles
 
