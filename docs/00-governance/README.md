@@ -1,4 +1,6 @@
-# 📚 FDI_Project — Documentation Hub v2.0 (tổ chức phân lớp)
+# 00-governance — Quản trị & bằng chứng
+
+> ← [Index tổng `/docs`](../README.md) · Phần này liệt kê chi tiết nhóm governance.
 
 > **Nguồn gốc:** 11 tài liệu v2.0. Bản v1 chỉ giữ `api_spec.md`, `roadmap.md`, `checklist.md` vì v2 còn trích dẫn.
 > Trạng thái: Proposed baseline — **không phải bằng chứng triển khai** · Cập nhật 2026-11-17 · Commit `6be8437`.
