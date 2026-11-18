@@ -38,6 +38,8 @@ Expected sections: Dashboard, Customers, Projects, Devices, Alerts/Incidents, Ma
 3. Record remediation and resolution evidence.
 4. Close only with appropriate permission. Whether Alert and Incident are separate entities remains a product decision.
 
+> DD decision 2026-11-17: Incident là **trạng thái xử lý của Alert**, không phải entity riêng trong v1; hệ thống giữ MỘT bảng `alerts`, tách entity `incidents` deferred. (xem DD_DECISIONS_P0.md)
+
 ### Maintenance
 Review assigned schedule and checklist; record execution evidence; submit for supervisor approval. Never delete monitoring history merely because a maintenance window exists.
 

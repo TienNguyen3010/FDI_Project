@@ -39,6 +39,8 @@ The original v1.0 listed “SaaS / Subscription” without specifying the corres
 - **Document:** private attachments, metadata and download authorization.
 - **Dashboard / Audit:** aggregated operational KPIs and traceability.
 
+> DD decision 2026-11-17: Giữ MỘT entity `alerts`; Incident = **trạng thái xử lý của Alert** (render qua `IncidentLifecycle`), KHÔNG phải entity riêng trong v1; tách bảng `incidents` deferred. Dòng "Alert / Incident: incidents..." ở trên là proposal cũ, giữ lại để traceability. (xem DD_DECISIONS_P0.md)
+
 Module boundaries should be enforced in application services; avoid direct writes into another module’s tables except through explicitly defined application contracts.
 
 ## 3. Logical architecture
@@ -84,6 +86,8 @@ The API communicates independently with PostgreSQL and object storage; PostgreSQ
 
 Use foreign keys, indexes based on measured queries, UTC timestamps, transactional changes, and explicit delete/archive rules. **Do not add tenant_id or Tenant/Membership tables.** For device/project consistency, enforce via composite FK or transactional application validation plus DB constraints where possible. Avoid a polymorphic `owner_type/owner_id` without a clear integrity strategy; separate join tables may be preferable.
 
+> DD decision 2026-11-17: Device serial giữ rule migration đã chạy: `UNIQUE (project_id, serial)` + `UNIQUE (mac_address)` **toàn cục**; `normalized_serial` **chưa có cột** → backlog, không ghi là đã có. Dòng "Unique (project_id, normalized_serial)" trong bảng ở trên là proposal cũ, giữ lại để traceability. (xem DD_DECISIONS_P0.md)
+
 ## 5. Authorization and data access
 
 - Authentication establishes **who** the user is; authorization establishes **what resources** they can access.
@@ -94,6 +98,8 @@ Use foreign keys, indexes based on measured queries, UTC timestamps, transaction
 - Default deny; do not trust project_id, site_id or role values from request bodies as proof of access.
 
 **Permission matrix — requires Product Owner sign-off**
+
+> DD decision 2026-11-17: Đồng bộ về 4 tên canonical — giữ Manager/Leader; **Admin → Director**, **Engineer → Employee**. Giữ cột riêng `system_admin (technical)`: privilege kỹ thuật, cấp explicit + audited, KHÔNG suy từ hierarchy. Bảng Admin/Engineer bên dưới giữ nguyên để traceability. (xem DD_DECISIONS_P0.md)
 
 | Operation | Admin | Manager | Leader | Engineer |
 |---|---|---|---|---|

@@ -94,5 +94,7 @@ Reuse existing color/font tokens where verified; do not assert that CSS tokens o
 ## 9. Open decisions
 Alert vs Incident; Project–Site relationship; Device lifecycle; Site Report approval chain; mobile bottom navigation; upload limits and allowed formats; Director vs Manager permission nuances. Resolve with Product Owner before high-fidelity design.
 
+> DD decision 2026-11-17: Alert/Incident — giữ MỘT entity `alerts`; Incident = trạng thái xử lý của Alert, KHÔNG phải entity riêng trong v1 (`incidents` deferred). Các mục còn lại trong danh sách trên vẫn chờ Product Owner. (xem DD_DECISIONS_P0.md)
+
 ## 10. UX handoff checklist
 Approved screen inventory; state diagrams; permission-aware UI; responsive layouts; accessibility tests; realistic anonymized data; error/empty/loading states; link to requirement and test IDs; signed review.

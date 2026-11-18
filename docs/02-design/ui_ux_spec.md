@@ -42,6 +42,8 @@
 
 **[PROPOSAL — validate with Product Owner]** Initial roles: Administrator, Project Manager, Operations Engineer, Site Reporter, Read-only Viewer. Roles are illustrative, not existing confirmed roles.
 
+> DD decision 2026-11-17: Canonical = **4 business roles: Employee / Leader / Manager / Director**. Năm tên trên là **persona/alias UI**, KHÔNG phải role hệ thống. Alias → canonical: **Administrator → Director**; **Project Manager → Manager**; **Operations Engineer → Employee**; **Site Reporter → Employee**; **Read-only Viewer → Employee (read-only scope)**. (xem DD_DECISIONS_P0.md)
+
 Define a permission matrix per entity and action: `view`, `create`, `edit`, `submit`, `approve`, `assign`, `close`, `delete`, `export`, `administer`.
 
 - Backend authorization is mandatory; hiding UI buttons is not security.
@@ -250,7 +252,7 @@ Required artifacts before a module enters development:
 
 | ID | Question | Owner | Status |
 |---|---|---|---|
-| D-01 | Which roles exist, and which actions can each role perform? | Product Owner | Open |
+| D-01 | Which roles exist, and which actions can each role perform? | Product Owner | Open — Closed by DD_DECISIONS_P0.md |
 | D-02 | What are final Project, Site Report and Alert states/transitions? | Product Owner / Operations | Open |
 | D-03 | Is mobile offline editing truly required? | Product Owner | Open |
 | D-04 | Is Light theme in the first release? | Product Owner / Design | Open |

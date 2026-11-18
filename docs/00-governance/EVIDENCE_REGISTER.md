@@ -7,11 +7,11 @@
 
 | Trường | Giá trị |
 |---|---|
-| Commit SHA (đầy đủ) | `29dc349236320d296b734bed458320b7d812edeb` |
-| Commit SHA (ngắn) | `29dc349` |
-| Commit message | `docs: mark CI/CD as pending until workflow file is enabled on GitHub` |
-| Commit time | `2026-11-17T13:14:08Z` |
-| Ngày đối chiếu | `2026-11-17T13:45:34Z` (UTC) |
+| Commit SHA (đầy đủ) | `5b3290984fd9589736a5b6a221c5bd3279d98531` |
+| Commit SHA (ngắn) | `5b32909` |
+| Commit message | `refactor(W0): extract server authorization to lib/auth, update docs (parallel)` |
+| Audit baseline SHA | `29dc349236320d296b734bed458320b7d812edeb` (`29dc349`, 2026-11-17 — SHA đối chiếu gốc của bảng E-01..E-23 bên dưới) |
+| Ngày đối chiếu | `2026-11-17T13:45:34Z` (UTC); cập nhật evidence 2026-11-18 |
 | Trạng thái 11 file v2 | **Uncommitted working-tree modifications** (`git status --short` → ` M` trên cả 11 file); phiên bản v1 của chúng đã được track tại HEAD |
 | Môi trường local | Linux 6.1.0-amd64, Node + npm, RAM ~1.4 Gi; `next@16.4.6`, `react@19.3.0`, `typescript@^5`, `eslint@^9` |
 | Môi trường DB | Supabase/PostgreSQL **17.12**, pooler `aws-0-ap-northeast-1` (Tokyo) — theo `docs/checklist.md:261`; phiên này **không có credential DB trong shell** nên không re-query DB thật |
@@ -53,6 +53,8 @@
 | E-21 | `README.md:3,36` — status Proposed/Unverified, evidence hierarchy | **VERIFIED** (tự nhất quán) | `README.md:17` "Runtime verification … > test log > code inspection > spec > assertion in release notes"; `:22` vocabulary `Proposed→Approved→Implemented→Verified→UAT Accepted→Released`; `:27-32` source-of-truth map | Artifact này tuân thủ hierarchy đó: dùng lệnh thật + SHA, không nâng cấp trạng thái suy diễn. |
 | E-22 | `product.md:13-15` (D-01) — "runs in Claude" vs standalone Next.js | **VERIFIED** (là open question, đã resolve theo code) | `product.md:150` ghi D-01 là decision blocking; code thực tế là standalone Next.js 16 App Router (`package.json:27`, `app/layout.tsx`, `next.config.ts`) — không có runtime "in Claude" | Tài liệu v2 đúng khi giữ D-01; thực tế code đã là standalone app. |
 | E-23 | Secret hygiene / "đã xoay vòng" (`checklist.md:279`) | **VERIFIED** (không lộ credential trong repo) | `git ls-files \| grep '^\.env$'` → **(none)**; `.gitignore:10-12` ignore `.env*`; `tests/smoke.test.mjs:47-55` quét secret trên tracked files (chính nó tự match → E-03). Artifact này **không chép lại giá trị secret** | Không khẳng định việc rotate trên Supabase đã xong — chỉ xác nhận repo không chứa credential. Rotate là hành động ngoài repo, v2/checklist vẫn yêu cầu. |
+| E-24 | W0 server-auth extraction — `lib/auth/authorize.ts` tách & `app/api/admin/roles/route.ts` reuse | **IMPLEMENTED_UNVERIFIED** (code @ `5b32909`; ⏳ chưa re-run live phiên này) | Source: `lib/auth/authorize.ts` (JWT + `users.role` DB-authoritative, `allowed` parameterized) + `app/api/admin/roles/route.ts` dùng lại helper, bỏ inline trùng — `git show --stat 5b32909`. Evidence recorded: `checklist.md §12` (dòng 265–267) + `SPEC_REALITY_CHECK.md` W0 note (dòng 57): `tsc` 0 / `lint` 0 / `npm test` **22/22 recorded @ `167a674`** | Status IMPLEMENTED_UNVERIFIED do 22/22 là recorded evidence tại `167a674`, chưa re-run trong phiên tài liệu này. Routes/URL không đổi. Xem `project_structure.md §10(a)`. |
+| E-25 | `/api/v1` alias via `proxy.ts` rewrite (DD C-09) | **VERIFIED** (curl smoke recorded + 22/22 @ `167a674`) | `proxy.ts:86-93` rewrite `/api/v1/*` → `/api/*` (không redirect); `git show --stat 167a674`. Recorded: curl thật `/api/v1/auth`, `/api/v1/auth/session`, `/api/v1/admin/roles` → cùng 401/body với `/api/*`; smoke test **22/22** — ghi tại `DD_DECISIONS_P0.md` C-09 (`✅ Đã implement & verify`), `CONTRADICTIONS_V2.md`. Giải quyết E-11 CONFLICT | Không đổi cấu trúc thư mục route. ⏳ chưa re-run curl phiên này (chỉ trích evidence recorded). Xem `project_structure.md §10(b)`. |
 
 ---
 
@@ -69,7 +71,7 @@
 ## Điểm cần làm rõ
 
 1. **✅ Test đã xanh (E-03)**: lúc audit `npm test` = 20/21 do self-match tại `tests/smoke.test.mjs`; parent đã fix (skip file test khỏi self-scan) → **21/21 pass**. Gate "tests green" trong `RELEASE_NOTES.md:25` đã đạt ở mức unit/smoke.
-2. **🔴 `/api/v1` chưa hiện thực (E-11)**: tech_spec/api_spec/checklist chọn làm base path nhưng code không có prefix và không có OpenAPI. Cần quyết định: sửa docs cho khớp code, hoặc đổi route handlers — đừng để CONFLICT này tồn tại.
+2. **✅ `/api/v1` đã hiện thực (E-25, cập nhật 2026-11-18)**: trước đây E-11 ghi CONFLICT — giờ đã giải quyết tại `167a674` (alias qua `proxy.ts` rewrite, curl recorded + 22/22, DD C-09). E-11/C-06 giữ nguyên là historical claim tại baseline `29dc349`.
 3. **🟠 Live DB chưa re-verify (E-06/E-07)**: phiên này không có credential DB; các số 13 bảng/47 policy/RLS 0-vs-all/audit 0→3 chỉ có trong nhật ký xác minh. Muốn nâng lên VERIFIED cần chạy lại query trên Supabase thật tại SHA này với secret đã rotate (không lưu vào file).
 4. **🟠 E2E / Redis live / build chưa re-run (E-05/E-08/E-09/E-19)**: các bằng chứng 100×401+5×429, render PDF 349 KB, build `--webpack` là từ phiên trước. Không tự nhận đã re-chạy.
 5. **🟠 Chưa có Incidents riêng & SLA chưa apply (E-13/E-14)**: incident chỉ là KPI/dòng ma trận; view `v_alert_sla` nằm trong migration 005 chưa execute. Không ghi SLA là "live".

@@ -44,7 +44,7 @@ The uploaded `SPEC_REALITY_CHECK.md` reports an early scaffold, while `RELEASE_N
 A. Identify current repo SHA and deployment SHA; B. run lint/typecheck/build/tests; C. inspect routes and schema/migrations; D. test RBAC/RLS negative cases; E. test full business workflows; F. validate metrics against DB; G. test backup/restore and production security; H. obtain QA/UAT sign-off.
 
 ## 6. Decision log
-- D-01: Confirm canonical API prefix (`/api/v1` is documented but not verified).
+- D-01: Confirm canonical API prefix (`/api/v1` is documented but not verified). **Closed by DD_DECISIONS_P0.md** — canonical `/api/v1` confirmed; implemented at `167a674` via `proxy.ts` rewrite (curl smoke recorded + 22/22; E-25). Historical matrix C-06 above kept as-is.
 - D-02: Approve Manager admin scope and Director operational permissions.
 - D-03: Decide Alert vs Incident lifecycle and link to Work.
 - D-04: Approve upload limits and storage lifecycle.
@@ -55,3 +55,4 @@ A. Identify current repo SHA and deployment SHA; B. run lint/typecheck/build/tes
 ## W0 — Refactor theo project_structure.md v2 (2026-11-17)
 
 - **W0 (server auth helper):** tạo `lib/auth/authorize.ts` — xác thực JWT + đối chiếu `users.role` (DB authoritative), parameterized `allowed` roles. `app/api/admin/roles/route.ts` đã dùng lại helper, bỏ bản inline trùng. Verify: `tsc` 0, `lint` 0, `npm test` 22/22. Routes/URL không đổi (DD evidence hierarchy).
+- **Cập nhật 2026-11-18:** W0 **đã xong & commit** tại `5b32909` (`git show --stat 5b32909`: 4 files, +110). Số `22/22` là recorded evidence tại `167a674` (xem `checklist.md §12`, E-24); phiên này chạy lại `npm test` → **23/23 pass** (thêm 1 smoke test W0) và `npm run lint` → 0 error. Chi tiết: `03-architecture/project_structure.md §10`.

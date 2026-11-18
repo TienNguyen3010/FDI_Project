@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import { logAudit } from '@/lib/audit'
 import type { Database } from '@/lib/types'
 import { can, useProfile, type Role } from '@/lib/hooks/useProfile'
+import {
+  STATUS_ORDER,
+  STATUS_LABEL,
+  SLA_HOURS,
+  SLA_LABEL,
+  type AlertStatus,
+  type Severity,
+} from '@/features/alerts/schema'
+import { changeAlertStatus, createWorkFromAlert } from '@/features/alerts/actions'
 import {
   Button,
   Badge,
@@ -21,22 +28,6 @@ import { AlertTriangle, CheckCircle2, ListTodo } from 'lucide-react'
 // Nhận alert object (Row) từ trang chi tiết; mọi ghi DB đều qua supabase-js có kiểu.
 
 type AlertRow = Database['public']['Tables']['alerts']['Row']
-type AlertStatus = 'new' | 'acknowledged' | 'in_progress' | 'resolved' | 'closed'
-type Severity = 'critical' | 'major' | 'minor'
-
-const STATUS_ORDER: AlertStatus[] = ['new', 'acknowledged', 'in_progress', 'resolved', 'closed']
-
-const STATUS_LABEL: Record<AlertStatus, string> = {
-  new: 'Mới',
-  acknowledged: 'Đã nhận',
-  in_progress: 'Đang xử lý',
-  resolved: 'Đã giải quyết',
-  closed: 'Đã đóng',
-}
-
-// Ngưỡng SLA theo mức độ (giờ): critical 4h, major 8h, minor 24h.
-const SLA_HOURS: Record<Severity, number> = { critical: 4, major: 8, minor: 24 }
-const SLA_LABEL: Record<Severity, string> = { critical: 'Critical', major: 'Major', minor: 'Minor' }
 
 interface Transition {
   to: AlertStatus
@@ -111,73 +102,24 @@ export function IncidentLifecycle({ alert }: { alert: AlertRow }) {
   const changeStatus = async (transition: Transition) => {
     setBusy(transition.to)
     setMessage(null)
-    const isResolved = transition.to === 'resolved' || transition.to === 'closed'
-    const resolvedAt =
-      isResolved && !alert.resolved_at ? new Date().toISOString() : alert.resolved_at
-    // "Nhận xử lý" = nhận quyền xử lý sự cố -> gán owner_id cho người thao tác.
     const ownerId =
       transition.to === 'acknowledged' && profile?.id ? profile.id : alert.owner_id
-
-    const { data, error } = await supabase
-      .from('alerts')
-      .update({ status: transition.to, resolved_at: resolvedAt, owner_id: ownerId })
-      .eq('id', alert.id)
-      .select('id')
-
+    const result = await changeAlertStatus({ to: transition.to, alert, ownerId })
     setBusy(null)
-    if (error) {
-      setMessage(`Không cập nhật được trạng thái: ${error.message}`)
-      return
-    }
-    // RLS có thể chặn ghi mà không trả error -> select về rỗng.
-    if (!data || data.length === 0) {
-      setMessage('Không cập nhật được trạng thái (bị chính sách bảo mật chặn).')
-      return
-    }
-
-    void logAudit({
-      action: 'UPDATE',
-      resourceType: 'alerts',
-      resourceId: alert.id,
-    })
-    setMessage(`Đã chuyển trạng thái: ${STATUS_LABEL[transition.to]}.`)
-    router.refresh()
+    setMessage(result.message)
+    if (result.ok) router.refresh()
   }
 
   const createWorkFromIncident = async () => {
     setBusy('create-work')
     setMessage(null)
-    const { data, error } = await supabase
-      .from('works')
-      .insert({
-        id: typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : String(Date.now()),
-        project_id: alert.project_id,
-        incident_id: alert.id,
-        assignee_id: alert.owner_id,
-        creator_id: profile?.id ?? null,
-        type: 'incident',
-        title: `Xử lý sự cố: ${alert.description.slice(0, 120)}`,
-        description: `Công việc tạo tự động từ sự cố ${alert.id}. Mức độ: ${SLA_LABEL[severity]}.`,
-        status: 'assigned',
-        priority: alert.priority,
-      })
-      .select('id')
-      .single()
-
+    const result = await createWorkFromAlert({ alert, severity, creatorId: profile?.id ?? null })
     setBusy(null)
-    if (error) {
-      setMessage(`Không tạo được công việc: ${error.message}`)
-      return
+    setMessage(result.message)
+    if (result.ok) {
+      router.push('/works')
+      router.refresh()
     }
-    if (!data) {
-      setMessage('Không tạo được công việc (bị chính sách bảo mật chặn).')
-      return
-    }
-    void logAudit({ action: 'CREATE', resourceType: 'works', resourceId: data.id })
-    router.push('/works')
-    router.refresh()
   }
 
   const available = TRANSITIONS.filter(

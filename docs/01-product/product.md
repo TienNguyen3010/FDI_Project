@@ -57,9 +57,13 @@ Dashboard; Customers; Sites; Projects; Devices; Work; Alerts & Incidents; Mainte
 ### Canonical domain relationships (proposed)
 - Customer `1:N` Site; Customer `1:N` Project.
 - Project `N:M` Site via `project_sites` (must validate customer consistency).
+
+> DD decision 2026-11-17: Giữ quan hệ **N:1** — `projects.site_id` FK → `sites`, `sites.customer_id` FK → `customers`; KHÔNG tạo bảng `project_sites` trong phase này. Quan hệ N:M **deferred sang v3**, cần migration + data migration + retest UI/API/RLS. Dòng N:M ở trên giữ lại để traceability. (xem DD_DECISIONS_P0.md)
 - Device is an inventory asset, with current location and **device_assignment_history**; project links record deployments, not permanent ownership.
 - Project `1:N` Milestone and Work; Work may also link Incident or Maintenance.
 - Alert `N:1` Incident when correlated; an alert can exist without an incident.
+
+> DD decision 2026-11-17: Giữ **MỘT entity `alerts`**. "Incident" là **trạng thái xử lý của Alert** (render qua `IncidentLifecycle`), KHÔNG phải entity/bảng riêng trong v1; tách bảng `incidents` là **deferred** (cần migration + FK `works.incident_id`). (xem DD_DECISIONS_P0.md)
 - Site Report belongs to a project/site and has attachments, author, reviewer, version and approval history.
 - Contract/SLA belongs to the agreed service/customer/site scope, not simply a project by default; exact contractual granularity TBD.
 
@@ -74,12 +78,16 @@ Identifiers use UUIDs. Store timestamps in UTC, render in user-configured timezo
 
 ### FR-02 Project & milestones
 - Project lifecycle: `PLANNED → IN_PROGRESS → READY_FOR_HANDOVER → DEPLOYED → CLOSED`, with `ON_HOLD` and `CANCELLED` transitions defined in a state-transition table before implementation.
+
+> DD decision 2026-11-17: Enum canonical lấy từ migration: `planned / in_progress / deployed / paused / ended`. Map PRD → migration: `READY_FOR_HANDOVER → deployed` (kèm checklist), `ON_HOLD → paused`, `CANCELLED → ended`. Không thêm giá trị mới vào DB lúc này. (xem DD_DECISIONS_P0.md)
 - Progress is computed from approved milestone weighting or explicit tracked progress; choose one policy, never silently mix.
 - **AC:** Deployment/handover is blocked if required checklist items or approvals are missing; the user sees specific missing items; transition is audited.
 
 ### FR-03 Device inventory
 - Capture manufacturer, model, normalized serial, MAC when available, warranty dates, current site/rack, installation status and historical assignments.
 - **Serial policy:** prefer unique `(manufacturer, normalized_serial)` when valid; define handling for missing/reused vendor serials and legacy duplicates. Do not assume uniqueness only within project.
+
+> DD decision 2026-11-17: Giữ rule migration đã chạy: `UNIQUE (project_id, serial)` + `UNIQUE (mac_address)` **toàn cục**. `normalized_serial` chỉ là khái niệm đề xuất, **chưa có cột** → **backlog**, KHÔNG ghi là đã có. (xem DD_DECISIONS_P0.md)
 - **AC:** Moving a device retains previous assignment history and does not erase prior incident/report associations.
 
 ### FR-04 Work and maintenance
@@ -90,9 +98,13 @@ Identifiers use UUIDs. Store timestamps in UTC, render in user-configured timezo
 ### FR-05 Alert and Incident
 - Alert: source, source event ID, detected timestamp, device/site, severity, deduplication key, raw payload reference.
 - Incident: business impact, severity, assignee, acknowledgement, resolution, closure, RCA, SLA policy reference.
+
+> DD decision 2026-11-17: Giữ MỘT entity `alerts`; "Incident" ở đây là **trạng thái xử lý của Alert**, không phải entity riêng trong v1. Timeline/SLA render từ bảng `alerts`; tách entity `incidents` deferred. (xem DD_DECISIONS_P0.md)
 - Proposed lifecycle: `NEW → ACKNOWLEDGED → IN_PROGRESS → RESOLVED → CLOSED`; `REOPENED` is a controlled transition, not an implicit overwrite.
 - **AC:** Repeated monitoring events with the same dedupe key in the configured window do not create duplicate incidents; every transition is auditable.
 - **SLA:** Define calendar, holidays, timezone, pause rules, response vs resolution clock, maintenance exclusions and severity mapping per contract. Example 15-minute Critical / 1-hour Major from v1 is **illustrative only until approved**.
+
+> DD decision 2026-11-17: Chốt **4h/8h/24h** cho Critical/Major/Minor (giá trị đang chạy), đo từ `created_at` → `resolved_at` hoặc `now()`. Đây là **default nội bộ, KHÔNG phải số hợp đồng**; SLA hợp đồng cấu hình sau, không hardcode. Ví dụ 15p/1h ở trên giữ lại chỉ để traceability. (xem DD_DECISIONS_P0.md)
 
 ### FR-06 Site Report
 - Templates for survey, deployment and maintenance; fields for site, work performed, observations, evidence, pending items and reviewer.

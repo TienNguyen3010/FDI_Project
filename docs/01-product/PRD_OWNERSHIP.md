@@ -147,6 +147,7 @@ AC phải có positive, negative, boundary, access-control và failure/retry cas
 ### 5.4 Projects (`PRJ`)
 
 - `PRJ-AC-01`: Project thuộc customer hợp lệ, trạng thái đúng enum đã chốt.
+> DD decision 2026-11-17: Enum canonical = `planned/in_progress/deployed/paused/ended` (migration); map `READY_FOR_HANDOVER→deployed`, `ON_HOLD→paused`, `CANCELLED→ended`. (xem DD_DECISIONS_P0.md)
 - `PRJ-AC-02`: Progress nhận giá trị từ 0 đến 100; giá trị ngoài miền bị từ chối tại server.
 - `PRJ-AC-03`: Chuyển `deployed` chỉ khi checklist bắt buộc được hoàn thành và người dùng có quyền.
 - `PRJ-AC-04`: User ngoài project/team/department không đọc/sửa project ngoài phạm vi.
@@ -169,6 +170,7 @@ AC phải có positive, negative, boundary, access-control và failure/retry cas
 - `ALT-AC-02`: Gộp trùng không làm mất lịch sử alert gốc; quy tắc dedupe có thể kiểm chứng.
 - `ALT-AC-03`: Acknowledge/assign/escalate ghi actor và thời điểm; không thể chuyển trạng thái trái quy tắc.
 - `ALT-AC-04`: SLA tính theo timestamp, lịch làm việc, hợp đồng và maintenance window đã được phê duyệt.
+> DD decision 2026-11-17: SLA chốt **4h/8h/24h** (Critical/Major/Minor), đo `created_at` → `resolved_at` hoặc `now()`; là **default nội bộ, không phải số hợp đồng** (hợp đồng cấu hình sau). (xem DD_DECISIONS_P0.md)
 - `ALT-AC-05`: Không xóa (`purge`) cảnh báo do maintenance window; nếu suppress, phải giữ dấu vết và lý do.
 - **Test:** duplicate arrival, out-of-order events, SLA boundary, escalation, unauthorized closure.
 - **[OPEN]:** tách `Alert` và `Incident` hay sử dụng một entity; `SLA response` đo tới acknowledgement hay tới first response; mục tiêu 15 phút/1 giờ trong v1 cần xác nhận theo hợp đồng.
@@ -201,6 +203,7 @@ AC phải có positive, negative, boundary, access-control và failure/retry cas
 - `ADM-AC-04`: API và UI thực thi cùng một policy; không dựa vào ẩn menu.
 - **Test:** invalid JSON, duplicate email, privilege escalation, rollback, audit.
 - **[OPEN]:** Manager được phép truy cập phần nào của Admin; role import có thực sự nằm trong MVP; `password_hash` thuộc Supabase Auth hay bảng ứng dụng.
+> DD decision 2026-11-17: Admin = **Manager (hạn chế) + Director**. Ranh giới Manager: `user:read`/`user:update` + `role:read` **chỉ trong department/team mình**; KHÔNG tự nâng role, KHÔNG cấp Director, KHÔNG đổi role người khác department, KHÔNG xem audit toàn cục. Director = full Admin. `system_admin` tách riêng, chỉ cấp explicit + audit, không suy từ hierarchy. (xem DD_DECISIONS_P0.md)
 
 ### 5.10 Works (`WRK`)
 
@@ -284,11 +287,11 @@ AC phải có positive, negative, boundary, access-control và failure/retry cas
 | ID | Vấn đề | Tác động | Owner quyết định đề xuất | Trạng thái |
 |---|---|---|---|---|
 | DEC-01 | Ai là System Owner và các DRI cá nhân? | Governance | Sponsor | OPEN |
-| DEC-02 | Quyền Manager đối với `/admin` và export/import role | Security | System Owner | OPEN |
-| DEC-03 | Quy tắc Project–Site nhiều-nhiều | Data integrity | Business + Tech DRI | OPEN |
-| DEC-04 | Serial unique toàn tổ chức, theo site hay project? | Asset lifecycle | Operations + Tech DRI | OPEN |
-| DEC-05 | Tách Alert và Incident; work FK nào? | Workflow, SLA | Operations + Tech DRI | OPEN |
-| DEC-06 | SLA start/stop, maintenance window, escalation | Contract compliance | Operations Manager | OPEN |
+| DEC-02 | Quyền Manager đối với `/admin` và export/import role | Security | System Owner | OPEN — Closed by DD_DECISIONS_P0.md |
+| DEC-03 | Quy tắc Project–Site nhiều-nhiều | Data integrity | Business + Tech DRI | OPEN — Closed by DD_DECISIONS_P0.md |
+| DEC-04 | Serial unique toàn tổ chức, theo site hay project? | Asset lifecycle | Operations + Tech DRI | OPEN — Closed by DD_DECISIONS_P0.md |
+| DEC-05 | Tách Alert và Incident; work FK nào? | Workflow, SLA | Operations + Tech DRI | OPEN — Closed by DD_DECISIONS_P0.md |
+| DEC-06 | SLA start/stop, maintenance window, escalation | Contract compliance | Operations Manager | OPEN — Closed by DD_DECISIONS_P0.md |
 | DEC-07 | Site Report workflow, required photo, PDF phase | Delivery UAT | Project Manager | OPEN |
 | DEC-08 | Auth/session/RLS contract thực tế và Supabase Auth schema | Security | Tech Lead | OPEN |
 | DEC-09 | Notification chỉ copy hay lưu lịch sử/template? | Scope/DB | Operations Manager | OPEN |

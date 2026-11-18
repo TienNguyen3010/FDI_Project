@@ -270,6 +270,8 @@
 
 | 2026-11-17 | Bản 2 + Bản 3 + export/import + docs (3 subagents, parent fix) | `tsc`, `lint`, `npm test`, `next build --webpack` | tsc 0; lint 0/0; **test 21/21** (thêm 4 PDF test); build ✓ 20 routes | Thêm Works, Incident lifecycle+SLA, notification soạn-copy, PDF pdf-lib+Inter TTF nhúng, tổng hợp tuần/tháng, export/import role, PRD/release/user guide, wireframe. Sửa 4 lint error + 1 TS typo + Next16 segment config + **cài @pdf-lib/fontkit** (pdf-lib không embed TTF nếu chưa register fontkit). Test PDF render thật: `%PDF-`, 349KB, Inter nhúng, dấu tiếng Việt ă â đ ê ô ơ ư đúng. ⚠️ `npm run build` (Turbopack) **OOM trên máy 1.4Gi RAM** → dùng `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack` |
 
+| 2026-11-18 | W0 + DD decisions + P2 Alerts (subagent rớt → parent tiếp quản) | `npx tsc --noEmit --skipLibCheck`; `npm run lint`; `npm test`; `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack`; marker-grep | **TSC_EXIT=0; LINT_EXIT=0; test 23/23 pass; BUILD_EXIT=0 (21 routes)**; marker `features/alerts` = 2 refs/component + 2 refs/page, local dupes = 0 | W0 commit `5b32909`; `/api/v1` alias `167a674`. Áp 8 DD decisions vào 7 spec v2 (23 dòng DD + 8 dòng "Closed by DD"). P2: tách `features/alerts/{schema,actions}.ts`, component & page import domain, URL/behavior giữ nguyên. docs cập nhật: checklist, README, EVIDENCE_REGISTER (E-24/E-25), SPEC_REALITY_CHECK, project_structure §10, RELEASE_NOTES, roadmap, ci.yml (thêm typecheck). Số **23/23** là test chạy thật hôm nay (docs cũ ghi 22/22 tại `167a674`). |
+
 ### Điểm sạch
 - Build production chạy xanh từ đầu đến cuối, không throw lúc collect page data.
 - TypeScript strict: 0 lỗi (`tsc --noEmit` exit 0).

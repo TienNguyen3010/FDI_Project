@@ -59,6 +59,8 @@
 
 **Target:** Quản trị bằng số liệu, báo cáo định kỳ.
 
+> **Cập nhật 2026-11-18:** Refactor cấu trúc theo `03-architecture/project_structure.md §10` — W0 (server auth helper) **xong** tại `5b32909`; `/api/v1` alias xong tại `167a674`; P2 (tách domain Alerts vào `features/alerts/`) **xong, chưa commit** — verify `tsc` 0 · lint 0 · test 23/23 · build ✓ 21 routes. Không đổi target/phase ở trên.
+
 ---
 
 ### 2.4 Bên sau (Tùy chọn & Tăng cường)

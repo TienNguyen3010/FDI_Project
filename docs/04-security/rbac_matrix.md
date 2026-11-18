@@ -64,6 +64,8 @@ Legend: `R` read, `C` create, `U` update, `A` approve/transition, `X` privileged
 
 **Decision needed:** The original matrix allowed Director full Admin control but read-only devices. This proposal retains read-only devices and separates `system_admin` **technical privilege** from Director **business role**. If the business insists Director has system admin rights, grant them explicitly and audit the assignment; never infer them from hierarchy.
 
+> DD decision 2026-11-17: Admin = **Manager (hạn chế) + Director**. Ranh giới Manager: `user:read`/`user:update` + `role:read` **chỉ trong department/team mình**; KHÔNG tự nâng role, KHÔNG cấp Director, KHÔNG đổi role người khác department, KHÔNG xem audit toàn cục. Director = full Admin. `system_admin` tách bạch, **không suy từ hierarchy**, chỉ cấp explicit + audit. (xem DD_DECISIONS_P0.md)
+
 ## 5. Scope evaluation contract
 
 `allow(user, action, resource)` only when all conditions hold:
@@ -145,7 +147,7 @@ All other routes must receive equivalent explicit mapping; deny access until map
 
 1. Confirm source-of-truth tables for user/role/team/department/project assignment.
 2. Inspect current RLS policies, privileged RPCs, route handlers and Supabase session flow.
-3. Decide whether Director receives `system_admin` by explicit grant or only business approvals.
+3. Decide whether Director receives `system_admin` by explicit grant or only business approvals. — Closed by DD_DECISIONS_P0.md
 4. Define which customer records are globally discoverable versus project-related only.
 5. Confirm device ownership and Project–Site cardinality.
 6. Agree whether Incident is separate from Alert and whether report approvals require separation of duties.

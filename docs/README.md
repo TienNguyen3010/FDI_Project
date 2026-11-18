@@ -1,11 +1,13 @@
 # 📚 FDI_Project — Documentation Hub
 
 > Entry point cho toàn bộ tài liệu. Phiên bản baseline **v2.0** (11 tài liệu gốc).
-> Trạng thái: Proposed — **không phải bằng chứng triển khai** · Cập nhật 2026-11-17 · Commit `167a674`.
+> Trạng thái: Proposed — **không phải bằng chứng triển khai** · Cập nhật 2026-11-18 · HEAD `5b32909` (+ working tree chưa commit).
 >
 > 🔎 Đọc trước khi code: [EVIDENCE_REGISTER.md](00-governance/EVIDENCE_REGISTER.md) ·
 > [CONTRADICTIONS_V2.md](00-governance/CONTRADICTIONS_V2.md) ·
-> [**DD_DECISIONS_P0.md**](00-governance/DD_DECISIONS_P0.md) — **8/8 P0 đã chốt (để implement)**.
+> [**DD_DECISIONS_P0.md**](00-governance/DD_DECISIONS_P0.md) — **8/8 P0 đã chốt & đã áp vào 7 spec v2**.
+>
+> ✅ Verify mới nhất (2026-11-18): `tsc` 0 · `lint` 0 · `npm test` **23/23** · `next build --webpack` ✓ 21 routes — xem [checklist §12](00-governance/checklist.md). Refactor: W0 xong (`5b32909`), `/api/v1` alias xong (`167a674`), P2 (tách `features/alerts/`) xong nhưng chưa commit — xem [project_structure §10](03-architecture/project_structure.md).
 
 ## Cấu trúc 6 nhóm
 
