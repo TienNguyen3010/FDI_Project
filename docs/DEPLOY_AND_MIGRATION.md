@@ -97,3 +97,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Commit | `942adac` (không đổi code → không cần redeploy) | push OK |
 
 > Dashboard metrics vẫn là **reference** (baseline/SLA chưa đủ) — không claim production-ready.
+
+## 9. Debug 403 sau grant (2026-11-18)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng | Network tab: 4 API dashboard đều **403**, body 96 bytes, message "Không có customer grant... truy cập dashboard" (OCR ảnh browser) |
+| Loại trừ | RLS DB OK: simulate role `authenticated` + JWT claims → `user_grants=1, projects=1, tickets=3` |
+| Root cause | Route handler tạo client MỚI mỗi request; `setSession()` với `refresh_token: ''` fail → query không gắn JWT → `auth_user_id()` NULL → 0 grants → 403 |
+| Fix | `lib/auth/authorize.ts`: tạo client với `global.headers.Authorization: Bearer <token>` cho mọi query (commit `b4311a9`) |
+| Verify | test 27/27; deploy `EXIT=0`, Ready 28s; HTTP `/` 307 · `/login` 200 · `/dashboard` 307 · `/api/v1/dashboard/health` 401 (unauth đúng) |
+
+> Cần browser refresh để API gọi lại với code mới. Nếu vẫn 403, gửi lại ảnh Network tab (đã fix RLS + auth, khả năng cao hết).
