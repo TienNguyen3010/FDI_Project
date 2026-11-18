@@ -1,36 +1,52 @@
-# FDI_Project — Quản lý dự án, vận hành, sự cố & Site Report
+# FDI_Project — Project OPS v1.0
 
-> Next.js 16 · TypeScript · Tailwind 4 · Supabase · Upstash Redis
-> Phiên bản 1.0 — Bản 1 (MVP) đã build xanh.
+> Next.js 16 · TypeScript · Tailwind 4 · Supabase (Postgres 16) · Upstash Redis
+> **Đang rewrite theo tài liệu v1.0** — xem [`docs/REWRITE_PLAN_v1_0.md`](docs/REWRITE_PLAN_v1_0.md).
 
 ## 📚 Tài liệu
-Tất cả tài liệu thiết kế, checklist và báo cáo được gom trong [`docs/`](docs/README.md):
 
-- [Checklist tiến độ](docs/checklist.md) — trạng thái ✅/❌/⏳ + nhật ký xác minh bằng tool thật
-- [Product / PRD](docs/product.md) · [Roadmap](docs/roadmap.md) · [UI/UX](docs/ui_ux_spec.md)
-- [RBAC matrix](docs/rbac_matrix.md) · [Tech spec](docs/tech_spec.md) · [API spec](docs/api_spec.md)
-- [SPEC_REALITY_CHECK](docs/SPEC_REALITY_CHECK.md) — đối chiếu tài liệu vs code thật
-- Schema CSDL: [`database_schema.sql`](database_schema.sql) · Migrations: [`migrations/`](migrations/README.md)
+Entrypoint duy nhất: [`docs/README.md`](docs/README.md). Các nhóm:
 
-## How to develop
+| Nhóm | Nội dung |
+|---|---|
+| `docs/00-entry/` | Tổng quan v1.0 |
+| `docs/01-product/` | PRD, business rules, ERD, workflow, data dictionary |
+| `docs/02-design/` | UI baseline (green), metric contract, design tokens |
+| `docs/03-contracts/` | API, DB (`001_core.sql`, `002_extended.sql`) |
+| `docs/04-governance/` | ADR, RBAC, release gate, traceability |
+| `docs/05-quality/` | Integration status, UAT, RBAC policy |
+| `docs/06-reference/` | Code mẫu/reference + archive (provenance) |
+
+Plan rewrite: [`docs/REWRITE_PLAN_v1_0.md`](docs/REWRITE_PLAN_v1_0.md) — critique, P0 scope, kiến trúc, roadmap.
+
+## Phát triển
+
 ```bash
 npm install
-cp .env.example .env.local   # điền Supabase URL/anon key; Upstash URL/token cho rate-limit
-npm run dev                  # local dev server
-npm run build                # production build
-npm run start                # production server
-npm run lint                 # eslint
+cp .env.example .env.local   # Supabase URL/anon key; Upstash cho rate-limit
+npm run dev                  # local dev
+npm run check:docs           # guard: secret + version + link + JSON
+npm run test                 # node:test
+npm run build                # production (xem note RAM bên dưới)
 ```
 
-## Cấu trúc
-- `app/` — routes: dashboard, login, 7 module CRUD, API auth
-- `components/` — UI library + CrudPage + ClientBody (sidebar/header)
-- `lib/` — Supabase client, hooks, types, audit, rate-limit
-- `migrations/` — SQL 001→004 (schema, RLS, seed, audit trigger)
-- `docs/` — toàn bộ tài liệu (xem index ở trên)
+> RAM sandbox ~1.4Gi → Turbopack build OOM. Build verified:
+> `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack`.
 
-## Notes
-- Vercel tự detect Next.js (`npm run build` → `npm run start`).
-- Build không cần credential thật (Supabase client lazy); runtime cần env.
-- Rate-limit dùng Upstash Redis; nếu thiếu env vẫn chạy soft-limit per-instance.
-- Repo public — không commit `.env` (đã có trong `.gitignore`).
+## Cấu trúc code (đang chuyển theo schema v1.0)
+
+- `app/(auth)/` — đăng nhập Supabase OIDC
+- `app/(workspace)/` — AppShell green + dashboard + module CRUD theo scope
+- `app/api/v1/` — dashboard read API (5 GET) + auth
+- `components/` — UI semantic (token-driven), shell
+- `lib/rbac/` — policy 6 role / 48 permission, deny-by-default + scope
+- `lib/supabase/`, `lib/audit.ts`, `lib/rate-limit*.ts` — nền tảng đã verify
+- `migrations/` — 001→005 (cũ) + `006_ops_core.sql` (schema/RLS mới theo docs)
+
+## Nguyên tắc rewrite
+
+1. Mọi query chịu customer scope — role grant **không** override scope.
+2. Backend enforce RBAC; UI chỉ phản chiếu permission.
+3. Không persist presentation-only KPI (ADR-009); metric thiếu baseline → `null` + `data_quality`, không số giả.
+4. Không claim production-ready khi `docs/05-quality/INTEGRATION_STATUS.md` còn blocker.
+5. Repo public — không commit `.env` (đã trong `.gitignore`).

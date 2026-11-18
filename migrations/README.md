@@ -1,7 +1,7 @@
 # FDI_Project — Database migrations (Supabase)
 
 Bộ migration SQL chạy **trực tiếp trong Supabase SQL Editor** (không cần psc, không dùng `\i`).
-Thứ tự bắt buộc: **001 → 002 → 003 → 004**. Mỗi file idempotent, có thể chạy lại.
+Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006**. Mỗi file idempotent, có thể chạy lại.
 
 | File | Nội dung |
 |---|---|
@@ -9,6 +9,8 @@ Thứ tự bắt buộc: **001 → 002 → 003 → 004**. Mỗi file idempotent,
 | `002_rls_policies.sql` | Bật RLS 13 bảng; 6 helper `SECURITY DEFINER` lấy role/team/uid an toàn từ JWT `app_metadata` hoặc `public.users`; policies SELECT/INSERT/UPDATE/DELETE cho 4 role theo `rbac_matrix.md`. |
 | `003_seed.sql` | Dữ liệu demo tối thiểu, `ON CONFLICT DO NOTHING`, UUID cố định; không password hash thật / thông tin nhạy cảm. |
 | `004_audit_trigger.sql` | Trigger audit `AFTER INSERT/UPDATE/DELETE` trên 11 bảng nghiệp vụ (ghi `user_id=auth.uid()`, diff OLD/NEW vào cột `changes JSONB`); chạy **sau 003**. |
+| `005_works_sla.sql` | View `v_alert_sla` (SLA/MTTR/% vi phạm, `security_invoker=true`) + 2 index composite `alerts(status,severity)`, `works(assignee_id,incident_id)`. |
+| `006_ops_core.sql` | **Bổ sung schema/RLS cho Dashboard — KHÔNG đụng migration đã apply, KHÔNG đổi cột bảng cũ.** Thêm `user_grants` (map user→customer scope), `project_baselines` + `acceptance_fractions` + view `v_project_progress_baseline` (MET-02 weighted progress), `sla_instances` + `sla_state` (**illustrative**, chờ PO sign-off — MET-04/MET-05); helper `auth_user_id()`, `auth_customer_ids()` + 6 role check `super_admin`/`director`/`project_manager`/`engineer`/`support`/`customer_viewer` (theo `rbac_policy.json`); bật RLS + policy theo customer scope cho **mọi bảng mới**; đăng ký version `006_ops_core`. Chạy **sau 005**. |
 
 ## Cách chạy
 
@@ -17,7 +19,9 @@ Thứ tự bắt buộc: **001 → 002 → 003 → 004**. Mỗi file idempotent,
 3. Tạo query mới → paste `002_rls_policies.sql` → **Run**.
 4. Tạo query mới → paste `003_seed.sql` → **Run**.
 5. Tạo query mới → paste `004_audit_trigger.sql` → **Run** (sau 003).
-6. (Tuỳ) Chạy các câu verify bên dưới trong query mới.
+6. Tạo query mới → paste `005_works_sla.sql` → **Run** (sau 004).
+7. Tạo query mới → paste `006_ops_core.sql` → **Run** (sau 005; bổ sung schema/RLS cho dashboard, không đổi bảng cũ).
+8. (Tuỳ) Chạy các câu verify bên dưới trong query mới.
 
 > Nếu chạy lại cả bộ, không lỗi: bảng/index dùng `IF NOT EXISTS`, policy dùng
 > `DROP POLICY IF EXISTS`, function dùng `CREATE OR REPLACE`, seed dùng

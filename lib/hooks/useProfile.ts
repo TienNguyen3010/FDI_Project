@@ -2,76 +2,63 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { ROLES, hasPermission, type Role, type Permission } from '@/lib/rbac/policy'
 
-export type Role = 'employee' | 'leader' | 'manager' | 'director'
-
-const ROLES: Role[] = ['employee', 'leader', 'manager', 'director']
-
-function isRole(v: unknown): v is Role {
-  return typeof v === 'string' && (ROLES as string[]).includes(v)
-}
+export type { Role, Permission }
+export { ROLES, hasPermission }
 
 export interface Profile {
   id: string
   email: string
   role: Role
-  team: string | null
+  customerIds: string[]
 }
 
 /**
- * Lấy role/email của user hiện tại từ bảng `users` (khớp auth.uid()).
- * - Không throw khi chưa đăng nhập / chưa có DB: trả role mặc định 'employee'.
- * - Dùng cho RBAC mềm (ẩn menu, khóa nút). RBAC cứng nằm ở RLS/middleware.
+ * Lấy role + customer grants cho UI (soft RBAC). RBAC cứng ở RLS/middleware.
+ * Role mặc định `customer_viewer` — KHÔNG bao giờ fallback lên quyền cao.
  */
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [role, setRole] = useState<Role>('employee')
+  const [role, setRole] = useState<Role>('customer_viewer')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-
     async function load(userId: string, email: string | undefined) {
       try {
-        const { data } = await supabase
-          .from('users')
-          .select('id, email, role, team')
-          .eq('id', userId)
-          .maybeSingle()
+        const [{ data: user }, { data: grants }] = await Promise.all([
+          supabase.from('users').select('id, email, role').eq('id', userId).maybeSingle(),
+          supabase.from('user_grants').select('customer_id').eq('user_id', userId),
+        ])
         if (cancelled) return
-        const nextRole = isRole(data?.role) ? data.role : 'employee'
+        const rawRole = user?.role
+        const nextRole: Role = ROLES.includes(rawRole as Role)
+          ? (rawRole as Role)
+          : 'customer_viewer'
+        const customerIds = (grants ?? [])
+          .map((g: { customer_id?: string | null }) => g.customer_id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
         setRole(nextRole)
-        setProfile({
-          id: userId,
-          email: data?.email ?? email ?? '',
-          role: nextRole,
-          team: data?.team ?? null,
-        })
+        setProfile({ id: userId, email: user?.email ?? email ?? '', role: nextRole, customerIds })
       } catch {
-        if (!cancelled) setProfile({ id: userId, email: email ?? '', role: 'employee', team: null })
+        if (!cancelled) setProfile({ id: userId, email: email ?? '', role: 'customer_viewer', customerIds: [] })
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
-
     supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return
-      if (!data.user) {
-        setLoading(false)
-        return
-      }
+      if (!data.user) { setLoading(false); return }
       load(data.user.id, data.user.email)
     })
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
-  return { profile, role, loading }
+  return { profile, role, loading, can: (p: Permission) => hasPermission(role, p) }
 }
 
-/** Kiểm tra role có trong danh sách được phép hay không. */
-export function can(role: Role, allowed: Role[]): boolean {
-  return allowed.includes(role)
+/** Tương thích ngược cho code cũ gọi can(role, allowed). */
+export function can(role: Role, allowed: readonly Permission[]): boolean {
+  return allowed.some((p) => hasPermission(role, p))
 }

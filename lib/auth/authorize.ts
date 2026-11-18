@@ -1,27 +1,22 @@
-// FDI_Project — Server-side authorization helper (project_structure.md v2 §4).
-// Không UI-only: mọi route handler gọi hàm này trước khi đọc/ghi dữ liệu nhạy cảm.
-// Nguyên tắc (rbac_matrix v2 §1): deny by default; role + action + resource scope.
-// JWT role chỉ là gợi ý — DB `users.role` là nguồn chân thực (tránh privilege stale).
+// Project OPS v1.0 — Server-side authorization.
+// Deny by default. Role from DB `users.role` (source of truth) or verified JWT app_metadata.
+// Role grant KHÔNG override resource scope (docs/05-quality/rbac_policy.json:163).
 
 import { cookies } from 'next/headers'
 import { getSupabaseClient } from '@/lib/supabase/server'
+import {
+  ROLES, hasPermission, canAll, isRole, type Role, type Permission, type ScopeGrant,
+} from '@/lib/rbac/policy'
 
-export const ROLES = ['employee', 'leader', 'manager', 'director'] as const
-export type Role = (typeof ROLES)[number]
-
-export function isRole(v: unknown): v is Role {
-  return typeof v === 'string' && (ROLES as readonly string[]).includes(v)
-}
-
-export function can(role: Role, allowed: readonly Role[]): boolean {
-  return allowed.includes(role)
-}
+export { ROLES, hasPermission, canAll, isRole }
+export type { Role, Permission, ScopeGrant }
 
 export interface Authorized {
   ok: true
   userId: string
   email: string
   role: Role
+  grants: ScopeGrant[]
   supabase: ReturnType<typeof getSupabaseClient>
 }
 export interface Denied {
@@ -30,13 +25,24 @@ export interface Denied {
   message: string
 }
 
+/** Đọc role/scope grants từ bảng user_grants (migration 006). Fail-closed. */
+async function loadProfile(supabase: ReturnType<typeof getSupabaseClient>, userId: string) {
+  const [{ data: user }, { data: grants }] = await Promise.all([
+    supabase.from('users').select('id, email, role').eq('id', userId).maybeSingle(),
+    supabase.from('user_grants').select('customer_id').eq('user_id', userId),
+  ])
+  const scopeGrants: ScopeGrant[] = (grants ?? [])
+    .map((g: { customer_id?: string | null }) => g.customer_id)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    .map((id) => ({ kind: 'customer' as const, id }))
+  return { user, scopeGrants }
+}
+
 /**
- * Xác thực session + kiểm tra role theo danh sách cho phép.
- * - 401 nếu chưa đăng nhập / token không hợp lệ / chưa cấu hình Supabase (500).
- * - 403 nếu role không nằm trong `allowed`.
- * - Gắn session vào client để RLS nhận diện đúng user.
+ * Xác thực session + permission. Trả 401 nếu chưa login, 500 nếu chưa config,
+ * 403 nếu thiếu permission. Scope phải kiểm tra riêng bằng canAccessScope().
  */
-export async function authorize(allowed: readonly Role[] = ROLES): Promise<Authorized | Denied> {
+export async function authorize(required: Permission | readonly Permission[] = 'dashboard.read'): Promise<Authorized | Denied> {
   const cookieStore = await cookies()
   const token = cookieStore.get('sb-access-token')?.value
   if (!token) return { ok: false, status: 401, message: 'Chưa đăng nhập.' }
@@ -52,37 +58,29 @@ export async function authorize(allowed: readonly Role[] = ROLES): Promise<Autho
   if (error || !authData.user) {
     return { ok: false, status: 401, message: 'Phiên đăng nhập không hợp lệ.' }
   }
-
-  // Best-effort: getUser đã verify chữ ký; setSession giúp query/insert đi với JWT.
   try {
     await supabase.auth.setSession({ access_token: token, refresh_token: '' })
-  } catch {
-    // bỏ qua — getUser ở trên đã đủ để tin identity
-  }
+  } catch { /* getUser đã verify identity */ }
 
   const user = authData.user
   const meta = (user.app_metadata ?? {}) as Record<string, unknown>
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, email, role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  const role: Role = isRole(profile?.role)
+  const { user: profile, scopeGrants } = await loadProfile(supabase, user.id)
+  const role: Role | null = isRole(profile?.role)
     ? profile.role
-    : isRole(meta.role ?? meta.app_role)
-      ? (meta.role ?? meta.app_role) as Role
-      : 'employee'
+    : isRole(meta.role) ? meta.role : null
 
-  if (!can(role, allowed)) {
+  const needed = typeof required === 'string' ? [required] : required
+  if (!role || !canAll(role, needed)) {
     return { ok: false, status: 403, message: 'Không đủ quyền thực hiện thao tác này.' }
   }
+  if (role === 'super_admin') scopeGrants.push({ kind: 'global' })
 
   return {
     ok: true,
     userId: user.id,
     email: profile?.email ?? user.email ?? '',
     role,
+    grants: scopeGrants,
     supabase,
   }
 }

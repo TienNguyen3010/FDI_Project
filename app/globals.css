@@ -1,30 +1,63 @@
 @import "tailwindcss";
 
+/*
+ * Project OPS — Design Token Green v1.0
+ * Nguồn: docs/02-design/assets/tokens.json (green #008B21/#07872B,
+ * primary #087F30, canvas #F7FAFC) + DESIGN_BASELINE.md.
+ *
+ * Quy tắc Tailwind v4: mỗi token được khai báo 2 lần —
+ *   1) :root { --ten-token: <giá trị> }  (giá trị thật, dùng trong var())
+ *   2) @theme inline { --color-ten-token: var(--ten-token) } (tạo utility)
+ * Thiếu một trong hai → utility bị drop im lặng, build vẫn xanh.
+ */
 :root {
-  /* Backgrounds — 12 màu gốc, GIỮ NGUYÊN theo ui_ux_spec.md §7.1 */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #263244;
-  --bg-modal: #0f172a;
+  /* --- Canvas / surface / nav ------------------------------------------- */
+  --canvas: #f7fafc;
+  --sidebar: #ffffff;
+  --sidebar-group: #f8fcf9;
+  --sidebar-active: #ddf5dc;
+  --sidebar-active-border: #008b21;
+  --sidebar-icon: #07872b;
+  --sidebar-heading: #08752a;
 
-  /* Text */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  /* --- Brand / text / border --------------------------------------------- */
+  --primary: #087f30;
+  --primary-hover: #006c28;
+  --text: #10203e;
+  --muted: #445a7b;
+  --border: #d9e4f2;
+  --surface: #ffffff;
 
-  /* Brand */
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+  /* --- KPI gradient families (GIỮ NGUYÊN theo baseline, không đổi) ------- */
+  --kpi-projects: #087ef3;
+  --kpi-progress: #06b76b;
+  --kpi-tickets: #f58b1a;
+  --kpi-sla: #ef4057;
 
-  /* Status */
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
+  /* --- Ticket donut: 3 bucket loại trừ nhau; SLA risk KHÔNG phải bucket --- */
+  --ticket-in-progress: #149cf3;
+  --ticket-waiting: #f7b900;
+  --ticket-new: #9d4cf1;
+  --risk: #e84853;
 
-  /* Border */
-  --border: #334155;
+  /* --- Trạng thái ---------------------------------------------------------- */
+  --success: #087f30;
+  --warning: #b45309;
+  --danger: #e84853;
+  --info: #087ef3;
 
-  /* Spacing scale — checklist §7 #13/#14 (đồng bộ khoảng cách) */
+  /* --- Alias cũ: giữ tên để component chưa rewrite không vỡ, nhưng trỏ
+         sang palette green v1.0 (không còn dark theme #0f172a) ------------ */
+  --bg-primary: var(--canvas);
+  --bg-secondary: var(--sidebar-group);
+  --bg-card: var(--surface);
+  --bg-modal: var(--surface);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --accent: var(--primary);
+  --accent-hover: var(--primary-hover);
+
+  /* --- Spacing / radius / motion ------------------------------------------ */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -33,15 +66,60 @@
   --space-6: 24px;
   --space-7: 32px;
   --space-8: 48px;
-
-  /* Border radius — checklist §7 #14 (đồng bộ bo góc) */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-
-  /* Motion — checklist §1 #18 (hiệu ứng đồng bộ) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
   --duration-fast: 150ms;
   --duration-normal: 300ms;
+}
+
+@theme inline {
+  /* Tailwind semantic utilities: bg-card, text-muted-foreground, ... */
+  --color-background: var(--canvas);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-primary: var(--primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--sidebar-group);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--sidebar-group);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--sidebar-active);
+  --color-accent-foreground: var(--sidebar-heading);
+  --color-destructive: var(--risk);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  /* Design-token utilities dùng trực tiếp trong dashboard / shell */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-group: var(--sidebar-group);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-border: var(--sidebar-active-border);
+  --color-sidebar-icon: var(--sidebar-icon);
+  --color-sidebar-heading: var(--sidebar-heading);
+  --color-kpi-projects: var(--kpi-projects);
+  --color-kpi-progress: var(--kpi-progress);
+  --color-kpi-tickets: var(--kpi-tickets);
+  --color-kpi-sla: var(--kpi-sla);
+  --color-ticket-in-progress: var(--ticket-in-progress);
+  --color-ticket-waiting: var(--ticket-waiting);
+  --color-ticket-new: var(--ticket-new);
+  --color-risk: var(--risk);
+
+  --radius-card: 14px;
+  --radius-section: 16px;
+  --text-h1: 30px;
+  --text-kpi: 34px;
+  --text-section: 12px;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {
@@ -49,22 +127,41 @@
 }
 
 html {
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Focus indicator rõ, nhất quán cho mọi phần tử tương tác (checklist §7 #4, §8 #5) */
+/* Focus indicator rõ, nhất quán (44px target + 2px ring — tokens §accessibility) */
 :where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Mọi control tương tác phải đạt 44px theo tokens.json accessibility. */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Bảng dữ liệu cho máy đọc màn hình (accessible chart data table). */
+.sr-only-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Tôn trọng cài đặt giảm chuyển động của hệ điều hành */

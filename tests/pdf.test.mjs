@@ -24,8 +24,8 @@ test('file font Inter tồn tại và có magic bytes TTF 00010000', () => {
   }
 })
 
-test('lib/pdf.ts dùng PDFDocument.create + embedFont Inter (không dùng font chuẩn)', () => {
-  const src = read('lib/pdf.ts')
+test('P2 legacy: pdf.ts dùng PDFDocument.create + embedFont Inter', () => {
+  const src = read('legacy/lib/pdf.ts')
   assert.ok(src.includes('PDFDocument.create'), 'thiếu PDFDocument.create()')
   assert.ok(src.includes('Inter-Regular.ttf'), 'thiếu tên file Inter-Regular.ttf')
   assert.ok(src.includes('Inter-Bold.ttf'), 'thiếu tên file Inter-Bold.ttf')
@@ -35,9 +35,9 @@ test('lib/pdf.ts dùng PDFDocument.create + embedFont Inter (không dùng font c
   assert.ok(src.includes('Asia/Ho_Chi_Minh'), 'thiếu múi giờ GMT+7')
 })
 
-test('các route API PDF tồn tại và trả application/pdf', () => {
-  const detail = read('app/api/reports/[id]/pdf/route.ts')
-  const summary = read('app/api/reports/summary/pdf/route.ts')
+test('P2 legacy: route API PDF (đã tách khỏi build) trả application/pdf', () => {
+  const detail = read('legacy/reports/pdf-id-route.ts')
+  const summary = read('legacy/reports/pdf-summary-route.ts')
   for (const [name, src] of [['detail', detail], ['summary', summary]]) {
     assert.ok(src.includes("'application/pdf'"), `${name}: thiếu Content-Type application/pdf`)
     assert.ok(src.includes('Content-Disposition'), `${name}: thiếu Content-Disposition`)
@@ -47,9 +47,9 @@ test('các route API PDF tồn tại và trả application/pdf', () => {
   assert.ok(detail.includes('status: 500'), 'detail: thiếu xử lý 500')
 })
 
-test('trang chi tiết & tổng hợp tồn tại, gọi API PDF và dùng Toast', () => {
-  const detailPage = readPage('reports/[id]/page.tsx')
-  const summaryPage = readPage('reports/summary/page.tsx')
+test('P2 legacy: trang PDF detail/summary (đã tách khỏi build)', () => {
+  const detailPage = read('legacy/reports/report-detail-page.tsx')
+  const summaryPage = read('legacy/reports/report-summary-page.tsx')
   assert.ok(detailPage.includes('/api/reports/${id}/pdf'), 'detail: thiếu fetch API PDF')
   assert.ok(detailPage.includes('Xuất PDF'), 'detail: thiếu nút Xuất PDF')
   assert.ok(summaryPage.includes('/api/reports/summary/pdf?period='), 'summary: thiếu fetch API PDF')

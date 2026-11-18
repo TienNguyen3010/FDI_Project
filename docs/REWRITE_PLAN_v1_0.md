@@ -12,7 +12,7 @@
 | Dashboard | 5 GET: summary, ticket-status, incidents, ticket-trend, (health) — metric có `as_of`, `effective_scope`, scope filter | `03-contracts/api/dashboard_openapi_executable.json`, `05-quality/INTEGRATION_STATUS.md:14-22` |
 | Metric | `sla_risk` **KHÔNG** phải ticket status; donut status mutually exclusive; weighted progress theo baseline | `02-design/assets/tokens.json:53`, `05-quality/INTEGRATION_STATUS.md:19-22` |
 | Design token | Green sidebar `#008B21`/`#07872B`, primary `#087F30`, canvas `#F7FAFC`; IPC KPI giữ nguyên gradient | `02-design/assets/tokens.json:4-25`, ADR-008 `04-governance/ADR.md:4` |
-| RBAC | 6 role × ~46 permission, matrix machine-readable | `05-quality/rbac_matrix.csv`, `05-quality/rbac_policy.json` |
+| RBAC | 6 role × ~48 permission, matrix machine-readable | `05-quality/rbac_matrix.csv`, `05-quality/rbac_policy.json` |
 | UI baseline | `DESIGN_BASELINE.md` + `design_reference_approved.png` (approved, green sidebar) | `02-design/DESIGN_BASELINE.md:3` |
 
 ## 2. ĐIỂM CẦN LÀM RÕ / MÂU THUẨN (chốt P0 để giải quyết)

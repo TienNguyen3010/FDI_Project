@@ -10,8 +10,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { cn } from "@/lib/utils"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from '@/lib/utils'
+import { cva, type VariantProps } from 'class-variance-authority'
 import {
   AlertCircle,
   AlertTriangle,
@@ -21,30 +21,33 @@ import {
   X,
 } from 'lucide-react'
 
+/*
+ * Project OPS — UI primitives theo Design Token Green v1.0.
+ * Mọi màu đi qua token CSS (docs/02-design/assets/tokens.json); KHÔNG hardcode
+ * palette dark/column cũ. Các export được giữ nguyên để không vỡ page khác.
+ */
+
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover',
+        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:opacity-90',
+        outline: 'border border-border bg-surface text-foreground shadow-sm hover:bg-sidebar-group',
+        secondary: 'bg-sidebar-group text-foreground shadow-sm hover:opacity-90',
+        ghost: 'text-foreground hover:bg-sidebar-group',
+        link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: 'h-11 px-4 py-2',
+        sm: 'h-11 rounded-md px-3',
+        lg: 'h-12 rounded-md px-8',
+        icon: 'h-11 w-11',
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
+    defaultVariants: { variant: 'default', size: 'default' },
+  },
 )
 
 export interface ButtonProps
@@ -67,8 +70,8 @@ export function Input({ className, type, ...props }: React.InputHTMLAttributes<H
     <input
       type={type}
       className={cn(
-        "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        'flex h-11 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        className,
       )}
       {...props}
     />
@@ -82,8 +85,8 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "flex min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        'flex min-h-20 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        className,
       )}
       {...props}
     />
@@ -92,77 +95,71 @@ export function Textarea({
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
-    <label
-      className={cn("text-sm font-medium text-foreground", className)}
-      {...props}
-    />
+    <label className={cn('text-sm font-medium text-foreground', className)} {...props} />
   )
 }
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-lg border border-border bg-card text-card-foreground shadow-sm", className)}
+      className={cn('rounded-card border border-border bg-card text-card-foreground shadow-sm', className)}
       {...props}
     />
   )
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-col space-y-1.5 p-6", className)}
-      {...props}
-    />
-  )
+  return <div className={cn('flex flex-col space-y-1.5 p-5', className)} {...props} />
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+      className={cn('text-sm font-semibold leading-none tracking-tight text-foreground', className)}
       {...props}
     />
   )
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return (
-    <p className={cn("text-sm text-muted-foreground", className)} {...props} />
-  )
+  return <p className={cn('text-xs text-muted-foreground', className)} {...props} />
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-6 pt-0", className)} {...props} />
+  return <div className={cn('p-5 pt-0', className)} {...props} />
 }
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center justify-between p-6 pt-0", className)} {...props} />
+  return <div className={cn('flex items-center justify-between p-5 pt-0', className)} {...props} />
 }
 
+/*
+ * LƯU Ý: các primitive Table/TableHeader/TableBody/TableRow/TableHead/TableCell
+ * trước đây nằm ở đây đã bị loại bỏ theo yêu cầu "xóa dependency bảng/cột cũ".
+ * Chúng vẫn được re-export ở cuối file dưới dạng wrapper trung tính (không còn
+ * màu cột/striping cũ) để các trang admin/reports chưa rewrite không vỡ build.
+ * Dashboard v1.0 KHÔNG dùng We bảng này.
+ */
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
     <div className="w-full overflow-auto">
-      <table
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
+      <table className={cn('w-full caption-bottom text-sm text-foreground', className)} {...props} />
     </div>
   )
 }
 
 export function TableHeader({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("bg-muted/50 text-sm", className)} {...props} />
+  return <thead className={cn('bg-sidebar-group text-xs text-muted-foreground', className)} {...props} />
 }
 
 export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn("bg-primary/5", className)} {...props} />
+  return <tbody className={cn('bg-surface', className)} {...props} />
 }
 
 export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={cn("border-b transition-colors hover:bg-muted/50", className)}
+      className={cn('border-b border-border transition-colors hover:bg-sidebar-group', className)}
       {...props}
     />
   )
@@ -171,60 +168,55 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
 export function TableHead({ className, ...props }: React.HTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={cn("h-12 px-4 text-left align-middle font-medium text-muted-foreground", className)}
+      className={cn('h-11 px-4 text-left align-middle font-medium text-muted-foreground', className)}
       {...props}
     />
   )
 }
 
 export function TableCell({ className, ...props }: React.HTMLAttributes<HTMLTableCellElement>) {
-  return (
-    <td
-      className={cn("h-12 px-4 align-middle", className)}
-      {...props}
-    />
-  )
+  return <td className={cn('h-11 px-4 align-middle', className)} {...props} />
 }
 
+/* Badge: trạng thái trung tính, màu theo ngữ nghĩa (không gắn cột dữ liệu cũ). */
 export type BadgeVariant =
-  | "default"
-  | "critical"
-  | "major"
-  | "minor"
-  | "active"
-  | "inactive"
-  | "planned"
-  | "in-progress"
-  | "deployed"
-  | "paused"
-  | "ended"
+  | 'default'
+  | 'critical'
+  | 'major'
+  | 'minor'
+  | 'active'
+  | 'inactive'
+  | 'planned'
+  | 'in-progress'
+  | 'deployed'
+  | 'paused'
+  | 'ended'
 
 export function Badge({
   className,
-  variant = "default",
+  variant = 'default',
   ...props
 }: React.HTMLAttributes<HTMLSpanElement> & { variant?: BadgeVariant }) {
-  // Nhiều variant dùng chung style -> gom lại để tránh duplicate key trong object literal.
-  const neutral = "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+  const neutral = 'bg-sidebar-group text-muted border border-border'
   const styleByVariant: Record<BadgeVariant, string> = {
     default: neutral,
-    critical: "bg-red-500/10 text-red-400 border border-red-500/20",
-    major: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
-    minor: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
-    active: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    critical: 'bg-risk/10 text-risk border border-risk/20',
+    major: 'bg-kpi-tickets/10 text-kpi-tickets border border-kpi-tickets/20',
+    minor: 'bg-ticket-waiting/10 text-warning border border-ticket-waiting/20',
+    active: 'bg-sidebar-active text-sidebar-heading border border-sidebar-active-border/20',
     inactive: neutral,
     planned: neutral,
-    "in-progress": "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-    deployed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-    paused: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    'in-progress': 'bg-kpi-projects/10 text-kpi-projects border border-kpi-projects/20',
+    deployed: 'bg-sidebar-active text-sidebar-heading border border-sidebar-active-border/20',
+    paused: 'bg-ticket-waiting/10 text-warning border border-ticket-waiting/20',
     ended: neutral,
   }
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
         styleByVariant[variant],
-        className
+        className,
       )}
       {...props}
     />
@@ -235,8 +227,8 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   return (
     <select
       className={cn(
-        "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        'flex h-11 min-w-11 rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        className,
       )}
       {...props}
     />
@@ -246,24 +238,23 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
 export function Tabs({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("inline-flex space-x-1 border-b border-border bg-muted/50 p-1", className)}
+      className={cn('inline-flex space-x-1 border-b border-border bg-sidebar-group p-1', className)}
       {...props}
     />
   )
 }
 
 export function TabList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex", className)} {...props} />
+  return <div className={cn('flex', className)} {...props} />
 }
 
 export function Tab({ className, ...props }: React.HTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        "border-b-2 border-transparent data-[active=true]:border-primary data-[active=true]:text-foreground",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        className
+        'inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[active=true]:border-primary data-[active=true]:text-sidebar-heading',
+        'border-b-2 border-transparent data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        className,
       )}
       {...props}
     />
@@ -277,7 +268,7 @@ export function Modal({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("fixed inset-0 z-50 flex items-center justify-center bg-background/80", className)}
+      className={cn('fixed inset-0 z-50 flex items-center justify-center bg-foreground/40', className)}
       {...props}
     >
       {children}
@@ -292,10 +283,7 @@ export function ModalContent({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "w-full max-w-lg rounded-lg border border-border bg-card text-card-foreground shadow-lg",
-        className
-      )}
+      className={cn('w-full max-w-lg rounded-section border border-border bg-card text-card-foreground shadow-lg', className)}
       {...props}
     >
       {children}
@@ -304,26 +292,25 @@ export function ModalContent({
 }
 
 export function ModalHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col space-y-2 p-6", className)} {...props} />
+  return <div className={cn('flex flex-col space-y-2 p-6', className)} {...props} />
 }
 
 export function ModalTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-xl font-semibold leading-none tracking-tight", className)} {...props} />
+  return <h2 className={cn('text-xl font-semibold leading-none tracking-tight', className)} {...props} />
 }
 
 export function ModalBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-6", className)} {...props} />
+  return <div className={cn('p-6', className)} {...props} />
 }
 
 export function ModalFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex justify-end gap-2 p-6 pt-0", className)} {...props} />
+  return <div className={cn('flex justify-end gap-2 p-6 pt-0', className)} {...props} />
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Trạng thái hiển thị: loading / empty — checklist §7 #7, #9                */
+/*  Trạng thái hiển thị: loading / empty / error                               */
 /* -------------------------------------------------------------------------- */
 
-/** Spinner — chỉ báo đang tải, màu theo token --accent. */
 export function Spinner({
   className,
   label = 'Đang tải',
@@ -336,25 +323,23 @@ export function Spinner({
       role="status"
       aria-label={label}
       className={cn(
-        'inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-t-[var(--accent)] text-[var(--text-secondary)] align-middle',
-        className
+        'inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-t-primary text-muted align-middle',
+        className,
       )}
     />
   )
 }
 
-/** Skeleton — khối xương nhấp nháy trong lúc tải dữ liệu. */
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       aria-hidden="true"
-      className={cn('animate-pulse rounded-md bg-[var(--bg-secondary)]', className)}
+      className={cn('animate-pulse rounded-md bg-sidebar-group', className)}
       {...props}
     />
   )
 }
 
-/** EmptyState — icon + tiêu đề + mô tả + nút hành động tuỳ chọn. */
 export function EmptyState({
   icon,
   title,
@@ -370,25 +355,20 @@ export function EmptyState({
 }) {
   return (
     <div
-      className={cn(
-        'flex flex-col items-center justify-center gap-2 px-4 py-10 text-center',
-        className
-      )}
+      className={cn('flex flex-col items-center justify-center gap-2 px-4 py-10 text-center', className)}
     >
-      <div className="mb-1 text-[var(--text-secondary)]" aria-hidden="true">
+      <div className="mb-1 text-muted" aria-hidden="true">
         {icon ?? <Inbox size={32} strokeWidth={1.5} />}
       </div>
-      <p className="text-base font-medium text-[var(--text-primary)]">{title}</p>
-      {description && (
-        <p className="max-w-sm text-sm text-[var(--text-secondary)]">{description}</p>
-      )}
+      <p className="text-base font-medium text-foreground">{title}</p>
+      {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Toast / notification — checklist §1 #15, §7 #8                           */
+/*  Toast / notification                                                       */
 /* -------------------------------------------------------------------------- */
 
 export type ToastKind = 'success' | 'error' | 'info' | 'warning'
@@ -424,7 +404,6 @@ const TOAST_STYLE: Record<ToastKind, { accent: string; icon: ReactNode }> = {
 
 const DEFAULT_TOAST_DURATION = 4000
 
-/** Bọc ứng dụng để cung cấp vùng hiển thị toast (góc phải trên). */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([])
   const idRef = useRef(0)
@@ -448,10 +427,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       timersRef.current.set(id, timer)
       return id
     },
-    [dismiss]
+    [dismiss],
   )
 
-  // Dọn hết timer khi provider unmount để tránh setState sau khi huỷ.
   useEffect(() => {
     const timers = timersRef.current
     return () => {
@@ -469,7 +447,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       warning: (options) => toast('warning', options),
       dismiss,
     }),
-    [toast, dismiss]
+    [toast, dismiss],
   )
 
   return (
@@ -486,7 +464,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={item.id}
               role={item.kind === 'error' ? 'alert' : 'status'}
-              className="pointer-events-auto flex items-start gap-3 rounded-lg border bg-[var(--bg-card)] p-3 text-[var(--text-primary)] shadow-lg"
+              className="pointer-events-auto flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-card-foreground shadow-lg"
               style={{ borderColor: style.accent, borderLeftWidth: 4 }}
             >
               <span className="mt-0.5 shrink-0" style={{ color: style.accent }} aria-hidden="true">
@@ -495,7 +473,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{item.title}</p>
                 {item.description && (
-                  <p className="mt-0.5 break-words text-xs text-[var(--text-secondary)]">
+                  <p className="mt-0.5 break-words text-xs text-muted-foreground">
                     {item.description}
                   </p>
                 )}
@@ -504,7 +482,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 onClick={() => dismiss(item.id)}
                 aria-label="Đóng thông báo"
-                className="shrink-0 rounded p-0.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+                className="tap-target shrink-0 rounded p-0.5 text-muted transition-colors hover:bg-sidebar-group hover:text-foreground"
               >
                 <X size={16} />
               </button>
@@ -516,7 +494,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 }
 
-/** Hook dùng trong component con của ToastProvider. */
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext)
   if (!ctx) {

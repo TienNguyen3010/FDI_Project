@@ -1,51 +1,124 @@
 'use client'
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Users,
   FolderKanban,
-  Cpu,
-  AlertTriangle,
-  Camera,
-  FileBarChart,
+  MapPin,
+  Network,
+  Server,
+  ListChecks,
+  Ticket,
+  Wrench,
+  Activity,
+  FileText,
+  ChartNoAxesColumn,
   Settings,
   LogOut,
   Menu,
-  Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
+  type LucideIcon,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { hasPermission, isRole, type Permission, type Role as V1Role } from '@/lib/rbac/policy'
 import { ToastProvider } from '@/components/ui/ui'
 
-type Role = 'employee' | 'leader' | 'manager' | 'director'
-type Scope = Role[]
+/*
+ * Project OPS — App shell theo Design Token Green v1.0.
+ * Nguồn navigation: docs/02-design/assets/navigation.json (5 nhóm, thứ tự giữ nguyên).
+ * Sidebar trắng, icon xanh #07872B, heading xanh #08752A, active pale-green #DDF5DC
+ * + rail trái 3px #008B21. 44px target, aria-current=page, responsive drawer.
+ * Ẩn menu là UX — backend (RLS/policy) vẫn là nguồn quyền chính.
+ */
 
 interface NavItem {
   label: string
   href: string
-  icon: ReactNode
-  scope: Scope
+  icon: LucideIcon
+  permission: Permission
 }
 
-// RBAC mềm (UI): Manager & Director thấy Quản trị.
-// Quyết định Dev Director 2026-11-17: theo rbac_matrix.md:40 + product.md:381
-// (Manager thêm user/team của mình); database_schema.sql:158 đã được sửa cho khớp.
-const allItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Khách hàng', href: '/customers', icon: <Users size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Dự án', href: '/projects', icon: <FolderKanban size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Thiết bị', href: '/devices', icon: <Cpu size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Cảnh báo', href: '/alerts', icon: <AlertTriangle size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Bảo trì', href: '/maintenance', icon: <Camera size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Báo cáo', href: '/reports', icon: <FileBarChart size={18} />, scope: ['employee', 'leader', 'manager', 'director'] },
-  { label: 'Quản trị', href: '/admin', icon: <Settings size={18} />, scope: ['manager', 'director'] },
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
+/** Map icon name từ navigation.json sang Lucide component. */
+const ICONS: Record<string, LucideIcon> = {
+  'layout-dashboard': LayoutDashboard,
+  users: Users,
+  folder: FolderKanban,
+  'map-pin': MapPin,
+  network: Network,
+  server: Server,
+  'list-checks': ListChecks,
+  ticket: Ticket,
+  wrench: Wrench,
+  activity: Activity,
+  'file-text': FileText,
+  'chart-column': ChartNoAxesColumn,
+  settings: Settings,
+}
+
+/* Bám đúng navigation.json: thứ tự nhóm + nhãn + permission. */
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'TỔNG QUAN',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: ICONS['layout-dashboard'], permission: 'dashboard.read' },
+    ],
+  },
+  {
+    label: 'KHÁCH HÀNG & DỰ ÁN',
+    items: [
+      { label: 'Customers', href: '/customers', icon: ICONS.users, permission: 'customer.read' },
+      { label: 'Projects', href: '/projects', icon: ICONS.folder, permission: 'project.read' },
+      { label: 'Sites', href: '/sites', icon: ICONS['map-pin'], permission: 'site.read' },
+      { label: 'Infrastructure', href: '/infrastructure', icon: ICONS.network, permission: 'diagram.read' },
+      { label: 'Assets', href: '/assets', icon: ICONS.server, permission: 'asset.read' },
+    ],
+  },
+  {
+    label: 'VẬN HÀNH & DỊCH VỤ',
+    items: [
+      { label: 'Works', href: '/my-work', icon: ICONS['list-checks'], permission: 'task.read' },
+      { label: 'Service Desk', href: '/tickets', icon: ICONS.ticket, permission: 'ticket.read' },
+      { label: 'Maintenance', href: '/maintenance', icon: ICONS.wrench, permission: 'maintenance.read' },
+      // navigation.json: chỉ hiện khi monitoring.read được cấu hình (feature flag).
+      { label: 'Monitoring', href: '/monitoring', icon: ICONS.activity, permission: 'monitoring.read' },
+    ],
+  },
+  {
+    label: 'TÀI LIỆU & BÁO CÁO',
+    items: [
+      { label: 'Documents', href: '/documents', icon: ICONS['file-text'], permission: 'document.read' },
+      { label: 'Reports', href: '/reports', icon: ICONS['chart-column'], permission: 'report.read' },
+    ],
+  },
+  {
+    label: 'HỆ THỐNG',
+    items: [
+      { label: 'Admin', href: '/admin', icon: ICONS.settings, permission: 'admin.user_manage' },
+    ],
+  },
 ]
 
-// Mục trên thanh điều hướng dưới cùng (mobile) — checklist §2 #10, ui_ux_spec §4.2.
-const bottomNavHrefs = ['/dashboard', '/projects', '/alerts', '/reports']
+/* Điều hướng nhanh dưới cùng trên mobile (mục đã có permission). */
+const BOTTOM_NAV_HREFS = ['/dashboard', '/projects', '/tickets', '/reports']
+
+const ROLE_LABEL: Record<string, string> = {
+  super_admin: 'Quản trị hệ thống',
+  director: 'Giám đốc',
+  project_manager: 'Quản lý dự án',
+  engineer: 'Kỹ sư',
+  support: 'Hỗ trợ',
+  customer_viewer: 'Khách hàng',
+}
 
 export default function ClientBody({
   children,
@@ -58,41 +131,40 @@ export default function ClientBody({
   const router = useRouter()
   const [collapsed, setCollapsed] = useState<boolean>(initialCollapsed ?? false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [role, setRole] = useState<Role>('employee')
-  const [user, setUser] = useState<{ email: string } | null>(null)
+  const [role, setRole] = useState<V1Role | null>(null)
+  const [user, setUser] = useState<{ email: string; fullName?: string } | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadProfile(userId: string) {
+    async function loadProfile(userId: string, email?: string) {
+      // Role lấy từ auth JWT app_metadata (nguồn cứng); fallback bảng users cho
+      // session cũ. Backend vẫn enforce RBAC — UI chỉ ẩn theo policy v1.0.
+      const { data: authData } = await supabase.auth.getUser()
+      const jwtRole = authData.user?.app_metadata?.role
       const { data } = await supabase
         .from('users')
         .select('email, role')
         .eq('id', userId)
         .maybeSingle()
-      if (cancelled || !data) return
-      setUser({ email: data.email })
-      if (
-        data.role === 'employee' ||
-        data.role === 'leader' ||
-        data.role === 'manager' ||
-        data.role === 'director'
-      ) {
-        setRole(data.role)
-      }
+      if (cancelled) return
+      setUser({ email: data?.email ?? email ?? '' })
+      const candidate = isRole(jwtRole) ? jwtRole : data?.role
+      setRole(isRole(candidate) ? candidate : null)
     }
 
     supabase.auth.getUser().then(({ data }) => {
-      if (!cancelled && data.user) loadProfile(data.user.id)
+      if (!cancelled && data.user) loadProfile(data.user.id, data.user.email)
+      else if (!cancelled) setRole(null)
     })
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) loadProfile(session.user.id)
+      if (session?.user) void loadProfile(session.user.id, session.user.email)
       else if (!cancelled) {
         setUser(null)
-        setRole('employee')
+        setRole(null)
       }
     })
 
@@ -102,10 +174,30 @@ export default function ClientBody({
     }
   }, [])
 
-  const visibleItems = allItems.filter((item) => item.scope.includes(role))
-  const bottomItems = visibleItems.filter((item) => bottomNavHrefs.includes(item.href))
+  /** Lọc theo policy v1.0: deny-by-default, super_admin thấy tất cả. */
+  const can = useCallback(
+    (permission: Permission) => hasPermission(role, permission),
+    [role],
+  )
 
-  // Đóng drawer khi chuyển trang (đẩy vào microtask để tránh cascade render).
+  const visibleGroups = useMemo(
+    () =>
+      NAV_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => can(item.permission)),
+      })).filter((group) => group.items.length > 0),
+    [can],
+  )
+
+  const bottomItems = useMemo(
+    () =>
+      visibleGroups
+        .flatMap((group) => group.items)
+        .filter((item) => BOTTOM_NAV_HREFS.includes(item.href)),
+    [visibleGroups],
+  )
+
+  // Đóng drawer khi chuyển trang (microtask tránh cascade render).
   useEffect(() => {
     let cancelled = false
     void Promise.resolve().then(() => {
@@ -116,7 +208,7 @@ export default function ClientBody({
     }
   }, [pathname])
 
-  // Đóng drawer bằng Escape + khoá cuộn nền khi drawer mở (tránh click-trap).
+  // Escape + khoá cuộn nền khi drawer mở.
   useEffect(() => {
     if (!mobileOpen) return
     const onKeyDown = (event: KeyboardEvent) => {
@@ -134,231 +226,216 @@ export default function ClientBody({
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
   const handleLogout = useCallback(() => {
-    void supabase.auth.signOut().then(() => {
-      router.push('/login')
-    })
+    void supabase.auth.signOut().then(() => router.push('/login'))
   }, [router])
 
-  const renderNavItems = (compact: boolean, onNavigate?: () => void) =>
-    visibleItems.map((item) => {
-      const active = pathname === item.href
-      return (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={onNavigate}
-          aria-current={active ? 'page' : undefined}
-          title={compact ? item.label : undefined}
-          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-            active
-              ? 'bg-[var(--accent)] text-white'
-              : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]'
-          }`}
-        >
-          <span className="flex shrink-0 items-center">{item.icon}</span>
-          {!compact && <span className="min-w-0 break-words text-left">{item.label}</span>}
-        </Link>
-      )
-    })
+  const isActive = useCallback(
+    (href: string) => pathname === href || pathname.startsWith(`${href}/`),
+    [pathname],
+  )
 
-  const pageTitle =
-    pathname === '/dashboard'
-      ? 'Dashboard'
-      : (allItems.find((i) => i.href === pathname)?.label ??
-        pathname.split('/').pop() ??
-        'Trang')
+  const pageTitle = useMemo(() => {
+    const all = NAV_GROUPS.flatMap((g) => g.items)
+    return all.find((i) => isActive(i.href))?.label ?? pathname.split('/').pop() ?? 'Trang'
+  }, [isActive, pathname])
 
-  const logoutButton = (showLabel: boolean) => (
-    <button
-      type="button"
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
-      onClick={() => {
-        closeMobile()
-        handleLogout()
-      }}
-      aria-label="Đăng xuất"
-    >
-      <LogOut size={16} />
-      {showLabel && <span>Đăng xuất</span>}
-    </button>
+  /* Sidebar content dùng chung cho desktop + drawer (giữ geometry). */
+  const renderSidebarContent = (compact: boolean, onNavigate?: () => void) => (
+    <>
+      <div className={`flex h-[58px] shrink-0 items-center border-b border-border ${compact ? 'justify-center px-2' : 'gap-2 px-4'}`}>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground" aria-hidden="true">
+          P
+        </span>
+        {!compact && (
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-bold tracking-wide text-sidebar-heading">PROJECT OPS</span>
+            <span className="block truncate text-[11px] text-muted-foreground">Management Platform</span>
+          </span>
+        )}
+      </div>
+
+      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3" aria-label="Điều hướng chính">
+        {visibleGroups.length === 0 ? (
+          <p className="px-2 text-xs text-muted-foreground">Không có mục được phép truy cập.</p>
+        ) : (
+          visibleGroups.map((group) => (
+            <div key={group.label}>
+              {!compact && (
+                <p className="mb-1.5 px-2 text-section font-semibold uppercase tracking-wider text-sidebar-heading">
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active = isActive(item.href)
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onNavigate}
+                      aria-current={active ? 'page' : undefined}
+                      title={compact ? item.label : undefined}
+                      className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${
+                        active
+                          ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading'
+                          : 'border-transparent text-muted hover:bg-sidebar-group hover:text-sidebar-heading'
+                      }`}
+                    >
+                      <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                      {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))
+        )}
+      </nav>
+
+      <div className="shrink-0 border-t border-border p-3">
+        {user ? (
+          <div className={`flex items-center gap-3 ${compact ? 'justify-center' : ''}`}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground" aria-hidden="true">
+              {(user.fullName ?? user.email ?? '?').charAt(0).toUpperCase()}
+            </span>
+            {!compact && (
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-foreground">
+                  {user.fullName || user.email}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {role ? (ROLE_LABEL[role] ?? role) : 'Đang xác thực…'}
+                </span>
+              </span>
+            )}
+            {compact && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Đăng xuất"
+                className="tap-target rounded-md text-muted hover:text-foreground"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className={`truncate text-xs text-muted-foreground ${compact ? 'text-center' : ''}`}>
+            {compact ? 'Đăng nhập' : 'Đăng nhập để tiếp tục'}
+          </p>
+        )}
+        {!compact && user && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="tap-target mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted transition-colors hover:bg-sidebar-group hover:text-foreground"
+            aria-label="Đăng xuất"
+          >
+            <LogOut size={16} aria-hidden="true" />
+            <span>Đăng xuất</span>
+          </button>
+        )}
+      </div>
+    </>
   )
 
   return (
     <ToastProvider>
-      <div className="flex h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
-        {/* Sidebar desktop (ẩn dưới 768px) — giữ nguyên chế độ thu gọn */}
+      <div className="flex h-dvh bg-canvas text-foreground">
+        {/* Sidebar desktop — 280px expanded / 72px collapsed */}
         <aside
-          className={`hidden h-screen shrink-0 flex-col border-r border-[var(--border)] bg-[var(--bg-secondary)] transition-[width] duration-[var(--duration-normal)] md:flex ${
-            collapsed ? 'w-16' : 'w-60'
+          className={`hidden h-dvh shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-normal md:flex ${
+            collapsed ? 'w-[72px]' : 'w-[280px]'
           }`}
+          aria-label="Thanh điều hướng"
         >
-          <div className="flex h-16 shrink-0 items-center justify-center border-b border-[var(--border)]">
-            {!collapsed && (
-              <span className="flex items-center gap-2 text-lg font-semibold text-[var(--accent)]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white">
-                  <FolderKanban className="h-4 w-4" />
-                </span>
-                FDI_Project
-              </span>
-            )}
-          </div>
-
-          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
-            {renderNavItems(collapsed)}
-          </nav>
-
-          <div className="shrink-0 border-t border-[var(--border)] p-3">
-            {!collapsed && user ? (
-              <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
-                  {user.email?.charAt(0)?.toUpperCase() || '?'}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-[var(--text-primary)]">{user.email}</p>
-                  <p className="text-xs">Vai trò: {role}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center truncate text-xs text-[var(--text-secondary)]">
-                {collapsed ? 'Đăng nhập' : 'Đăng nhập để tiếp tục'}
-              </div>
-            )}
-            {collapsed && user && (
-              <div className="mt-2 flex justify-center">{logoutButton(false)}</div>
-            )}
-          </div>
+          {renderSidebarContent(collapsed)}
         </aside>
 
-        {/* Nội dung chính */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--bg-primary)] px-3 sm:px-4">
+          <header className="flex h-[58px] shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              {/* Nút mở drawer — chỉ mobile */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="rounded-md p-1.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] md:hidden"
+                className="tap-target rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground md:hidden"
                 aria-label="Mở menu điều hướng"
               >
                 <Menu size={20} />
               </button>
-              {/* Nút thu gọn sidebar — chỉ desktop */}
               <button
                 type="button"
                 onClick={() => setCollapsed((v) => !v)}
-                className="hidden rounded-md p-1.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] md:block"
+                className="tap-target hidden rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground md:flex"
                 aria-label={collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
               >
-                {collapsed ? <Menu size={18} /> : <X size={18} />}
+                {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
               </button>
-              <h1 className="truncate text-base font-semibold text-[var(--accent)] sm:text-lg">
+              <span className="min-w-0 truncate text-sm font-semibold text-sidebar-heading sm:text-base" aria-hidden="true">
                 {pageTitle}
-              </h1>
+              </span>
             </div>
-
             <div className="flex shrink-0 items-center gap-2">
               {user && (
-                <span className="hidden truncate text-sm text-[var(--text-secondary)] sm:block">
-                  {user.email}
-                </span>
+                <span className="hidden truncate text-sm text-muted sm:block">{user.email}</span>
               )}
-              <span className="hidden sm:inline">{logoutButton(false)}</span>
-              <span className="sm:hidden">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="rounded-md p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
-                  aria-label="Đăng xuất"
-                >
-                  <LogOut size={18} />
-                </button>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-heading" aria-hidden="true">
+                {(user?.email ?? '?').charAt(0).toUpperCase()}
               </span>
             </div>
           </header>
 
           {/* pb-20 trên mobile để bottom nav không che nội dung */}
-          <main className="min-h-0 flex-1 overflow-auto p-4 pb-20 md:pb-4">{children}</main>
+          <main className="min-h-0 flex-1 overflow-auto p-4 pb-20 md:p-[30px] md:pb-[30px]">
+            {children}
+          </main>
         </div>
 
-        {/* Drawer mobile (overlay) */}
+        {/* Drawer mobile */}
         {mobileOpen && (
-          <div
-            className="fixed inset-0 z-50 md:hidden"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu điều hướng"
-          >
-            {/* Backdrop — click ngoài đóng drawer */}
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={closeMobile}
-              aria-hidden="true"
-            />
+          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu điều hướng">
+            <div className="absolute inset-0 bg-foreground/40" onClick={closeMobile} aria-hidden="true" />
             <aside
-              className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col border-r border-[var(--border)] bg-[var(--bg-secondary)]"
+              className="absolute inset-y-0 left-0 flex w-[280px] max-w-[85%] flex-col border-r border-border bg-sidebar"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border)] px-4">
-                <span className="flex items-center gap-2 text-lg font-semibold text-[var(--accent)]">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white">
-                    <FolderKanban className="h-4 w-4" />
-                  </span>
-                  FDI_Project
-                </span>
+              <div className="absolute right-2 top-2 z-10">
                 <button
                   type="button"
                   onClick={closeMobile}
-                  className="rounded-md p-1.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]"
+                  className="tap-target rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground"
                   aria-label="Đóng menu điều hướng"
                 >
                   <X size={20} />
                 </button>
               </div>
-
-              <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain p-3">
-                {renderNavItems(false, closeMobile)}
-              </nav>
-
-              <div className="shrink-0 border-t border-[var(--border)] p-3">
-                {user ? (
-                  <div className="mb-2 flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
-                      {user.email?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-[var(--text-primary)]">{user.email}</p>
-                      <p className="text-xs">Vai trò: {role}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="mb-2 text-xs text-[var(--text-secondary)]">Đăng nhập để tiếp tục</p>
-                )}
-                {logoutButton(true)}
-              </div>
+              {renderSidebarContent(false, closeMobile)}
             </aside>
           </div>
         )}
 
-        {/* Bottom nav cố định trên mobile */}
+        {/* Bottom nav mobile */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-[var(--border)] bg-[var(--bg-secondary)] pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-border bg-sidebar pb-[env(safe-area-inset-bottom)] md:hidden"
           aria-label="Điều hướng nhanh"
         >
           {bottomItems.map((item) => {
-            const active = pathname === item.href
+            const active = isActive(item.href)
+            const Icon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 aria-label={item.label}
-                className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors ${
+                className={`tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors ${
                   active
-                    ? 'text-[var(--accent)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'border-t-[3px] border-sidebar-active-border bg-sidebar-active text-sidebar-heading'
+                    : 'text-muted hover:text-foreground'
                 }`}
               >
-                <span className="flex items-center">{item.icon}</span>
+                <Icon size={18} className="text-sidebar-icon" aria-hidden="true" />
                 <span className="w-full truncate text-center">{item.label}</span>
               </Link>
             )
@@ -366,13 +443,11 @@ export default function ClientBody({
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            aria-label="Thêm — mở menu điều hướng"
+            className="tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] text-muted transition-colors hover:text-foreground"
+            aria-label="Mở menu điều hướng"
           >
-            <span className="flex items-center">
-              <Plus size={18} />
-            </span>
-            <span className="w-full truncate text-center">Thêm</span>
+            <Menu size={18} aria-hidden="true" />
+            <span className="w-full truncate text-center">Menu</span>
           </button>
         </nav>
       </div>

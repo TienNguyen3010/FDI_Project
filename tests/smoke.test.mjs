@@ -23,9 +23,9 @@ test('.env.example có placeholder Supabase + Upstash (không phải secret th�
   assert.ok(!/Fdi@Project2026|sb_secret_|ghp_/.test(env), '.env.example lộ secret')
 })
 
-test('00-governance/checklist.md có Nhật ký xác minh', () => {
-  // Đường dẫn cập nhật theo cấu trúc /docs phân lớp (00-governance).
-  assert.ok(read('docs/00-governance/checklist.md').includes('Nhật ký xác minh'))
+test('docs v1.0 checklist có verification evidence', () => {
+  // Đường dẫn cập nhật theo cấu trúc /docs v1.0 (04-governance).
+  assert.ok(read('docs/04-governance/CHECKLISTS.md').includes('evidence_required'))
 })
 
 test('W0: lib/auth/authorize.ts dùng DB làm nguồn truth', () => {
@@ -42,10 +42,10 @@ test('DD C-09: proxy.ts có rewrite /api/v1 -> /api', () => {
   assert.ok(proxy.includes('NextResponse.rewrite'), 'phải dùng rewrite internal, không redirect')
 })
 
-test('đủ migration 001-004', () => {
+test('đủ migration 001-006', () => {
   const files = readdirSync(resolve(root, 'migrations'))
   for (const f of ['001_initial_schema.sql', '002_rls_policies.sql',
-                   '003_seed.sql', '004_audit_trigger.sql']) {
+                   '003_seed.sql', '004_audit_trigger.sql', '006_ops_core.sql']) {
     assert.ok(files.includes(f), `thiếu ${f}`)
   }
 })
