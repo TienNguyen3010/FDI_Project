@@ -1,6 +1,6 @@
 # Apply Migration & Deploy — FDI_Project v1.0
 
-> Trạng thái 2026-11-18: **Migration 006 ✅ applied trên DB thật; Deploy ⏳ (chờ verify token)**.
+> Trạng thái 2026-11-18: **Migration 006 ✅ applied; Deploy ✅ production `https://fdi-project.vercel.app`**.
 
 ## 1. Phát hiện quan trọng (audit thực, 2026-11-18)
 
@@ -73,3 +73,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Sau apply | `schema_migrations` có `006_ops_core` | query thật |
 
 > ⚠️ DB password dùng trong phiên đã xuất hiện trong chat → **phải xoay vòng** (xem cảnh báo cuối).
+
+## 7. Deploy production thật (2026-11-18)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| `vercel deploy --prod --yes` | ✅ DEPLOY_EXIT=0, `Ready in 22s`, alias `https://fdi-project.vercel.app` | deploy log |
+| Bug production phát hiện | `/api/v1/dashboard/health` → 404 do proxy rewrite mọi `/api/v1/*` sang `/api/*` (trong khi API nằm tại `app/api/v1/dashboard/**`) | curl thật |
+| Fix | `proxy.ts` chỉ rewrite `/api/v1/auth*` (legacy); commit `b226e06` | diff + redeploy |
+| HTTP sau fix | `/login` 200 · `/dashboard` 307 · `/api/v1/dashboard/health` 401 (auth guard) · `/api/v1/auth/session` 401 | curl thật |
+| Root `/` | 404 → thêm `app/page.tsx` redirect `/dashboard` (`0d47b48`) | curl thật |
+
+> ⚠️ `VERCEL_TOKEN` và DB password đã xuất hiện trong chat → **phải revoke/xoay vòng cả 2 ngay**.
