@@ -121,3 +121,16 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Deploy | `EXIT=0`, alias `fdi-project.vercel.app`; test 27/27; docs-check OK |
 
 > Refresh browser lần cuối để thấy dashboard với API đã fix + nav không còn 404.
+
+## 11. Full admin cho admin@fdi.local (2026-11-18)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Yêu cầu | user muốn `admin@fdi.local` thành full admin (sidebar hiện nhóm HỆ THỐNG/Admin) |
+| Constraint | `public.users.role` có CHECK chỉ nhận 4 role legacy → KHÔNG gán `super_admin` được (đúng nguyên tắc không đổi migration đã apply) |
+| Fix | Gán `super_admin` trong `auth.users.raw_app_meta_data.role` (JWT) + `user_grants.role_code`; code `authorize()` và `useProfile()` ưu tiên JWT role, fallback DB |
+| Verify DB | auth role=super_admin · public role vẫn director (legacy) · grant role_code=super_admin |
+| Verify code | test 27/27 · docs-check OK · commit `894d15e` · deploy `EXIT=0` · `/admin` 307 (có auth) |
+| Bắt buộc | **Logout → login lại** để cookie nhận JWT role mới; nếu không, sidebar vẫn hiện "Giám đốc" |
+
+> ⚠️ Vẫn phải revoke Vercel token + reset DB password + đổi password login (đã lộ trong chat).
