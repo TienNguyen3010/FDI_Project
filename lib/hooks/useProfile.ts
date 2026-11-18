@@ -25,14 +25,15 @@ export function useProfile() {
 
   useEffect(() => {
     let cancelled = false
-    async function load(userId: string, email: string | undefined) {
+    async function load(userId: string, email: string | undefined, meta: Record<string, unknown> = {}) {
       try {
         const [{ data: user }, { data: grants }] = await Promise.all([
           supabase.from('users').select('id, email, role').eq('id', userId).maybeSingle(),
           supabase.from('user_grants').select('customer_id').eq('user_id', userId),
         ])
         if (cancelled) return
-        const rawRole = user?.role
+        const jwtRole = meta.role
+        const rawRole = ROLES.includes(jwtRole as Role) ? jwtRole : user?.role
         const nextRole: Role = ROLES.includes(rawRole as Role)
           ? (rawRole as Role)
           : 'customer_viewer'
@@ -50,7 +51,9 @@ export function useProfile() {
     supabase.auth.getUser().then(({ data }) => {
       if (cancelled) return
       if (!data.user) { setLoading(false); return }
-      load(data.user.id, data.user.email)
+      // Ưu tiên role v1.0 từ JWT app_metadata (full admin = super_admin).
+      // public.users giữ role legacy do CHECK constraint của schema cũ.
+      load(data.user.id, data.user.email, (data.user.app_metadata ?? {}) as Record<string, unknown>)
     })
     return () => { cancelled = true }
   }, [])

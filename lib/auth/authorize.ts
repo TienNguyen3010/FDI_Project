@@ -71,9 +71,13 @@ export async function authorize(required: Permission | readonly Permission[] = '
   const user = authData.user
   const meta = (user.app_metadata ?? {}) as Record<string, unknown>
   const { user: profile, scopeGrants } = await loadProfile(supabase, user.id)
-  const role: Role | null = isRole(profile?.role)
-    ? profile.role
-    : isRole(meta.role) ? meta.role : null
+  // Role resolution v1.0: JWT app_metadata.role là nguồn truth khi có (full admin
+  // được gán super_admin ở JWT vì public.users có CHECK chỉ nhận 4 role legacy).
+  // Fallback public.users.role cho account cũ chưa có role v1.0 trong JWT.
+  const jwtRole = meta.role
+  const role: Role | null = isRole(jwtRole)
+    ? jwtRole
+    : isRole(profile?.role) ? profile.role : null
 
   const needed = typeof required === 'string' ? [required] : required
   if (!role || !canAll(role, needed)) {
