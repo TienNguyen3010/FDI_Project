@@ -10,95 +10,31 @@
 //   có gắn session của người dùng (RLS: audit_logs INSERT WITH CHECK(TRUE)).
 // - Không lưu credential vào file.
 
-import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getSupabaseClient } from '@/lib/supabase/server'
+import { authorize, isRole, ROLES, type Role } from '@/lib/auth/authorize'
 import { ROLE_MATRIX } from '@/lib/role-matrix'
 
 // Không khai báo dynamic='force-dynamic': xung đột nextConfig.cacheComponents.
 // Route đọc cookie/DB → vẫn chạy lúc request nhờ Cache Components.
 
-const ROLES = ['employee', 'leader', 'manager', 'director'] as const
-type Role = (typeof ROLES)[number]
+// Dùng cho logic import (chống self-escalation/toàn quyền).
 const RANK: Record<Role, number> = { employee: 1, leader: 2, manager: 3, director: 4 }
-
-function isRole(v: unknown): v is Role {
-  return typeof v === 'string' && (ROLES as readonly string[]).includes(v)
-}
 
 /** Ma trận quyền — sao chép trung thực từ docs/rbac_matrix.md §3. */
 
-type DbClient = ReturnType<typeof getSupabaseClient>
+type DbClient = ReturnType<typeof import('@/lib/supabase/server')['getSupabaseClient']>
 
-interface Authorized {
-  ok: true
-  userId: string
-  email: string
-  role: Role
-  supabase: DbClient
-}
-interface Denied {
-  ok: false
-  status: number
-  message: string
-}
-
-/** Xác thực JWT + kiểm tra role manager/director. Gắn session để RLS thấy đúng user. */
-async function authorize(): Promise<Authorized | Denied> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('sb-access-token')?.value
-  if (!token) return { ok: false, status: 401, message: 'Chưa đăng nhập.' }
-
-  let supabase: DbClient
-  try {
-    supabase = getSupabaseClient()
-  } catch {
-    return { ok: false, status: 500, message: 'Chưa cấu hình Supabase.' }
-  }
-
-  const { data: authData, error: authError } = await supabase.auth.getUser(token)
-  if (authError || !authData.user) {
-    return { ok: false, status: 401, message: 'Phiên đăng nhập không hợp lệ.' }
-  }
-
-  // Gắn session vào client để mọi query/insert đi với JWT (RLS nhận diện được user).
-  // refresh_token để trống là chủ đích: access token còn hạn nên GoTrue không refresh.
-  try {
-    await supabase.auth.setSession({ access_token: token, refresh_token: '' })
-  } catch {
-    // best-effort: nếu setSession thất bại vẫn tiếp tục; getUser ở trên đã verify chữ ký.
-  }
-
-  const user = authData.user
-  const appMeta = (user.app_metadata ?? {}) as Record<string, unknown>
-  const jwtRoleRaw = appMeta.role ?? appMeta.app_role
-
-  // DB là nguồn chân thực: JWT cũ (role đã nâng/hạ) không được giữ quyền stale.
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, email, role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  const dbRole = isRole(profile?.role) ? profile.role : null
-  const jwtRole = isRole(jwtRoleRaw) ? jwtRoleRaw : null
-  const role: Role = dbRole ?? jwtRole ?? 'employee'
-
-  if (role !== 'manager' && role !== 'director') {
+/** Xác thực JWT + kiểm tra role manager/director qua helper dùng chung (lib/auth). */
+async function authorizeAdmin() {
+  const result = await authorize(['manager', 'director'])
+  if (!result.ok && result.status === 403) {
     return {
-      ok: false,
+      ok: false as const,
       status: 403,
       message: 'Không đủ quyền: chỉ Manager/Director được export/import cấu hình quyền.',
     }
   }
-
-  return {
-    ok: true,
-    userId: user.id,
-    email: profile?.email ?? user.email ?? '',
-    role,
-    supabase,
-  }
+  return result
 }
 
 /** Ghi audit best-effort — không được làm thất bại thao tác import. */
@@ -127,7 +63,7 @@ async function writeAudit(
 // GET — export
 // ---------------------------------------------------------------------------
 export async function GET() {
-  const auth = await authorize()
+  const auth = await authorizeAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.message }, { status: auth.status })
   }
@@ -176,7 +112,7 @@ interface ImportRow {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await authorize()
+  const auth = await authorizeAdmin()
   if (!auth.ok) {
     return NextResponse.json({ error: auth.message }, { status: auth.status })
   }

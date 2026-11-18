@@ -51,3 +51,7 @@ A. Identify current repo SHA and deployment SHA; B. run lint/typecheck/build/tes
 - D-05: Confirm actual release candidate and production readiness.
 
 **Rule:** no percentage complete or green release label without a defined denominator and linked evidence.
+
+## W0 — Refactor theo project_structure.md v2 (2026-11-17)
+
+- **W0 (server auth helper):** tạo `lib/auth/authorize.ts` — xác thực JWT + đối chiếu `users.role` (DB authoritative), parameterized `allowed` roles. `app/api/admin/roles/route.ts` đã dùng lại helper, bỏ bản inline trùng. Verify: `tsc` 0, `lint` 0, `npm test` 22/22. Routes/URL không đổi (DD evidence hierarchy).

@@ -28,6 +28,13 @@ test('00-governance/checklist.md có Nhật ký xác minh', () => {
   assert.ok(read('docs/00-governance/checklist.md').includes('Nhật ký xác minh'))
 })
 
+test('W0: lib/auth/authorize.ts dùng DB làm nguồn truth', () => {
+  const auth = read('lib/auth/authorize.ts')
+  assert.ok(auth.includes("from('users')"), 'phải đối chiếu bảng users')
+  assert.ok(auth.includes('app_metadata'), 'đọc role từ JWT app_metadata')
+  assert.ok(auth.includes('export async function authorize'), 'thiếu helper dùng chung')
+})
+
 test('DD C-09: proxy.ts có rewrite /api/v1 -> /api', () => {
   const proxy = read('proxy.ts')
   assert.ok(proxy.includes('/api/v1/'), 'thiếu điều kiệnrewrite /api/v1')
