@@ -12,20 +12,20 @@
 | DB password | **ABSENT** — đã rotate 2026-11-17, không lưu lại (chỉ placeholder) | session history msg 1076; `git-credentials` chỉ có host github.com |
 | psycopg / psql | ABSENT | `python3 -c import psycopg` fail; `command -v psql` fail |
 | `VERCEL_TOKEN` | **ABSENT** (env, config, shell rc đều không có) | deploy audit subagent |
-| `vercel` CLI | ABSENT; `.vercel/project.json` PRESENT | `command -v vercel` |
+| `vercel` CLI | ABSENT; file cấu hình Vercel tại repo root PRESENT | `command -v vercel` |
 | Git | sạch, `HEAD == origin/main == 74da920` | verify tool |
 
 ## 2. Quyết định Dev Director (không đổi DB đã apply)
 
-- **Không chạy** `docs/001_core.sql` / `002_extended.sql` lên DB hiện tại (sẽ lỗi/sai schema).
+- **Không chạy** `03-contracts/database/001_core.sql` / `03-contracts/database/002_extended.sql` lên DB hiện tại (sẽ lỗi/sai schema).
 - **Không force push**, không chỉnh migration đã apply.
-- Chỉ apply **`migrations/006_ops_core.sql`** (bổ sung, idempotent) SAU KHI có credential và verify bảng cũ tồn tại.
+- Chỉ apply **`../migrations/006_ops_core.sql`** (bổ sung, idempotent) SAU KHI có credential và verify bảng cũ tồn tại.
 - Deploy Vercel **chỉ sau** khi code đã push (đã xong `74da920`) + có token.
 
 ## 3. Việc cần từ bạn (2 credential)
 
 1. **Database password mới** (đã rotate) hoặc connection string pooler:
-   `postgresql://postgres.<ref>:<PASSWORD>@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres`
+   `postgresql://postgres.<project-ref>:<DB_PASSWORD>@<pooler-host>:6543/postgres`
    → Tôi sẽ set biến tạm trong phiên, **KHÔNG ghi vào repo/config/chat**.
 2. **VERCEL_TOKEN** hợp lệ (đăng nhập `vercel login` hoặc tạo token mới).
 
