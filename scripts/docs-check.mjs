@@ -61,7 +61,9 @@ const SECRET_PATTERNS = [
   ['Google API key', /AIza[0-9A-Za-z_-]{35}/],
   ['PEM private key', /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ['credential in URL', /[a-z][a-z0-9+.-]*:\/\/[^/\s:]+:[^/\s@]+@/i],
-];
+]
+// Credential-in-URL regex chỉ áp dụng khi value KHÔNG phải placeholder <...>.
+const isPlaceholderLine = (line) => /:\/\/[^/\s:]+:<[^>]+>@/.test(line);
 for (const file of allFiles) {
   if (path.basename(file).startsWith('.env')) {
     fail('secret', file, 0, 'env file tracked in docs');
@@ -71,7 +73,8 @@ for (const file of allFiles) {
   const lines = readFileSync(file, 'utf8').split('\n');
   lines.forEach((line, i) => {
     for (const [label, re] of SECRET_PATTERNS) {
-      if (re.test(line)) fail('secret', file, i + 1, `possible ${label}`);
+      if (label === 'credential in URL' && isPlaceholderLine(line)) continue
+      if (re.test(line)) fail('secret', file, i + 1, `possible ${label}`)
     }
   });
 }
