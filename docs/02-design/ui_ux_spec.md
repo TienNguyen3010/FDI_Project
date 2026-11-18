@@ -117,6 +117,8 @@ Every reusable component must specify: purpose, variants, props, events, accessi
 
 Exceptions: invalid credentials, expired session, insufficient permission, rate limit, server error. Never expose whether a specific username exists. Specify SSO/MFA requirements separately.
 
+> **Cập nhật 2026-11-18 (DD layout decision):** `/login` là màn hình **độc lập**, tách khỏi shell `(workspace)` bằng route group `(auth)` — root layout chỉ giữ html/body/font/metadata, `ClientBody` (sidebar + header + bottom nav) chỉ mount cho workspace. Lý do: ảnh production cho thấy user chưa đăng nhập vẫn thấy 7 link nội bộ → vi phạm nguyên tắc "menu ẩn không phải ranh giới bảo mật" (`USER_GUIDE §3`). Login giữ bố cục 2 cột: trái = branding dark gradient + 3 feature card, phải = form trắng; bỏ nút "Quay về Dashboard" (loop với `proxy.ts` redirect) và link "Quên mật khẩu?" `href="#"` (dead) → thay bằng hướng dẫn liên hệ admin. Dùng token có sẵn `--accent #3b82f6`, `--bg-*`, font Inter — không định nghĩa theme mới. Xem `00-governance/REVIEW_LOGIN_AUDIT_2026-11-18.md`.
+
 ### 7.2 Project
 `Project list → Detail → Overview / Progress / Devices / Documents → Contextual action`
 

@@ -272,6 +272,8 @@
 
 | 2026-11-18 | W0 + DD decisions + P2 Alerts (subagent rớt → parent tiếp quản) | `npx tsc --noEmit --skipLibCheck`; `npm run lint`; `npm test`; `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack`; marker-grep | **TSC_EXIT=0; LINT_EXIT=0; test 23/23 pass; BUILD_EXIT=0 (21 routes)**; marker `features/alerts` = 2 refs/component + 2 refs/page, local dupes = 0 | W0 commit `5b32909`; `/api/v1` alias `167a674`. Áp 8 DD decisions vào 7 spec v2 (23 dòng DD + 8 dòng "Closed by DD"). P2: tách `features/alerts/{schema,actions}.ts`, component & page import domain, URL/behavior giữ nguyên. docs cập nhật: checklist, README, EVIDENCE_REGISTER (E-24/E-25), SPEC_REALITY_CHECK, project_structure §10, RELEASE_NOTES, roadmap, ci.yml (thêm typecheck). Số **23/23** là test chạy thật hôm nay (docs cũ ghi 22/22 tại `167a674`). |
 
+| 2026-11-18 | Auth layout tách riêng (sau ảnh production) | `npx tsc --noEmit --skipLibCheck`; `npm run lint`; `npm test`; `NEXT_PRIVATE_BUILD_WORKER=1 npx next build --webpack` | **TSC=0; LINT=0; test 23/23; BUILD=0** — `/login` → `○` static KHÔNG shell; `/dashboard` `/alerts` `/reports` vẫn `◐` | Root layout bỏ `ClientBody`, thêm `app/(auth)/layout.tsx` + `app/(workspace)/layout.tsx`; dời 10 route nội bộ vào `(workspace)` bằng `git mv` (URL giữ nguyên). Bỏ nút "Quay về Dashboard" (loop) + link `href="#"` dead. Sửa `tests/pdf.test.mjs` (`readPage` fallback path) + review doc bỏ literal regex (self-match smoke). Tạo user `admin@fdi.local` role director qua Auth Admin API + profile row; `signInWithPassword` HTTP 200 verify role=director. Audit: `REVIEW_LOGIN_AUDIT_2026-11-18.md`. |
+
 ### Điểm sạch
 - Build production chạy xanh từ đầu đến cuối, không throw lúc collect page data.
 - TypeScript strict: 0 lỗi (`tsc --noEmit` exit 0).

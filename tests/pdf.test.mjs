@@ -7,6 +7,12 @@ import { resolve } from 'node:path'
 
 const root = process.cwd()
 const read = (rel) => readFileSync(resolve(root, rel), 'utf-8')
+// Route group (workspace) từ 2026-11-18: thử path mới trước, fallback path cũ.
+const readPage = (rel) => {
+  const grouped = `app/(workspace)/${rel}`
+  const path = existsSync(resolve(root, grouped)) ? grouped : rel
+  return read(path)
+}
 
 const FONTS = ['assets/fonts/Inter-Regular.ttf', 'assets/fonts/Inter-Bold.ttf']
 
@@ -42,8 +48,8 @@ test('các route API PDF tồn tại và trả application/pdf', () => {
 })
 
 test('trang chi tiết & tổng hợp tồn tại, gọi API PDF và dùng Toast', () => {
-  const detailPage = read('app/reports/[id]/page.tsx')
-  const summaryPage = read('app/reports/summary/page.tsx')
+  const detailPage = readPage('reports/[id]/page.tsx')
+  const summaryPage = readPage('reports/summary/page.tsx')
   assert.ok(detailPage.includes('/api/reports/${id}/pdf'), 'detail: thiếu fetch API PDF')
   assert.ok(detailPage.includes('Xuất PDF'), 'detail: thiếu nút Xuất PDF')
   assert.ok(summaryPage.includes('/api/reports/summary/pdf?period='), 'summary: thiếu fetch API PDF')

@@ -8,6 +8,8 @@ Obtain an account and the official internal URL from your administrator. Do not 
 ## 2. Sign-in and sign-out (verify on candidate build)
 Open the official URL; authenticate using the method configured by IT. Confirm your name/role; use Sign out when finished. If sign-in fails, check account status and contact support. **Do not assume a specific cookie name, token lifetime or password recovery flow** without testing the deployed version.
 
+> **Cập nhật 2026-11-18 (đã verify runtime):** `/login` là **màn hình đăng nhập riêng**, không hiển thị sidebar/menu nội bộ (tách route group `(auth)` / `(workspace)`). Form xác thực email + mật khẩu, lưu cookie `sb-access-token` HttpOnly qua `POST /api/auth/session` (1 giờ), chuyển `/dashboard` hoặc `callbackUrl`. Nút "Quay về Dashboard" (gây vòng lặp) đã bỏ; "Quên mật khẩu?" không có route reset nên thay bằng hướng dẫn **liên hệ admin để đặt lại**. Tài khoản thử do Dev Director tạo: `admin@fdi.local` (role `director`); mật khẩu giao riêng qua kênh bảo mật, **đổi ngay sau lần login đầu**. Xem `00-governance/REVIEW_LOGIN_AUDIT_2026-11-18.md`.
+
 ## 3. Navigation
 Expected sections: Dashboard, Customers, Projects, Devices, Alerts/Incidents, Maintenance, Works, Site Reports and Admin. Menus and available actions vary by role AND assigned data scope. Hidden buttons are not the security boundary; server and database enforce access.
 

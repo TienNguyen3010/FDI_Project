@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
-import { Suspense } from "react";
 import "./globals.css";
-import ClientBody from "@/components/ClientBody";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,24 +16,14 @@ export const metadata: Metadata = {
   },
 };
 
-// cookies() là request-time API. Với Cache Components, phải nằm trong <Suspense>
-// để phần còn lại của route được prerender (Next.js 16).
-async function Shell({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const initialCollapsed = cookieStore.get("sidebar_mode")?.value === "collapsed";
-  return <ClientBody initialCollapsed={initialCollapsed}>{children}</ClientBody>;
-}
-
+// Root layout duy nhất: chỉ chứa html/body/font/metadata.
+// Shell nội bộ nằm ở app/(workspace)/layout.tsx để trang login không bị lộ sidebar.
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
-        <Suspense fallback={<div className="min-h-screen bg-background" />}>
-          <Shell>{children}</Shell>
-        </Suspense>
-      </body>
+      <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );
 }

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/ui'
 import { Input } from '@/components/ui/ui'
 import { Label } from '@/components/ui/ui'
 import { Card, CardContent } from '@/components/ui/ui'
-import { Loader2, Mail, Lock, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Loader2, Mail, Lock, ShieldCheck } from 'lucide-react'
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -130,14 +130,7 @@ export default function LoginPage({
       <div className="flex w-full items-center justify-center bg-slate-50/60 px-4 lg:w-1/2">
         <div className="w-full max-w-md px-6 py-10">
           <div className="mb-8">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Quay về Dashboard
-            </button>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-900">Đăng nhập</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Đăng nhập</h2>
             <p className="mt-1 text-sm text-slate-500">Nhập email và mật khẩu để truy cập hệ thống</p>
           </div>
 
@@ -207,7 +200,7 @@ export default function LoginPage({
           </Card>
 
           <div className="mt-6 text-center text-sm text-slate-500">
-            <a href="#" className="text-blue-600 underline underline-offset-4 hover:text-blue-700">Quên mật khẩu?</a>
+            Liên hệ quản trị viên để đặt lại mật khẩu.
           </div>
         </div>
       </div>
