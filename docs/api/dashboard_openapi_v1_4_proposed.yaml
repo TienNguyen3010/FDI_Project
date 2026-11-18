@@ -1,0 +1,425 @@
+openapi: 3.1.0
+info:
+  title: Project OPS Dashboard Read API — Proposed v1.4
+  version: 1.4.0
+  description: Design-level contract; not implemented or production validated. Existing
+    /api/v1 endpoints remain authoritative until integration review.
+servers:
+- url: /api/v1
+security:
+- bearerAuth: []
+paths:
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags:
+      - Dashboard
+      parameters:
+      - &id001
+        name: from
+        in: query
+        schema:
+          type: string
+          format: date
+      - &id002
+        name: to
+        in: query
+        schema:
+          type: string
+          format: date
+      - &id003
+        name: scope
+        in: query
+        schema:
+          type: string
+        description: Requested scope intersected with effective grants
+      responses:
+        '200':
+          description: Scoped dashboard projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Summary'
+        '400':
+          description: Invalid date or filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '503':
+          description: Projection unavailable
+  /dashboard/projects:
+    get:
+      operationId: getDashboardProjects
+      tags:
+      - Dashboard
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - name: group_by
+        in: query
+        schema:
+          type: string
+          enum:
+          - project
+          - phase
+          default: project
+      responses:
+        '200':
+          description: Scoped dashboard projection
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - context
+                - items
+                properties:
+                  context:
+                    $ref: '#/components/schemas/Context'
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectProgress'
+        '400':
+          description: Invalid date or filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '503':
+          description: Projection unavailable
+  /dashboard/ticket-status:
+    get:
+      operationId: getDashboardTicketStatus
+      tags:
+      - Dashboard
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Scoped dashboard projection
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - context
+                - total_open
+                - buckets
+                properties:
+                  context:
+                    $ref: '#/components/schemas/Context'
+                  total_open:
+                    type: integer
+                  buckets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TicketBucket'
+        '400':
+          description: Invalid date or filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '503':
+          description: Projection unavailable
+  /dashboard/incidents:
+    get:
+      operationId: getDashboardIncidents
+      tags:
+      - Dashboard
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Scoped dashboard projection
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - context
+                - items
+                properties:
+                  context:
+                    $ref: '#/components/schemas/Context'
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Incident'
+        '400':
+          description: Invalid date or filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '503':
+          description: Projection unavailable
+  /dashboard/ticket-trend:
+    get:
+      operationId: getDashboardTicketTrend
+      tags:
+      - Dashboard
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      - name: metric
+        in: query
+        schema:
+          type: string
+          enum:
+          - created
+          - resolved
+          - open_end_of_day
+          default: created
+      responses:
+        '200':
+          description: Scoped dashboard projection
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - context
+                - metric
+                - points
+                properties:
+                  context:
+                    $ref: '#/components/schemas/Context'
+                  metric:
+                    type: string
+                    enum:
+                    - created
+                    - resolved
+                    - open_end_of_day
+                  points:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrendPoint'
+        '400':
+          description: Invalid date or filter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '503':
+          description: Projection unavailable
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Context:
+      type: object
+      required:
+      - as_of
+      - timezone
+      - scope
+      properties:
+        as_of:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          example: Asia/Ho_Chi_Minh
+        scope:
+          type: string
+        data_quality:
+          type: string
+          enum:
+          - complete
+          - partial
+          - stale
+          - insufficient_baseline
+    Metric:
+      type: object
+      required:
+      - id
+      - label
+      - value
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        value:
+          type:
+          - number
+          - 'null'
+        unit:
+          type: string
+        previous_value:
+          type:
+          - number
+          - 'null'
+        delta:
+          type:
+          - number
+          - 'null'
+        definition_id:
+          type: string
+        drilldown:
+          type: string
+        note:
+          type: string
+    Summary:
+      type: object
+      required:
+      - context
+      - metrics
+      properties:
+        context:
+          $ref: '#/components/schemas/Context'
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metric'
+    ProjectProgress:
+      type: object
+      required:
+      - id
+      - name
+      - progress
+      - health
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        project_code:
+          type: string
+        pm_name:
+          type:
+          - string
+          - 'null'
+        due_date:
+          type:
+          - string
+          - 'null'
+          format: date
+        progress:
+          type:
+          - number
+          - 'null'
+          minimum: 0
+          maximum: 100
+        health:
+          type: string
+          enum:
+          - on_track
+          - attention
+          - delayed
+          - unknown
+        baseline_version:
+          type:
+          - string
+          - 'null'
+    TicketBucket:
+      type: object
+      required:
+      - status
+      - count
+      properties:
+        status:
+          type: string
+          enum:
+          - new
+          - in_progress
+          - waiting
+          - other
+        count:
+          type: integer
+          minimum: 0
+    Incident:
+      type: object
+      required:
+      - id
+      - title
+      - priority
+      - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        priority:
+          type: string
+          enum:
+          - P1
+          - P2
+          - P3
+          - P4
+        status:
+          type: string
+        site_name:
+          type:
+          - string
+          - 'null'
+        assignee_name:
+          type:
+          - string
+          - 'null'
+        sla_deadline:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        sla_state:
+          type: string
+          enum:
+          - normal
+          - at_risk
+          - breached
+          - not_applicable
+    TrendPoint:
+      type: object
+      required:
+      - date
+      - count
+      properties:
+        date:
+          type: string
+          format: date
+        count:
+          type: integer
+          minimum: 0
+    ApiError:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string

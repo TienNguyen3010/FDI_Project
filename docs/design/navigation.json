@@ -1,0 +1,121 @@
+{
+  "version": "1.4",
+  "style": "approved-white-green-sidebar",
+  "width_expanded": 280,
+  "width_collapsed": 72,
+  "section_style": "white background, green section icons and labels, subtle green rule, pale-green active Dashboard",
+  "sections": [
+    {
+      "label": "TỔNG QUAN",
+      "items": [
+        {
+          "label": "Dashboard",
+          "icon": "layout-dashboard",
+          "route": "/dashboard",
+          "permission": "dashboard.read"
+        }
+      ]
+    },
+    {
+      "label": "KHÁCH HÀNG & DỰ ÁN",
+      "items": [
+        {
+          "label": "Customers",
+          "icon": "users",
+          "route": "/customers",
+          "permission": "customer.read"
+        },
+        {
+          "label": "Projects",
+          "icon": "folder",
+          "route": "/projects",
+          "permission": "project.read"
+        },
+        {
+          "label": "Sites",
+          "icon": "map-pin",
+          "route": "/sites",
+          "permission": "site.read"
+        },
+        {
+          "label": "Infrastructure",
+          "icon": "network",
+          "route": "/infrastructure",
+          "permission": "diagram.read"
+        },
+        {
+          "label": "Assets",
+          "icon": "server",
+          "route": "/assets",
+          "permission": "asset.read"
+        }
+      ]
+    },
+    {
+      "label": "VẬN HÀNH & DỊCH VỤ",
+      "items": [
+        {
+          "label": "Works",
+          "icon": "list-checks",
+          "route": "/my-work",
+          "permission": "task.read"
+        },
+        {
+          "label": "Service Desk",
+          "icon": "ticket",
+          "route": "/tickets",
+          "permission": "ticket.read"
+        },
+        {
+          "label": "Maintenance",
+          "icon": "wrench",
+          "route": "/maintenance",
+          "permission": "maintenance.read"
+        },
+        {
+          "label": "Monitoring",
+          "icon": "activity",
+          "route": "/monitoring",
+          "permission": "monitoring.read"
+        }
+      ]
+    },
+    {
+      "label": "TÀI LIỆU & BÁO CÁO",
+      "items": [
+        {
+          "label": "Documents",
+          "icon": "file-text",
+          "route": "/documents",
+          "permission": "document.read"
+        },
+        {
+          "label": "Reports",
+          "icon": "chart-column",
+          "route": "/reports",
+          "permission": "report.read"
+        }
+      ]
+    },
+    {
+      "label": "HỆ THỐNG",
+      "items": [
+        {
+          "label": "Admin",
+          "icon": "settings",
+          "route": "/admin",
+          "permission": "admin.user_manage"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    "Section order and all menu labels must match approved screenshot",
+    "Do not expose monitoring if monitoring.read permission is not configured; feature flag until authorized",
+    "Active Dashboard pale green, dark green text and 3px green left rail",
+    "Notification badge is scoped actionable count, not a global count",
+    "Collapsed sidebar 72px with accessible tooltips and keyboard navigation",
+    "Do not rely on hidden navigation for security",
+    "User profile anchored at bottom"
+  ]
+}

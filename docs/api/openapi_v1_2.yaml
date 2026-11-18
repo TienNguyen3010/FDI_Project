@@ -1,0 +1,1236 @@
+openapi: 3.1.0
+info:
+  title: Infrastructure Operations API — contract baseline
+  version: 1.2.0
+  description: Executable structural contract. Generic mutation schemas require endpoint-specific
+    refinement before production approval.
+servers:
+- url: https://ops.example.internal/api
+tags:
+- name: customers
+- name: sites
+- name: projects
+- name: tasks
+- name: assets
+- name: diagrams
+- name: tickets
+- name: maintenance
+- name: documents
+- name: reports
+- name: admin
+paths:
+  /v1/customers:
+    get:
+      tags:
+      - customers
+      operationId: listCustomers
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - customers
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/customers/{id}:
+    get:
+      tags:
+      - customers
+      operationId: getCustomer
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - customers
+      operationId: updateCustomer
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/sites:
+    get:
+      tags:
+      - sites
+      operationId: listSites
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - sites
+      operationId: createSite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/sites/{id}:
+    get:
+      tags:
+      - sites
+      operationId: getSite
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - sites
+      operationId: updateSite
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/projects:
+    get:
+      tags:
+      - projects
+      operationId: listProjects
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - projects
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/projects/{id}:
+    get:
+      tags:
+      - projects
+      operationId: getProject
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - projects
+      operationId: updateProject
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/tasks:
+    get:
+      tags:
+      - tasks
+      operationId: listTasks
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - tasks
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/tasks/{id}:
+    get:
+      tags:
+      - tasks
+      operationId: getTask
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - tasks
+      operationId: updateTask
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/assets:
+    get:
+      tags:
+      - assets
+      operationId: listAssets
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - assets
+      operationId: createAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/assets/{id}:
+    get:
+      tags:
+      - assets
+      operationId: getAsset
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - assets
+      operationId: updateAsset
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/diagrams:
+    get:
+      tags:
+      - diagrams
+      operationId: listDiagrams
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - diagrams
+      operationId: createDiagram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/diagrams/{id}:
+    get:
+      tags:
+      - diagrams
+      operationId: getDiagram
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - diagrams
+      operationId: updateDiagram
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/tickets:
+    get:
+      tags:
+      - tickets
+      operationId: listTickets
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - tickets
+      operationId: createTicket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/tickets/{id}:
+    get:
+      tags:
+      - tickets
+      operationId: getTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - tickets
+      operationId: updateTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/maintenance/work-orders:
+    get:
+      tags:
+      - maintenance
+      operationId: listWorkOrders
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - maintenance
+      operationId: createWorkOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/maintenance/work-orders/{id}:
+    get:
+      tags:
+      - maintenance
+      operationId: getWorkOrder
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - maintenance
+      operationId: updateWorkOrder
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/documents:
+    get:
+      tags:
+      - documents
+      operationId: listDocuments
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - documents
+      operationId: createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/documents/{id}:
+    get:
+      tags:
+      - documents
+      operationId: getDocument
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - documents
+      operationId: updateDocument
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/reports:
+    get:
+      tags:
+      - reports
+      operationId: listReports
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - reports
+      operationId: createReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/reports/{id}:
+    get:
+      tags:
+      - reports
+      operationId: getReport
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - reports
+      operationId: updateReport
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/admin/users:
+    get:
+      tags:
+      - admin
+      operationId: listUsers
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - admin
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '201':
+          description: Created
+      security:
+      - bearerAuth: []
+  /v1/admin/users/{id}:
+    get:
+      tags:
+      - admin
+      operationId: getUser
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: OK
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - admin
+      operationId: updateUser
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationInput'
+      responses:
+        '200':
+          description: Updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+      - bearerAuth: []
+  /v1/projects/{id}/submit-acceptance:
+    post:
+      tags:
+      - projects
+      operationId: submitProjectAcceptance
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/projects/{id}/approve-baseline:
+    post:
+      tags:
+      - projects
+      operationId: approveProjectBaseline
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/assets/{id}/install:
+    post:
+      tags:
+      - assets
+      operationId: installAsset
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/assets/{id}/move:
+    post:
+      tags:
+      - assets
+      operationId: moveAsset
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/assets/{id}/replace:
+    post:
+      tags:
+      - assets
+      operationId: replaceAsset
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/diagrams/{id}/versions:
+    post:
+      tags:
+      - diagrams
+      operationId: createDiagramRevision
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/diagrams/{id}/approve:
+    post:
+      tags:
+      - diagrams
+      operationId: approveDiagram
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/tickets/{id}/triage:
+    post:
+      tags:
+      - tickets
+      operationId: triageTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/tickets/{id}/assign:
+    post:
+      tags:
+      - tickets
+      operationId: assignTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/tickets/{id}/resolve:
+    post:
+      tags:
+      - tickets
+      operationId: resolveTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/tickets/{id}/close:
+    post:
+      tags:
+      - tickets
+      operationId: closeTicket
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/maintenance/work-orders/{id}/complete:
+    post:
+      tags:
+      - maintenance
+      operationId: completeWorkOrder
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+  /v1/documents/{id}/approve:
+    post:
+      tags:
+      - documents
+      operationId: approveDocument
+      parameters:
+      - $ref: '#/components/parameters/ResourceId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionInput'
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+      security:
+      - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+      description: Optimistic lock resource version
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+  schemas:
+    Resource:
+      type: object
+      required:
+      - id
+      - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        code:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+      additionalProperties: true
+    MutationInput:
+      type: object
+      minProperties: 1
+      additionalProperties: true
+    TransitionInput:
+      type: object
+      required:
+      - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+        evidence_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        assignee_id:
+          type: string
+          format: uuid
+      additionalProperties: false
+    PagedResult:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        next_cursor:
+          type:
+          - string
+          - 'null'
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - code
+      - correlation_id
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        correlation_id:
+          type: string
+          format: uuid
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: NotFound
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationError:
+      description: ValidationError
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

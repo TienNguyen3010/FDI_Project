@@ -1,0 +1,22 @@
+{
+  "version": "1.4",
+  "approved_visual_reference": "same_layout_as_before_but_optimized_left_sidebar.png",
+  "files": 43,
+  "dashboard_paths": 5,
+  "nav_sections": 5,
+  "rbac_permissions": 48,
+  "checks": [
+    "YAML parses",
+    "JSON parses",
+    "Navigation has 5 sections",
+    "Traceability rows present",
+    "Approved image copied"
+  ],
+  "not_executed": [
+    "PostgreSQL migration tests",
+    "Live API contract tests",
+    "RBAC integration tests",
+    "Figma redesign",
+    "UAT"
+  ]
+}

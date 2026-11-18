@@ -1,0 +1,11 @@
+requirement_id,database_tables,api_resource,ui_screen,uat_id
+REQ-001,"customers,sites","customers,sites",Customer/Site,UAT-001
+REQ-002,"projects,project_tasks,milestones,acceptance_records","projects,tasks",Project Detail,UAT-002
+REQ-003,"assets,asset_placements,asset_installations,asset_replacements",assets,Asset Detail,UAT-003
+REQ-004,"diagrams,diagram_versions,diagram_nodes",diagrams,Infrastructure,UAT-004
+REQ-005,"tickets,ticket_events,ticket_assignments,ticket_sla",tickets,Service Desk,UAT-005
+REQ-006,"maintenance_plans,work_orders,checklist_answers",maintenance/work-orders,Maintenance,UAT-006
+REQ-007,"contracts,contract_coverage,sla_policies",tickets,Contract Detail,UAT-007
+REQ-008,"projects,tickets,work_orders",reports,Dashboard,UAT-008
+REQ-009,"outbox_events,notification_deliveries",tickets,Notification Center,UAT-009
+REQ-010,"roles,permissions,role_permissions,access_grants,audit_events",admin/users,Admin RBAC,UAT-010

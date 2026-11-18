@@ -1,0 +1,10 @@
+requirement,screen,component,api_dependency,database_source,uat,status
+REQ-UI-013,UX-01—08,LightSidebar,auth effective permissions,roles/grants,UAT-UI-013,specified
+REQ-UI-014,UX-01,KPIGradientCard,GET /dashboard/summary (proposed),projects/tickets/sla_instances,UAT-UI-014,contract pending
+REQ-UI-015,UX-01,TicketDonut,GET /dashboard/ticket-status (proposed),tickets,UAT-UI-015,contract pending
+REQ-UI-015,UX-01,TicketTrendChart,GET /dashboard/ticket-trend (proposed),ticket_events/tickets,UAT-UI-017,contract pending
+REQ-UI-015,UX-01,QuickActionTile,existing create endpoints,project/ticket/asset/work_order,UAT-UI-018,permission gate
+REQ-UI-016,UX-01,TicketStatusDonut,GET /dashboard/ticket-status (proposed),tickets/ticket_events,UAT-UI-015,proposed
+REQ-UI-017,UX-01,WeightedProgress,GET /dashboard/projects (proposed),projects/milestones,UAT-UI-017,baseline review
+REQ-UI-018,UX-01,SlaRiskCard,GET /dashboard/summary (proposed),ticket_sla,UAT-UI-016,policy review
+REQ-UI-021,UX-01,QuickActionTile,existing create endpoints,rbac/target entities,UAT-UI-020,authorization review

@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: Infrastructure Operations API — Starter Contract
+  version: 1.1.0
+  description: Partial starter contract; not full endpoint coverage.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /tickets:
+    get:
+      operationId: listTickets
+      summary: List tickets scoped to authorized user
+      parameters:
+        - in: query
+          name: cursor
+          schema: {type: string}
+        - in: query
+          name: limit
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+      responses:
+        '200':
+          description: Scoped tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Ticket'}
+                  nextCursor: {type: [string, 'null']}
+        '401': {$ref: '#/components/responses/Error'}
+    post:
+      operationId: createTicket
+      summary: Create incident or service request
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: {type: string, minLength: 8, maxLength: 128}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateTicket'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Ticket'}
+        '422': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+  /tickets/{ticketId}/transitions:
+    post:
+      operationId: transitionTicket
+      parameters:
+        - in: path
+          name: ticketId
+          required: true
+          schema: {type: string, format: uuid}
+        - in: header
+          name: If-Match
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: {type: string, enum: [triage, assign, start, resolve, close, reopen]}
+                reason: {type: string}
+                assigneeId: {type: string, format: uuid}
+                resolutionCode: {type: string}
+      responses:
+        '200':
+          description: Transition applied
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Ticket'}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  responses:
+    Error:
+      description: Standard problem response
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Problem'}
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, code, traceId]
+      properties:
+        type: {type: string}
+        title: {type: string}
+        status: {type: integer}
+        code: {type: string}
+        detail: {type: string}
+        traceId: {type: string}
+    CreateTicket:
+      type: object
+      required: [customerId, type, summary, impact, urgency]
+      properties:
+        customerId: {type: string, format: uuid}
+        siteId: {type: string, format: uuid}
+        type: {type: string, enum: [incident, service_request]}
+        summary: {type: string, minLength: 5, maxLength: 250}
+        impact: {type: string, enum: [low, medium, high]}
+        urgency: {type: string, enum: [low, medium, high]}
+    Ticket:
+      type: object
+      required: [id, code, customerId, type, status, priority, version]
+      properties:
+        id: {type: string, format: uuid}
+        code: {type: string}
+        customerId: {type: string, format: uuid}
+        type: {type: string, enum: [incident, service_request]}
+        status: {type: string}
+        priority: {type: string}
+        version: {type: integer}

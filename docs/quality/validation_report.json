@@ -1,0 +1,8 @@
+{
+  "openapi_paths": 35,
+  "permissions": 46,
+  "rbac_roles": 6,
+  "sql_tables": 47,
+  "traceability_requirements": 10,
+  "validation": "YAML parsed, trace table names checked; SQL NOT executed against PostgreSQL"
+}
