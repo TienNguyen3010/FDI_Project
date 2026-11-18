@@ -7,7 +7,7 @@
 | Cross-customer protection | `../06-reference/test_dashboard.py` | Testable reference |
 | Ticket state vs SLA | mutually exclusive state buckets; SLA risk separately | Testable reference |
 | Weighted progress | explicit baseline weights | Testable reference |
-| Database | SQLite fixture for executable API, v1.4 PostgreSQL DDL retained | **No PostgreSQL integration run** |
+| Database | SQLite fixture for executable API, legacy PostgreSQL DDL retained | **No PostgreSQL integration run** |
 | Figma | Editable dashboard in existing file | Partial sync, not pixel-perfect |
 | UI→API→DB→UAT | mapping below | Partial, reference only |
 

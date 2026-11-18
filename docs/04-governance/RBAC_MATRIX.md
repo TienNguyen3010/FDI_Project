@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 Dashboard widgets, global search, drilldowns, project detail, incident detail, SLA count, refresh and quick actions require backend permissions and record-level scope. `dashboard.read` and `monitoring.read` are proposed new permissions, not present in original policy until updated.
 
 ---
@@ -35,10 +35,9 @@ Cross-customer GET, list filter, attachment download, bulk export, websocket sub
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Executable authorization contract
+# Executable authorization contract
 Decision = authenticated AND permission granted AND resource scope matches AND resource state permits AND field policy permits. Default deny. UI visibility is never authorization.
 
 | Action | Admin | Director | PM | Engineer | Support | Customer |
@@ -61,11 +60,9 @@ Decision = authenticated AND permission granted AND resource scope matches AND r
 
 **Security test IDs:** SEC-001 cross-customer read; SEC-002 IDOR download; SEC-003 forged customer_id create; SEC-004 unauthorized priority edit; SEC-005 websocket topic escalation; SEC-006 search leakage; SEC-007 stale membership after role revocation; SEC-008 export > authorized scope.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Menu visibility derives from effective permission plus scope, never grants access. Dashboard endpoints, drilldown, export, global search, alerts and realtime updates must all re-evaluate authorization. No hardcoded role-only KPI counts.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

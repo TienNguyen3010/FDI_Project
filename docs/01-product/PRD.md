@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 REQ-UI-014 (P0): approved green navigation and pixel-composition lock; REQ-UI-015 (P0): 4 KPI cards, scope/date/refresh bar; REQ-UI-016 (P0): mutually exclusive ticket status donut; REQ-UI-017 (P0): weighted project progress; REQ-UI-018 (P0): SLA at-risk separate from breached; REQ-UI-019 (P1): incident SLA and owner; REQ-UI-020 (P1): ticket trend metric selector; REQ-UI-021 (P0): five permission-gated quick actions.
 
 ---
 
-# PRD v1.1 — Infrastructure Lifecycle & Service Operations
+# PRD Infrastructure Lifecycle & Service Operations
 ## Problem
 Customer projects, device locations/serials, as-built diagrams, maintenance and incidents are fragmented across spreadsheets, email and messaging. The platform must create a verifiable record from delivery to operations.
 ## Personas
@@ -47,10 +47,9 @@ Security review; data migration rehearsal; backup restore test; UAT end-to-end s
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Change Control — supersedes conflicting v1.0 sections
+# Change Control — supersedes conflicting sections
 **Status:** REVIEW REQUIRED. Product baseline only after business owner, engineering, security and operations sign-off. All requirements carry IDs.
 
 ## Scope correction
@@ -84,7 +83,6 @@ Full CAD editing, full SNMP poller, remote config push, billing, inventory purch
 ## Open sign-offs
 Customer portal read-only vs ticket creation; contractual SLA pause rules; RPO/RTO; document retention; monitoring provider; approval authority; data volumes and target concurrent users.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 REQ-UI-013: consistent light sidebar with distinct sections/icons and selected state. REQ-UI-014: actionable KPI cards with scoped drilldowns. REQ-UI-015: accessible project progress, ticket donut, incident list, trend and quick actions. Visual approval does not imply production approval.

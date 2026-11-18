@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 UAT-UI-014: screenshot layout matches; UAT-UI-015: donut sums to open tickets; UAT-UI-016: SLA risk excludes already breached; UAT-UI-017: weighted progress handles missing baseline; UAT-UI-018: cross-customer scope blocks KPI and drilldown; UAT-UI-019: time window consistency; UAT-UI-020: quick actions denied without permission.
 
 ---
 
-# UAT & Quality Verification v1.1
+# UAT & Quality Verification
 | Test | Scenario | Expected |
 |---|---|---|
 | UAT-001 | Create customer/site and view as assigned user | scoped records only |
@@ -27,11 +27,9 @@ UAT-UI-014: screenshot layout matches; UAT-UI-015: donut sums to open tickets; U
 
 **Exit gate:** 100% P0 critical flows pass; no open critical/high security defects; backup restore and rollback drill evidenced; business owner signs acceptance. Test datasets must contain at least two customers and cross-scope negative cases.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Add UAT-UI-013 navigation role filtering and keyboard; UAT-UI-014 KPI reconciliation across date ranges; UAT-UI-015 donut sum/open tickets; UAT-UI-016 mobile 390px and 200% zoom; UAT-UI-017 loading/error/stale/forbidden; UAT-UI-018 quick-action authorization.
 
-
-## v1.5 implementation evidence
-See `INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

@@ -1,4 +1,4 @@
-# UAT scenarios v1.2
+# UAT scenarios
 
 ## UAT-001 — REQ-001
 Given a user with appropriate scope, verify the Customer/Site flow against `customers,sites` and the corresponding tables `customers,sites`. Repeat with a cross-customer identity and expect access denied; verify audit, idempotency and concurrency behavior where mutations occur.

@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 UI design system: green light sidebar with KPI gradient cards preserved. Snapshot consistency and as_of timestamps are required. Prefer server-side authorized aggregation and transactionally consistent snapshot; no fake realtime guarantee.
 
 ---
@@ -33,10 +33,9 @@ ADR-001 auth provider; ADR-002 file storage; ADR-003 realtime transport; ADR-004
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Technical decisions and quality gates
+# Technical decisions and quality gates
 Modular monolith with bounded contexts, internal domain events and transactional outbox. No SaaS multi-tenancy. PostgreSQL OLTP; object storage for files; Redis queue for delivery and asynchronous reports; external monitoring provider via adapter. Choose one backend stack before coding (NestJS/TypeScript **or** ASP.NET Core), not both. OIDC with MFA for privileged roles; vault for secrets; TLS end-to-end; short-lived signed file links; strict customer scope at query boundary.
 
 **NFRs to validate (proposed, not approved):** 95th percentile GET list latency < 500 ms at agreed load; 99.5% app availability excluding planned maintenance; API audit completeness 100% for privileged mutations; retryable integrations at-least-once with dedupe; 30-day restore drill cadence initially. RPO, RTO, users, assets and event throughput remain TBD and must be signed off before infra sizing.
@@ -45,11 +44,9 @@ Modular monolith with bounded contexts, internal domain events and transactional
 
 **Observability:** traceId correlation across API/outbox/worker, structured logs without credentials, metrics for queue lag/failed jobs/SLA recalculation, health/readiness endpoints, backup/restore evidence. Release gate requires rollback rehearsal and migration compatibility.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Frontend design tokens from `assets/tokens.json`; semantic components rather than inline colors. KPI refresh must expose source timestamp and cache age. Do not infer realtime availability from UI animation.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

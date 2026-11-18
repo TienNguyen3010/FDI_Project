@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 Dashboard is read-only. Create Ticket / Project / Asset / Maintenance triggers existing workflows with all guards. SLA risk is an independent policy state; never transition ticket workflow because of donut selection.
 
 ---
@@ -31,10 +31,9 @@ Event -> Outbox -> Channel adapter -> Provider response -> Delivered/Failed/Retr
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Transition contracts
+# Transition contracts
 All transitions require expected `version`; conflicts return HTTP 409. Mutate state + write business history + outbox in one transaction; notifications happen asynchronously.
 
 | Flow | From → Action → To | Guard | Side effects / failure |
@@ -56,7 +55,6 @@ All transitions require expected `version`; conflicts return HTTP 409. Mutate st
 
 **SLA clocks:** policy selected from effective contract coverage + service + priority + site timezone; store calendar version and computed deadline. Pause reasons must be contract-authorized, event-sourced and independently auditable. Missing policy → `policy_missing`, not fabricated due_at. Incident restoration and final resolution are distinct timestamps. Use UTC instants for storage and IANA timezone for presentation.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Quick actions launch existing workflows; they do not bypass guards. Dashboard read-only projections never advance workflow states. Alert badges reflect scoped actionable state only.

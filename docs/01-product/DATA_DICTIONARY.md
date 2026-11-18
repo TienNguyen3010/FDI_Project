@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 New dashboard response definitions: as_of, effective_scope, definition_id, baseline_version, weighted_progress, progress_coverage, ticket_status_bucket, sla_risk_count, sla_breached_count, trend_metric, trend_local_date, is_stale.
 
 ---
 
-# Data Dictionary v1.1 — Critical Fields
+# Data Dictionary Critical Fields
 | Entity.field | Type | Required | Owner | Validation / sensitivity |
 |---|---|---|---|---|
 | customers.id | uuid | yes | Customer | immutable PK |
@@ -28,7 +28,6 @@ New dashboard response definitions: as_of, effective_scope, definition_id, basel
 
 **Ownership rules:** only owning module writes core entity; other modules reference stable IDs. PII: contacts, email, phone; restricted: credentials, network diagrams, configuration backups. Secrets must never be stored as free-text fields. All timestamps UTC; site timezone IANA identifier.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Add dashboard response vocabulary: `as_of` UTC timestamp, `scope` effective authorization, `range_start/end`, `definition_id`, `numerator`, `denominator`, `comparison_window`, `is_stale`, `drilldown_filter`; data owners must approve metric definitions.

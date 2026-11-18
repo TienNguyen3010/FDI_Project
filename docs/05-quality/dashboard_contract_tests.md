@@ -1,4 +1,4 @@
-# Dashboard Contract & Security Test Matrix v1.4
+# Dashboard Contract & Security Test Matrix
 
 | ID | Setup | Assertion |
 |---|---|---|

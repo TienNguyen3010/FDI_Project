@@ -1,6 +1,6 @@
-# UI Design Baseline v1.4 — APPROVED REFERENCE
+# UI Design Baseline APPROVED REFERENCE
 
-**Source of truth:** `design_reference_approved_v1.4.png` (the latest optimized dashboard image approved by the user). This supersedes v1.3 visual guidance where inconsistent. This is a **design baseline, not proof of a running system**.
+**Source of truth:** `design_reference_approved.png` (the latest optimized dashboard image approved by the user). This supersedes the legacy baseline visual guidance where inconsistent. This is a **design baseline, not proof of a running system**.
 
 ## Pixel-composition lock
 - Preserve the reference desktop layout and relative placement. White left sidebar (~280px) with green logo and icons, pale-green Dashboard active item, green section headings, grouped navigation and bottom user profile.

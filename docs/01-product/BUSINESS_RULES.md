@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 BR-DASH-001: SLA risk and breach separate. BR-DASH-002: donut statuses mutually exclusive and reconcile. BR-DASH-003: progress weighted by approved baseline. BR-DASH-004: date and scope consistent. BR-DASH-005: no fabricated comparison or timestamp. BR-DASH-006: backend checks quick actions.
 
 ---
 
-# Business Rules v1.1
+# Business Rules
 | ID | Rule | Enforcement | Tests |
 |---|---|---|---|
 | BR-001 | Project-site must belong to same customer | composite FK + service check | DB-001 |
@@ -26,7 +26,6 @@ BR-DASH-001: SLA risk and breach separate. BR-DASH-002: donut statuses mutually 
 
 **Precedence:** approved PRD/BR changes must update API, workflow, UI, migration and tests in the same change request. Every exception must identify approver and expiry.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 BR-UI-001: Never show demo values as live data. BR-UI-002: Counts and chart totals must reconcile under identical user scope/date filters. BR-UI-003: SLA risk and breach are separate. BR-UI-004: quick actions require backend permissions. BR-UI-005: weighted progress requires approved baseline and explicit coverage.

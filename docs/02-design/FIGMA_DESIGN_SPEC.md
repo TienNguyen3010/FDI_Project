@@ -1,7 +1,7 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-v1.4 design must match approved green sidebar screenshot. Existing Figma v1.2 screens do NOT yet match and must be updated separately. All design tokens in assets/tokens.json; no automatic claim of live Figma sync.
+### Dashboard alignment (approved baseline)
+ design must match approved green sidebar screenshot. Existing Figma screens do NOT yet match and must be updated separately. All design tokens in assets/tokens.json; no automatic claim of live Figma sync.
 
 ---
 
@@ -31,21 +31,18 @@ Every frame names route, permission, query source, loading/empty/error states, v
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Figma handoff acceptance (not a native Figma file)
+# Figma handoff acceptance (not a native Figma file)
 **Pages:** 00 Foundations, 01 Components, 02 Desktop Screens, 03 Mobile Screens, 04 Prototypes, 05 Handoff.
 **Tokens:** spacing 4/8/12/16/24/32; radii 6/10/14; semantic colors primary, success, warning, danger, neutral; typography 12/14/16/20/24/32; contrast target WCAG AA. Avoid using color alone for ticket severity.
 **Component variants:** Sidebar expanded/collapsed; DataTable loading/empty/error/selected; KPI default/stale; StatusBadge; FilterBar; Drawer; Timeline; AssetMarker; RackUnit; ApprovalPanel; SLAClock active/paused/breached; ChecklistItem; QRScanPrompt; NotificationToast.
 **Prototype journeys:** Project→Site→Asset→Ticket; Survey→Install→Acceptance; Ticket→Assignment→Resolution; WorkOrder→Evidence→Approval; RBAC denied access. Annotate each frame with UX-ID, REQ-ID, endpoint and permission. Produce 1440px desktop and 390px mobile frames with Auto Layout and responsive constraints.
 **Important:** No actual editable Figma file has been created in this package; this is the implementation handoff specification.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
-Visual direction v1.4 (green sidebar, approved) supersedes v1.3: white sidebar, grouped pale-blue sections, navy outline icons, blue selected nav, white content cards, colored KPI accents. See `DESIGN_BASELINE_v1.4.md` and `assets/tokens.json`. Prior Figma screens must be visually revised; do not claim they already match.
+## Visual baseline alignment (2026-11-18)
+Visual direction  (green sidebar, approved) supersedes the legacy baseline: white sidebar, grouped pale-blue sections, navy outline icons, blue selected nav, white content cards, colored KPI accents. See `DESIGN_BASELINE.md` and `assets/tokens.json`. Prior Figma screens must be visually revised; do not claim they already match.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

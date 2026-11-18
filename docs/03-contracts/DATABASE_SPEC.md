@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 No SQL schema migration is claimed for this UI change. Implement dashboard read projections only after validating existing table columns and snapshot semantics; add scoped indexes and migrations via separate reviewed change. Do not assume tickets have historical as-of data.
 
 ---
@@ -39,11 +39,9 @@ Separate DB app/migration/read-only users; TLS; encrypted backups; PII and attac
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 UI-only theme changes require no schema migration. Dashboard read models may use existing tables/views; any new materialized view requires migration, refresh strategy and scope-safe query tests. Never store gradient values in business tables.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

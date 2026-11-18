@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-v1.4 UI traceability: REQ-UI-014 -> UX-01 -> tokens/navigation -> UAT-UI-014; REQ-UI-016 -> GET /dashboard/ticket-status (proposed) -> tickets -> UAT-UI-015; REQ-UI-017 -> projects/milestones/baselines -> UAT-UI-017; REQ-UI-018 -> ticket_sla -> UAT-UI-016.
+### Dashboard alignment (approved baseline)
+ UI traceability: REQ-UI-014 -> UX-01 -> tokens/navigation -> UAT-UI-014; REQ-UI-016 -> GET /dashboard/ticket-status (proposed) -> tickets -> UAT-UI-015; REQ-UI-017 -> projects/milestones/baselines -> UAT-UI-017; REQ-UI-018 -> ticket_sla -> UAT-UI-016.
 
 ---
 
-# Requirement Traceability Matrix v1.1
+# Requirement Traceability Matrix
 | REQ | Business rule | UX | API | Database | Test |
 |---|---|---|---|---|---|
 | REQ-001 | BR-001, BR-012 | UX-02/04 | GET /customers, /sites | customers, sites | SEC-001, UAT-001 |
@@ -20,11 +20,9 @@ v1.4 UI traceability: REQ-UI-014 -> UX-01 -> tokens/navigation -> UAT-UI-014; RE
 
 **Traceability gate:** no P0 story is Ready until all six columns are populated with implementable artifacts and a named reviewer.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 REQ-UI-013 -> UX-01/AppShell -> navigation config -> RBAC route tests -> UAT-UI-013. REQ-UI-014 -> UX-01 KPI cards -> proposed dashboard read endpoints -> metric source tables -> UAT-UI-014. REQ-UI-015 -> UX-01 charts/actions -> ticket/project/SLA endpoints -> UAT-UI-015—018.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

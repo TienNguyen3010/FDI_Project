@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 Sequence: approve metric definitions; verify DB source columns; update RBAC policy; implement proposed dashboard endpoints; update Figma components and eight screens; implement frontend; contract+scope+UAT; visual parity; release review.
 
 ---
@@ -36,15 +36,13 @@ Unknown data quality; legacy diagram import; messaging provider approvals; custo
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Revised phased delivery
+# Revised phased delivery
 **Gate 0 (2–3 weeks estimate):** approve REQ/BR matrix, schema, RBAC, API contracts, prototype and NFRs. **Phase A:** identity, customer/site, project, tasks, audit, scoped search. **Phase B:** asset placement/history, diagram version and marker viewer, rack occupancy, acceptance. **Phase C:** tickets/SLA, maintenance, reports, email/outbox. **Phase D:** monitoring adapter, advanced topology editing, change, Telegram/Zalo integration. Phases are dependency-based; durations require team capacity and integration discovery.
 
 **Exit criteria:** complete end-to-end test of Customer→Site→Project→Install→As-built→Accept→Incident→Maintain; zero critical RBAC findings; migration/restore rehearsed; report totals reconcile to scoped source data; support playbook exercised.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Add UI sprint: token updates -> shared AppShell/LightSidebar -> dashboard KPI and charts -> states/responsive -> remaining eight screen shells -> QA and signoff. Backend endpoint additions gated by OpenAPI and authorization.

@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 Block release until new dashboard API contracts implemented and tested, RBAC permission catalog updated and enforced, screenshot parity reviewed, all data consistency tests pass, and Figma redesign delivered.
 
 ---
 
-# Release gate — v1.2 review
+# Release gate — review
 Status: **NOT APPROVED FOR PRODUCTION**.
 
 ## Delivered
@@ -25,11 +25,9 @@ Status: **NOT APPROVED FOR PRODUCTION**.
 
 No claim of full implementation or production readiness is made.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 New blocker: Figma and frontend must match approved light sidebar reference, pass responsive/accessibility review and prove dashboard metric consistency. Previous database/API/security blockers remain open.
 
-
-## v1.5 implementation evidence
-See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+## Implementation evidence
+See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

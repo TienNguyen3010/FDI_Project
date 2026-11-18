@@ -1,7 +1,7 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-Change request v1.4: replace v1.3 blue-sidebar visual baseline with user-approved green-sidebar reference. Require Product Owner metric signoff, frontend design QA, backend contract review, RBAC tests and UAT before release.
+### Dashboard alignment (approved baseline)
+Change request: replace legacy blue-sidebar visual baseline with user-approved green-sidebar reference. Require Product Owner metric signoff, frontend design QA, backend contract review, RBAC tests and UAT before release.
 
 ---
 
@@ -36,17 +36,15 @@ Security scans, contract tests, performance checks, UAT evidence, RBAC negative 
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Delivery and operations playbook
+# Delivery and operations playbook
 **RACI:** Product Owner approves business rules; Engineering Lead owns architecture; Security reviews auth/threat model; PM owns delivery; QA owns verification; Operations owns backup/restore and on-call; customer approver signs acceptance.
 
 **Definition of Ready:** approved REQ/BR/UX IDs, API contract, permission action, database invariant, acceptance and negative test, dependency/rollback plan. **Definition of Done:** migration tested, contract tests passing, RBAC negative tests passing, audit event verified, UX states complete, docs/runbook updated, QA and owner signoff.
 
 **Release:** change request→impact assessment→staging migration→backup restore validation→UAT→security signoff→deploy→smoke test→monitor→rollback if error budget exceeded. **Incident:** detect→triage severity→assign commander→communicate→mitigate→restore→RCA→corrective actions. **Data repair:** no direct production UPDATE without approved ticket, backup, peer-reviewed script and reconciliation.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 Design change control: link screenshot baseline, token version, Figma revision, UI test run and approvers. Reject visual changes that silently alter domain rules or metric formulas.

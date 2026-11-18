@@ -1,11 +1,11 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-ADR-008 proposed: Approved visual baseline is green-sidebar dashboard screenshot, replacing blue v1.3. Preserve information architecture and layout. ADR-009 proposed: Dashboard read projections use scoped source-of-truth entities; do not persist presentation-only KPI fields.
+### Dashboard alignment (approved baseline)
+ADR-008 proposed: Approved visual baseline is green-sidebar dashboard screenshot, replacing blue . Preserve information architecture and layout. ADR-009 proposed: Dashboard read projections use scoped source-of-truth entities; do not persist presentation-only KPI fields.
 
 ---
 
-# Architecture Decision Records v1.1
+# Architecture Decision Records
 ## ADR-001 — Single-company, customer-scoped deployment
 **Status:** proposed. **Decision:** one operating organization; many customer records, not SaaS multi-tenant. **Consequences:** enforce customer scope in every query and file access; no tenant-specific deployments assumed.
 ## ADR-002 — Modular monolith
@@ -21,7 +21,6 @@ ADR-008 proposed: Approved visual baseline is green-sidebar dashboard screenshot
 
 Each ADR requires approver, date, rejected alternatives and superseding ADR if changed. No ADR is approved merely by appearing in this package.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 ADR-007 (proposed): Adopt light sidebar grouped navigation and semantic dashboard cards; UI-only change, no domain/schema migration without separate ADR.

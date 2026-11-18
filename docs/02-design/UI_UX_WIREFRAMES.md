@@ -1,7 +1,7 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-Use approved image and DESIGN_BASELINE_v1.4.md as overriding reference. Preserve 4 KPI cards; 2-column progress/donut; 2-column incident/trend; quick actions. Sidebar white with green icons and pale green active Dashboard.
+### Dashboard alignment (approved baseline)
+Use approved image and DESIGN_BASELINE.md as overriding reference. Preserve 4 KPI cards; 2-column progress/donut; 2-column incident/trend; quick actions. Sidebar white with green icons and pale green active Dashboard.
 
 ---
 
@@ -54,10 +54,9 @@ Keyboard navigation, WCAG 2.2 AA target, focus state, no color-only statuses, au
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Screen-level wireframe acceptance
+# Screen-level wireframe acceptance
 Every screen needs loading/empty/error/permission-denied states, keyboard focus, pagination/filter persistence, responsive behavior and a link to the relevant requirement.
 
 | Screen ID | Layout / primary actions | Data and UX acceptance |
@@ -73,7 +72,6 @@ Every screen needs loading/empty/error/permission-denied states, keyboard focus,
 
 **Desktop shell:** 240px expandable sidebar, 64px topbar, fluid content, right-side detail drawer; no fixed empty space. **Mobile:** collapsible nav, sticky task action bar, camera/QR access, offline behavior explicitly states unsupported rather than silently dropping data. **Accessibility:** WCAG 2.2 AA target, visible focus, semantic table headers, contrast and error text.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
-Replace dark/neutral sidebar sketches with light grouped sidebar. Dashboard composition: 4 gradient KPI cards; progress + ticket donut; incidents + 7-day trend; quick actions. Use the approved image and `DESIGN_BASELINE_v1.4.md` (v1.3 superseded); all eight screens inherit the shared shell.
+## Visual baseline alignment (2026-11-18)
+Replace dark/neutral sidebar sketches with light grouped sidebar. Dashboard composition: 4 gradient KPI cards; progress + ticket donut; incidents + 7-day trend; quick actions. Use the approved image and `DESIGN_BASELINE.md` ( superseded); all eight screens inherit the shared shell.

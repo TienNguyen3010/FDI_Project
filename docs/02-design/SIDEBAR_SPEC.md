@@ -1,7 +1,7 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
-Approved sidebar is GREEN (not v1.3 blue): white canvas, green outline icons, green group headings and rules, pale-green Dashboard active, left green active rail. Preserve menu order and bottom profile. Canonical navigation: assets/navigation.json.
+### Dashboard alignment (approved baseline)
+Approved sidebar is GREEN (not blue): white canvas, green outline icons, green group headings and rules, pale-green Dashboard active, left green active rail. Preserve menu order and bottom profile. Canonical navigation: assets/navigation.json.
 
 ---
 
@@ -27,13 +27,11 @@ Navigation is permission-aware but backend remains authoritative. Menu sections 
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Navigation decision
+# Navigation decision
 Top level: Overview; Customers; Delivery (Projects, Portfolio, Approvals); Infrastructure (Sites, Assets, Topology, Layout, Racks); Service Desk (Incidents, Requests, Changes); Maintenance (Calendar, Plans, Work Orders); My Work; Reports; Administration. Show only authorized sections; hide is UX only, backend always checks. Role landing pages: Director=Overview; PM=Project Portfolio; Engineer=My Work; Support=Incident Queue; Customer=My Sites. Persist collapse state per user. Search by project code, site, asset code/serial, ticket code with scoped results.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
-v1.3 approved navigation order: Overview [Dashboard]; Customers & Projects [Customers, Projects, Sites, Infrastructure, Assets]; Operations & Services [Works, Service Desk, Maintenance, Monitoring]; Documents & Reports [Documents, Reports]; System [Admin]. Light section containers, blue active nav, navy outline icons, badge only for actionable counts, bottom profile; see `assets/navigation.json`.
+## Visual baseline alignment (2026-11-18)
+ approved navigation order: Overview [Dashboard]; Customers & Projects [Customers, Projects, Sites, Infrastructure, Assets]; Operations & Services [Works, Service Desk, Maintenance, Monitoring]; Documents & Reports [Documents, Reports]; System [Admin]. Light section containers, blue active nav, navy outline icons, badge only for actionable counts, bottom profile; see `assets/navigation.json`.

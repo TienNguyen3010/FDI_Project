@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 P0 dashboard checklist: approved reference parity; sidebar green and grouped; KPI semantics; ticket donut reconciliation; SLA risk/breach disjoint; project baseline; scope filtering; timestamp; click-through; loading/error/empty; 390px responsive; 200% zoom.
 
 ---
@@ -49,17 +49,15 @@ P0 dashboard checklist: approved reference parity; sidebar green and grouped; KP
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Structured checklist model
+# Structured checklist model
 Each template item: `item_id`, `revision`, `required`, `answer_type`, `validation`, `evidence_required`, `role_required`, `condition`, `help_text`. Each execution answer: actor/time/value/evidence/review decision; preserve historical template revision.
 
 **Survey:** customer/site contact; floor plan revision; network uplink; power/UPS; rack capacity; cable routes; IP/VLAN plan; VoIP call path; photos; risks. **Installation:** asset code+serial; MAC; site/location/rack U; firmware; config backup reference (no secret); labeling; cable/port; photos; tester; timestamp. **VoIP SAT:** inbound/outbound/local/international where allowed; extension registration; SIP trunk failover; call recording and retrieval; emergency routing where applicable; QoS/jitter/packet loss; CDR; user signoff. **Maintenance:** service window approval; pre-check backup; hardware inspection; logs/alarms; call test; change record; rollback readiness; before/after evidence; customer signoff.
 
 **Reject completion** when mandatory item unanswered, evidence missing, reviewer is same actor where separation-of-duties required, or linked site/asset not authorized.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 UI release checklist: verify sidebar section order, active route, collapsed mode, overflow, 44px targets, WCAG contrast, scoped search, no stale values disguised as live, chart accessibility, responsive and error states.

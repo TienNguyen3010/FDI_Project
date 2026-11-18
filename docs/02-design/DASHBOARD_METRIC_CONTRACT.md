@@ -1,4 +1,4 @@
-# DASHBOARD_METRIC_CONTRACT v1.4
+# DASHBOARD_METRIC_CONTRACT
 
 All metrics are server-derived, scoped by effective authorization. Date/time uses ISO 8601 UTC at API boundary, user timezone at UI display. Report `as_of` and `scope` on every response. Snapshot vs flow measures must not be conflated.
 

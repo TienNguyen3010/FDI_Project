@@ -1,6 +1,6 @@
-> **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
+> **v1.0 NOTE (2026-11-18):** This section is authoritative where UI descriptions conflict. Source: approved dashboard baseline. See `DESIGN_BASELINE.md`.
 
-### v1.4 dashboard alignment
+### Dashboard alignment (approved baseline)
 No new core domain entities mandated by visual redesign. Dashboard is an authorized read model derived from projects, milestones, tickets, SLA instances and assignments. Metric definitions and historical snapshots may require additional data modeling after owner approval.
 
 ---
@@ -55,10 +55,9 @@ Project closure must not delete site/assets. Approved document versions immutabl
 - All dates persisted UTC with timezone-aware presentation; all important mutations audited.
 - Architecture decisions require stakeholder sign-off before production.
 
-
 ---
 
-# v1.1 Domain boundaries and invariants
+# Domain boundaries and invariants
 **Ownership:** Customer domain owns Customer/Site/Contact; Delivery owns Project/Milestone/Acceptance; Infrastructure owns Asset/Placement/CI/Diagram; Service Operations owns Ticket/SLA; Maintenance owns Plan/WorkOrder; Platform owns Identity/Document/Notification/Audit.
 
 ```mermaid
@@ -89,7 +88,6 @@ erDiagram
 
 **Invariants:** ProjectSite.project.customer_id = Site.customer_id; only one active AssetPlacement per asset; location.site.customer matches asset owner customer; a diagram version is append-only once approved; CI relationship cannot point to itself or create prohibited dependency cycles; customer-scoped ticket/site/CI joins must match customer. Cross-domain changes publish outbox events after commit. Do not use serial as asset PK. Diagram node coordinates are stored against immutable version ID.
 
-
 ---
-## v1.3 Visual baseline alignment (2026-11-18)
+## Visual baseline alignment (2026-11-18)
 No domain entities change because of the visual redesign. Dashboard is a read projection across Projects, Tickets, SLA and Work Orders; it must not become a new source of truth.
