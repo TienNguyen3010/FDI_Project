@@ -46,7 +46,7 @@ docs/
 **Điểm sạch (đã rõ ràng, dev có thể bám):**
 - Entry point duy nhất = file này + `00-entry/README.md`; toàn bộ active dùng version **v1.0**.
 - Baseline UI approved = `DESIGN_BASELINE.md` + `design_reference_approved.png` (green sidebar, supersedes legacy baseline).
-- API dashboard 5 GET = `03-contracts/api/dashboard_openapi_executable.json` (sinh từ `../06-reference/app.py`).
+- API dashboard 5 GET = `03-contracts/api/dashboard_openapi_executable.json` (sinh từ `06-reference/app.py`).
 - API nền = `03-contracts/api/openapi.yaml`; validation hiện hành = `05-quality/validation_report.json`.
 - 0 secret/credential (đã audit 2 lớp); không có file `.env`.
 

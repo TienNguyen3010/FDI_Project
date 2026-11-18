@@ -46,7 +46,7 @@ Modular monolith with bounded contexts, internal domain events and transactional
 
 ---
 ## Visual baseline alignment (2026-11-18)
-Frontend design tokens from `assets/tokens.json`; semantic components rather than inline colors. KPI refresh must expose source timestamp and cache age. Do not infer realtime availability from UI animation.
+Frontend design tokens from `../02-design/assets/tokens.json`; semantic components rather than inline colors. KPI refresh must expose source timestamp and cache age. Do not infer realtime availability from UI animation.
 
 ## Implementation evidence
 See `../05-quality/INTEGRATION_STATUS.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
