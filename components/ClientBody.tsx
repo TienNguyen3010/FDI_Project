@@ -140,6 +140,9 @@ export default function ClientBody({
     async function loadProfile(userId: string, email?: string) {
       // Role lấy từ auth JWT app_metadata (nguồn cứng); fallback bảng users cho
       // session cũ. Backend vẫn enforce RBAC — UI chỉ ẩn theo policy v1.0.
+      // refreshSession() để lấy app_metadata mới nhất sau khi admin đổi role —
+      // getUser() có thể trả claims cũ từ cache local storage.
+      await supabase.auth.refreshSession().catch(() => {})
       const { data: authData } = await supabase.auth.getUser()
       const jwtRole = authData.user?.app_metadata?.role
       const { data } = await supabase

@@ -48,13 +48,16 @@ export function useProfile() {
         if (!cancelled) setLoading(false)
       }
     }
-    supabase.auth.getUser().then(({ data }) => {
+    void (async () => {
+      // Lấy claims mới nhất sau khi đổi role (getUser có thể trả JWT cache cũ).
+      await supabase.auth.refreshSession().catch(() => {})
+      const { data } = await supabase.auth.getUser()
       if (cancelled) return
       if (!data.user) { setLoading(false); return }
       // Ưu tiên role v1.0 từ JWT app_metadata (full admin = super_admin).
       // public.users giữ role legacy do CHECK constraint của schema cũ.
-      load(data.user.id, data.user.email, (data.user.app_metadata ?? {}) as Record<string, unknown>)
-    })
+      await load(data.user.id, data.user.email, (data.user.app_metadata ?? {}) as Record<string, unknown>)
+    })()
     return () => { cancelled = true }
   }, [])
 
