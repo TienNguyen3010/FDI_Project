@@ -292,7 +292,7 @@ BEGIN
                     -> 'app_metadata' ->> 'role');
   EXCEPTION WHEN OTHERS THEN
     v_role := NULL;
-  END IF;
+  END;
 
   IF v_role IN ('super_admin','director','project_manager','engineer','support','customer_viewer') THEN
     RETURN NEXT v_role;

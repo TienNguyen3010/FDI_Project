@@ -1,6 +1,6 @@
 # Apply Migration & Deploy — FDI_Project v1.0
 
-> Trạng thái: ⏳ **BLOCKED** — cần 2 credential từ Dev Director. Không tự ý chạy DB/prod.
+> Trạng thái 2026-11-18: **Migration 006 ✅ applied trên DB thật; Deploy ⏳ (chờ verify token)**.
 
 ## 1. Phát hiện quan trọng (audit thực, 2026-11-18)
 
@@ -60,3 +60,16 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 - `npm run check:docs` → OK (51 files, 0 secret/link hỏng)
 - `next build --webpack` → exit 0 (20 routes, 5 dashboard API)
 - CI `Docs guard (v1.0)` trên `74da920` → success
+
+## 6. Kết quả apply migration thật (2026-11-18)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Kết nối pooler | ✅ OK | 13 bảng public trước khi apply |
+| `schema_migrations` trước | `001_initial_schema, 002_rls_policies, 003_seed, 004_audit_trigger` | query thật |
+| Lỗi runtime phát hiện | `006` dòng 295 `END IF;` sai (phải `END;` cho EXCEPTION block) — pglast parse không bắt | psycopg SyntaxError |
+| Fix + apply lại | ✅ `006 executed OK` | 5 bảng mới: `user_grants, project_baselines, acceptance_fractions, sla_state, sla_instances` |
+| RLS | 57 policies; **0 bảng mới thiếu RLS** | query `relrowsecurity` |
+| Sau apply | `schema_migrations` có `006_ops_core` | query thật |
+
+> ⚠️ DB password dùng trong phiên đã xuất hiện trong chat → **phải xoay vòng** (xem cảnh báo cuối).
