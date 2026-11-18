@@ -85,3 +85,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Root `/` | 404 → thêm `app/page.tsx` redirect `/dashboard` (`0d47b48`) | curl thật |
 
 > ⚠️ `VERCEL_TOKEN` và DB password đã xuất hiện trong chat → **phải revoke/xoay vòng cả 2 ngay**.
+
+## 8. Seed runtime grant + bridge (2026-11-18, sau login QA)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Đầu tiên login QA | dashboard hiện đỏ "Không có customer grant" | ảnh browser user gửi |
+| Nguyên nhân | `user_grants` rỗng (migration 006 chỉ tạo bảng) + runtime DB dùng bảng `alerts`, không có `tickets` | query DB thật |
+| Fix | `migrations/007_ops_bridge.sql`: grant customer cho `admin@fdi.local` + view `tickets` từ `alerts` (security_invoker) | 5 statements parse OK; apply tay xong, version `007_ops_bridge` đã đăng ký |
+| Verify logic API | 1 grant · projects `in_progress`=1 · tickets new=1/in_progress=1/resolved=1 → kỳ vọng `open_tickets=2`, `active_projects=0` (đúng MET-01) | query DB thật |
+| Commit | `942adac` (không đổi code → không cần redeploy) | push OK |
+
+> Dashboard metrics vẫn là **reference** (baseline/SLA chưa đủ) — không claim production-ready.
