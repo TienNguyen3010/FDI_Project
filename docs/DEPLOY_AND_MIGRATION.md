@@ -134,3 +134,16 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Bắt buộc | **Logout → login lại** để cookie nhận JWT role mới; nếu không, sidebar vẫn hiện "Giám đốc" |
 
 > ⚠️ Vẫn phải revoke Vercel token + reset DB password + đổi password login (đã lộ trong chat).
+
+## 12. Sidebar vẫn thiếu nhóm sau khi đổi role (2026-11-18)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng (vision ảnh 12:02) | Profile hiện "Quản trị hệ thống" nhưng vẫn thiếu nhóm HỆ THỐNG/Admin; TÀI LIỆU & BÁO CÁO rỗng |
+| Loại trừ | DB `app_metadata.role = super_admin`; unit logic `hasPermission(super_admin, *)` = true cho cả 5 nhóm; code `NAV_GROUPS` có HỆ THỐNG |
+| Nguyên nhân | `supabase.auth.getUser()` trả JWT claims CŨ từ cache localStorage → role vẫn `director` dù DB đã đổi |
+| Fix | `ClientBody` + `useProfile` gọi `supabase.auth.refreshSession()` trước `getUser()` để lấy claims mới (commit `47da331`) |
+| Verify | test 27/27 · docs-check OK · deploy `EXIT=0` · `/admin` 307 |
+| Hành động user | **Hard refresh (Ctrl+Shift+R)** hoặc logout/login lại 1 lần để dọn cache JWT cũ |
+
+> Nếu sau hard refresh vẫn thiếu, gửi ảnh mới + báo thời điểm chụp để đối chiếu deployment SHA.
