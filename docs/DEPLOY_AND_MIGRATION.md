@@ -109,3 +109,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Verify | test 27/27; deploy `EXIT=0`, Ready 28s; HTTP `/` 307 · `/login` 200 · `/dashboard` 307 · `/api/v1/dashboard/health` 401 (unauth đúng) |
 
 > Cần browser refresh để API gọi lại với code mới. Nếu vẫn 403, gửi lại ảnh Network tab (đã fix RLS + auth, khả năng cao hết).
+
+## 10. Fix nav 404 (2026-11-18)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng (vision xác nhận) | 7 nav route trả 404 khi prefetch: `/infrastructure /my-work /tickets /maintenance /monitoring /documents /reports` |
+| Nguyên nhân | Nav href tới route không tồn tại sau khi tách legacy alerts/reports |
+| Fix | Component `ComingSoon` (Empty State + badge "Bản sau") + 9 route shell P1/P2; commit `35b85b5` |
+| Verify production | `/sites /assets /infrastructure /my-work /tickets /monitoring /documents` → 200; `/maintenance /reports` → 307 (auth redirect); `/api/v1/dashboard/health` → 401 (đúng) |
+| Deploy | `EXIT=0`, alias `fdi-project.vercel.app`; test 27/27; docs-check OK |
+
+> Refresh browser lần cuối để thấy dashboard với API đã fix + nav không còn 404.
