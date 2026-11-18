@@ -8,6 +8,8 @@
 |---|---|---|
 | DB thật đã có schema CŨ | `users, customers, sites, projects, devices, alerts, maintenances, works, reports, documents, audit_logs, config, schema_migrations` | `migrations/001_initial_schema.sql:20-...` (đã apply 001-004 theo session history) |
 | `03-contracts/database/001_core.sql` | **KHÔNG apply trực tiếp** — dùng `CREATE TABLE` (không `IF NOT EXISTS`) → conflict `customers/sites/projects` đã tồn tại, cột khác (`projects.progress`, status `deployed/paused/ended`) | subagent migration audit + grep cột |
+| Conflict `users` | Cũ: `password_hash, role, team, active` · Docs `002_extended.sql`: `display_name, active` (**thiếu role**) | subagent migration summary §2 |
+| `006` FK | FK tới `public.users/customers/projects` (cột `id`) → **thiết kế cho schema CŨ**; không trộn với schema docs | subagent migration summary §2 |
 | `../migrations/006_ops_core.sql` | **An toàn** — `CREATE TABLE IF NOT EXISTS`, 96 statements parse hợp lệ (pglast), RLS đầy đủ | parse output: `OK ... 96 statements parsed` |
 | DB password | **ABSENT** — đã rotate 2026-11-17, không lưu lại (chỉ placeholder) | session history msg 1076; `git-credentials` chỉ có host github.com |
 | psycopg / psql | ABSENT | `python3 -c import psycopg` fail; `command -v psql` fail |
@@ -19,6 +21,7 @@
 
 - **Không chạy** `03-contracts/database/001_core.sql` / `03-contracts/database/002_extended.sql` lên DB hiện tại (sẽ lỗi/sai schema).
 - **Không force push**, không chỉnh migration đã apply.
+- **Không trộn 2 họ schema**: runtime đang chạy họ `001_initial → 006`; họ docs (`001_core/002_extended`) chỉ dùng khi rewrite DB hoàn toàn (DB trống + viết lại FK/RBAC cho 006).
 - Chỉ apply **`../migrations/006_ops_core.sql`** (bổ sung, idempotent) SAU KHI có credential và verify bảng cũ tồn tại.
 - Deploy Vercel **chỉ sau** khi code đã push (đã xong `74da920`) + có token.
 
