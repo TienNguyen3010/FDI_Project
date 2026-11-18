@@ -35,7 +35,7 @@
 
 ## Accessibility and design tokens
 - Green icons and selected navigation must have readable text contrast; 44px target size, visible keyboard focus, `aria-current=page`, chart accessible data table, no color-only status.
-- Tokens: `design/tokens.json`; navigation source: `design/navigation.json`. Color approximations require screenshot visual QA, not claim of exact pixel sampling.
+- Tokens: `assets/tokens.json`; navigation source: `assets/navigation.json`. Color approximations require screenshot visual QA, not claim of exact pixel sampling.
 - Real date/time, names and counts in screenshot are demo values. No personal names or avatar are required production fixtures.
 
 ## Review state

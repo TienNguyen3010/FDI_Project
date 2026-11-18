@@ -34,4 +34,4 @@ Add UAT-UI-013 navigation role filtering and keyboard; UAT-UI-014 KPI reconcilia
 
 
 ## v1.5 implementation evidence
-See `quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+See `INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

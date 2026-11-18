@@ -2,9 +2,9 @@
 
 | Deliverable | Evidence | Status |
 |---|---|---|
-| Dashboard 5 GET endpoints | `implementation/app.py`, OpenAPI generated from app | Executable reference |
+| Dashboard 5 GET endpoints | `../06-reference/app.py`, OpenAPI generated from app | Executable reference |
 | Authorization | test-only identity + customer-scope grant query | Testable reference, **not production RBAC** |
-| Cross-customer protection | `tests/test_dashboard.py` | Testable reference |
+| Cross-customer protection | `../06-reference/test_dashboard.py` | Testable reference |
 | Ticket state vs SLA | mutually exclusive state buckets; SLA risk separately | Testable reference |
 | Weighted progress | explicit baseline weights | Testable reference |
 | Database | SQLite fixture for executable API, v1.4 PostgreSQL DDL retained | **No PostgreSQL integration run** |

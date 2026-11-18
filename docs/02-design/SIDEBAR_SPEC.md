@@ -1,7 +1,7 @@
 > **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
 
 ### v1.4 dashboard alignment
-Approved sidebar is GREEN (not v1.3 blue): white canvas, green outline icons, green group headings and rules, pale-green Dashboard active, left green active rail. Preserve menu order and bottom profile. Canonical navigation: design/navigation.json.
+Approved sidebar is GREEN (not v1.3 blue): white canvas, green outline icons, green group headings and rules, pale-green Dashboard active, left green active rail. Preserve menu order and bottom profile. Canonical navigation: assets/navigation.json.
 
 ---
 
@@ -36,4 +36,4 @@ Top level: Overview; Customers; Delivery (Projects, Portfolio, Approvals); Infra
 
 ---
 ## v1.3 Visual baseline alignment (2026-11-18)
-v1.3 approved navigation order: Overview [Dashboard]; Customers & Projects [Customers, Projects, Sites, Infrastructure, Assets]; Operations & Services [Works, Service Desk, Maintenance, Monitoring]; Documents & Reports [Documents, Reports]; System [Admin]. Light section containers, blue active nav, navy outline icons, badge only for actionable counts, bottom profile; see `design/navigation.json`.
+v1.3 approved navigation order: Overview [Dashboard]; Customers & Projects [Customers, Projects, Sites, Infrastructure, Assets]; Operations & Services [Works, Service Desk, Maintenance, Monitoring]; Documents & Reports [Documents, Reports]; System [Admin]. Light section containers, blue active nav, navy outline icons, badge only for actionable counts, bottom profile; see `assets/navigation.json`.

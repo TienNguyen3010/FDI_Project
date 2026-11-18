@@ -1,7 +1,7 @@
 > **v1.4 OVERRIDE (2026-11-18):** This section supersedes earlier UI-specific descriptions when they conflict. See `DESIGN_BASELINE_v1.4.md`.
 
 ### v1.4 dashboard alignment
-v1.4 design must match approved green sidebar screenshot. Existing Figma v1.2 screens do NOT yet match and must be updated separately. All design tokens in design/tokens.json; no automatic claim of live Figma sync.
+v1.4 design must match approved green sidebar screenshot. Existing Figma v1.2 screens do NOT yet match and must be updated separately. All design tokens in assets/tokens.json; no automatic claim of live Figma sync.
 
 ---
 
@@ -44,8 +44,8 @@ Every frame names route, permission, query source, loading/empty/error states, v
 
 ---
 ## v1.3 Visual baseline alignment (2026-11-18)
-Visual direction v1.3 overrides prior primary colors and sidebar styling: white sidebar, grouped pale-blue sections, navy outline icons, blue selected nav, white content cards, colored KPI accents. See `DESIGN_BASELINE_v1.3.md` and `design/tokens.json`. Prior Figma screens must be visually revised; do not claim they already match.
+Visual direction v1.4 (green sidebar, approved) supersedes v1.3: white sidebar, grouped pale-blue sections, navy outline icons, blue selected nav, white content cards, colored KPI accents. See `DESIGN_BASELINE_v1.4.md` and `assets/tokens.json`. Prior Figma screens must be visually revised; do not claim they already match.
 
 
 ## v1.5 implementation evidence
-See `quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.

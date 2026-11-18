@@ -76,4 +76,4 @@ Every screen needs loading/empty/error/permission-denied states, keyboard focus,
 
 ---
 ## v1.3 Visual baseline alignment (2026-11-18)
-Replace dark/neutral sidebar sketches with light grouped sidebar. Dashboard composition: 4 gradient KPI cards; progress + ticket donut; incidents + 7-day trend; quick actions. Use the image and `DESIGN_BASELINE_v1.3.md`; all eight screens inherit the shared shell.
+Replace dark/neutral sidebar sketches with light grouped sidebar. Dashboard composition: 4 gradient KPI cards; progress + ticket donut; incidents + 7-day trend; quick actions. Use the approved image and `DESIGN_BASELINE_v1.4.md` (v1.3 superseded); all eight screens inherit the shared shell.

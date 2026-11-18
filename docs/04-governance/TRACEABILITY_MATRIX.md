@@ -27,4 +27,4 @@ REQ-UI-013 -> UX-01/AppShell -> navigation config -> RBAC route tests -> UAT-UI-
 
 
 ## v1.5 implementation evidence
-See `quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
+See `../05-quality/INTEGRATION_STATUS_v1_5.md` for executable reference, verified tests and remaining production blockers. No production acceptance implied.
