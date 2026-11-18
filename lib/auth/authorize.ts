@@ -47,20 +47,26 @@ export async function authorize(required: Permission | readonly Permission[] = '
   const token = cookieStore.get('sb-access-token')?.value
   if (!token) return { ok: false, status: 401, message: 'Chưa đăng nhập.' }
 
-  let supabase: ReturnType<typeof getSupabaseClient>
+  let base: ReturnType<typeof getSupabaseClient>
   try {
-    supabase = getSupabaseClient()
+    base = getSupabaseClient()
   } catch {
     return { ok: false, status: 500, message: 'Chưa cấu hình Supabase.' }
   }
 
-  const { data: authData, error } = await supabase.auth.getUser(token)
+  const { data: authData, error } = await base.auth.getUser(token)
   if (error || !authData.user) {
     return { ok: false, status: 401, message: 'Phiên đăng nhập không hợp lệ.' }
   }
-  try {
-    await supabase.auth.setSession({ access_token: token, refresh_token: '' })
-  } catch { /* getUser đã verify identity */ }
+  //QUAN TRỌNG: route handler client được tạo MỚI mỗi request. setSession() với
+  // refresh_token rỗng => session không gắn JWT => RLS chặn (auth_user_id() NULL)
+  // => 403 dù DB có grant. Truyền Bearer token vào header của MỌI query.
+  const { createClient } = await import('@supabase/supabase-js')
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = createClient(envUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}`, 'x-supabase-auth-mode': 'pg' } },
+  }) as ReturnType<typeof getSupabaseClient>
 
   const user = authData.user
   const meta = (user.app_metadata ?? {}) as Record<string, unknown>
