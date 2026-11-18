@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  ChevronDown,
   LayoutDashboard,
   Users,
   FolderKanban,
@@ -133,6 +134,18 @@ export default function ClientBody({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [role, setRole] = useState<V1Role | null>(null)
   const [user, setUser] = useState<{ email: string; fullName?: string } | null>(null)
+  const drawerNavRef = useRef<HTMLElement | null>(null)
+  const [moreBelow, setMoreBelow] = useState(false)
+
+  /** Cập nhật mũi tên "cuộn xem thêm" trong drawer mobile. */
+  const updateMoreBelow = useCallback(() => {
+    const el = drawerNavRef.current
+    if (!el) {
+      setMoreBelow(false)
+      return
+    }
+    setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -214,6 +227,10 @@ export default function ClientBody({
   // Escape + khoá cuộn nền khi drawer mở.
   useEffect(() => {
     if (!mobileOpen) return
+    // Đo sau khi drawer mount — scrollHeight lúc đầu bằng clientHeight.
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(updateMoreBelow)
+    })
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMobileOpen(false)
     }
@@ -221,10 +238,11 @@ export default function ClientBody({
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
+      cancelAnimationFrame(frame)
       window.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
     }
-  }, [mobileOpen])
+  }, [mobileOpen, updateMoreBelow])
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
@@ -243,7 +261,11 @@ export default function ClientBody({
   }, [isActive, pathname])
 
   /* Sidebar content dùng chung cho desktop + drawer (giữ geometry). */
-  const renderSidebarContent = (compact: boolean, onNavigate?: () => void) => (
+  const renderSidebarContent = (
+    compact: boolean,
+    onNavigate?: () => void,
+    isDrawer = false,
+  ) => (
     <>
       <div className={`flex h-[58px] shrink-0 items-center border-b border-border ${compact ? 'justify-center px-2' : 'gap-2 px-4'}`}>
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground" aria-hidden="true">
@@ -257,42 +279,64 @@ export default function ClientBody({
         )}
       </div>
 
-      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3" aria-label="Điều hướng chính">
+      <nav
+        ref={isDrawer ? drawerNavRef : undefined}
+        onScroll={isDrawer ? updateMoreBelow : undefined}
+        className={`sidebar-nav min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 ${
+          isDrawer ? 'space-y-2 scrollbar-gutter-stable' : 'space-y-4'
+        }`}
+        aria-label="Điều hướng chính"
+      >
         {visibleGroups.length === 0 ? (
           <p className="px-2 text-xs text-muted-foreground">Không có mục được phép truy cập.</p>
         ) : (
-          visibleGroups.map((group) => (
-            <div key={group.label}>
-              {!compact && (
-                <p className="mb-1.5 px-2 text-section font-semibold uppercase tracking-wider text-sidebar-heading">
-                  {group.label}
-                </p>
-              )}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const active = isActive(item.href)
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={onNavigate}
-                      aria-current={active ? 'page' : undefined}
-                      title={compact ? item.label : undefined}
-                      className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${
-                        active
-                          ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading'
-                          : 'border-transparent text-muted hover:bg-sidebar-group hover:text-sidebar-heading'
-                      }`}
-                    >
-                      <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
-                      {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
-                    </Link>
-                  )
-                })}
+          <>
+            {visibleGroups.map((group) => (
+              <div key={group.label}>
+                {!compact && (
+                  <p className="mb-1.5 px-2 text-section font-semibold uppercase tracking-wider text-sidebar-heading">
+                    {group.label}
+                  </p>
+                )}
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = isActive(item.href)
+                    const Icon = item.icon
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={onNavigate}
+                        aria-current={active ? 'page' : undefined}
+                        title={compact ? item.label : undefined}
+                        className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${
+                          active
+                            ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading'
+                            : 'border-transparent text-muted hover:bg-sidebar-group hover:text-sidebar-heading'
+                        }`}
+                      >
+                        <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                        {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            {isDrawer && moreBelow && (
+              <button
+                type="button"
+                onClick={() =>
+                  drawerNavRef.current?.scrollBy({ top: 240, behavior: 'smooth' })
+                }
+                className="sticky bottom-0 left-1/2 z-10 mt-2 flex w-full -translate-x-1/2 items-center justify-center gap-1 rounded-full border border-border bg-surface/95 py-1.5 text-xs font-medium text-sidebar-heading shadow-sm"
+                aria-label="Cuộn xem thêm menu"
+              >
+                <span>Cuộn xem thêm</span>
+                <ChevronDown size={14} aria-hidden="true" />
+              </button>
+            )}
+          </>
         )}
       </nav>
 
@@ -413,7 +457,7 @@ export default function ClientBody({
                   <X size={20} />
                 </button>
               </div>
-              {renderSidebarContent(false, closeMobile)}
+              {renderSidebarContent(false, closeMobile, true)}
             </aside>
           </div>
         )}
