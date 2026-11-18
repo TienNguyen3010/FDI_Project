@@ -28,10 +28,10 @@ docs/
 ├── 05-quality/                  # Integration status, UAT, test evidence, reports
 └── 06-reference/                # Code mẫu chạy được (reference, KHÔNG production)
     ├── app.py, requirements.txt, test_dashboard.py
-    └── archive/                 # Bản đã superseded — chỉ đọc khi cần truy vết
+    └── archive/                 # Snapshot gốc (bản cũ + Figma sync v1.5) — chỉ đọc khi cần truy vết
 ```
 
-**Nguyên tắc:** entrypoint ở `README.md` · tên file active **không có suffix version** · bản cũ vào `06-reference/archive/` · assets design tách riêng · contract API/DB nằm cùng nhóm `03-contracts`.
+**Nguyên tắc:** entrypoint ở `README.md` · tên file active **không có suffix version** · bản cũ/snapshot gốc vào `06-reference/archive/` (giữ nguyên tên gốc để truy vết) · assets design tách riêng · contract API/DB nằm cùng nhóm `03-contracts`.
 
 ## 3. Ma trận ưu tiên triển khai
 
@@ -39,7 +39,7 @@ docs/
 |---|---|---|
 | **P0** | `01-product/` (PRD + business rules) · `03-contracts/` (API + DB) · `04-governance/RBAC_MATRIX.md` · `05-quality/INTEGRATION_STATUS.md` | Cần đọc + resolve blocker trước khi code |
 | **P1** | `02-design/` (baseline + tokens) · `04-governance/` (ADR, traceability, release gate) · `05-quality/` (UAT, rbac_policy) | Cần cho UI/QA, còn gate mở |
-| **P2** | `06-reference/` (app.py, tests) · `06-reference/archive/` | Reference/truy vết; không dùng làm production |
+| **P2** | `06-reference/` (app.py, tests) · `06-reference/archive/` | Reference/truy vết; gồm Figma sync v1.5 (đang dẫn chiếu) + bản cũ; không dùng làm production |
 
 ## 4. Điểm sạch / Điểm cần làm rõ
 
@@ -80,4 +80,4 @@ Hệ tài liệu v1.0 được chuyển đổi từ `Project_OPS_Specification_T
 | `INTEGRATION_STATUS_v1_5.md` | `05-quality/INTEGRATION_STATUS.md` |
 | `validation_report_v1_4.json` | `05-quality/validation_report_legacy.json` |
 
-Bản cũ (v1.1/v1.2/v1.3/v1.4) được giữ nguyên trong `06-reference/archive/` để truy vết — **không** mang version v1.0.
+Bản cũ (v1.1/v1.2/v1.3/v1.4) và `FIGMA_SYNC_v1_5.md` (artifact sync mới nhất, vẫn được `00-entry/README.md` dẫn chiếu) được giữ nguyên tên trong `06-reference/archive/` để truy vết — **không** mang version v1.0.
