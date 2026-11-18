@@ -8,7 +8,7 @@
 |---|---|---|
 | 1 | [`00-entry/README_v1_5.md`](00-entry/README_v1_5.md) | Tổng quan v1.5 + phạm vi reference |
 | 2 | [`05-quality/INTEGRATION_STATUS_v1_5.md`](05-quality/INTEGRATION_STATUS_v1_5.md) | **Release blockers** — đọc trước khi code |
-| 3 | [`01-product/PRD_v1.0.md`](01-product/PRD_v1.0.md) + [`01-product/BUSINESS_RULES.md`](01-product/BUSINESS_RULES.md) | Yêu cầu & luật business (nguồn truth cao nhất) |
+| 3 | [`01-product/PRD_v1.1.md`](01-product/PRD_v1.1.md) + [`01-product/BUSINESS_RULES.md`](01-product/BUSINESS_RULES.md) | Yêu cầu & luật business (nguồn truth cao nhất); file v1.1 có override v1.4 ở đầu |
 | 4 | [`03-contracts/API_SPEC.md`](03-contracts/API_SPEC.md) + [`03-contracts/database/`](03-contracts/database/) | API & DB contract |
 | 5 | [`02-design/DESIGN_BASELINE_v1.4.md`](02-design/DESIGN_BASELINE_v1.4.md) + [`02-design/assets/tokens.json`](02-design/assets/tokens.json) | UI baseline đang approved |
 
