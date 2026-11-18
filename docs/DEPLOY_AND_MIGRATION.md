@@ -92,7 +92,7 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 |---|---|---|
 | Đầu tiên login QA | dashboard hiện đỏ "Không có customer grant" | ảnh browser user gửi |
 | Nguyên nhân | `user_grants` rỗng (migration 006 chỉ tạo bảng) + runtime DB dùng bảng `alerts`, không có `tickets` | query DB thật |
-| Fix | `migrations/007_ops_bridge.sql`: grant customer cho `admin@fdi.local` + view `tickets` từ `alerts` (security_invoker) | 5 statements parse OK; apply tay xong, version `007_ops_bridge` đã đăng ký |
+| Fix | `../migrations/007_ops_bridge.sql` (từ `docs/`): grant customer cho `admin@fdi.local` + view `tickets` từ `alerts` (security_invoker) | 5 statements parse OK; apply tay xong, version `007_ops_bridge` đã đăng ký |
 | Verify logic API | 1 grant · projects `in_progress`=1 · tickets new=1/in_progress=1/resolved=1 → kỳ vọng `open_tickets=2`, `active_projects=0` (đúng MET-01) | query DB thật |
 | Commit | `942adac` (không đổi code → không cần redeploy) | push OK |
 
