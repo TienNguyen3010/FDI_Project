@@ -73,4 +73,4 @@ COMMIT;
 
 ## 6. Definition of Done
 
-Migration applied · `tsc` 0 · `check:docs` OK · `npm test` 24/24 · form `/customers/new` submit tạo được 1 customer thật với đủ 5 field mới · docs + checklist cùng commit · deploy prod READY · user chụp lại màn hình verify.
+Migration file ✅ (apply ⏳ do user) · `tsc` 0 · `check:docs` OK · `npm test` 24/24 · build 0 · form `/customers/new` code có trong build chunk (`page-0df89820...js`) · docs + checklist cùng commit · **deploy prod READY** (`dpl_GXCYrzHzxkXcnb7ebtk524CT3Epa`, SHA `4b9e3e0`, alias `fdi-project.vercel.app`) · submit DB thật + screenshot 390px ⏳ chờ user apply 008 & chụp lại.
