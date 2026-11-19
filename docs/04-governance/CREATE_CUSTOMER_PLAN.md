@@ -1,0 +1,74 @@
+# Create Customer — Implementation Plan (Phase 1)
+
+> **Trạng thái:** Chốt bởi Dev Director · 2026-11-19 · Review-first (đã có standard, chờ approve code).
+> **Phạm vi:** `/customers/new` theo mockup, giữ schema đang chạy. Không rebuild REST, không tạo bảng `contacts`.
+> Standard đi kèm: `../02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md`.
+
+## 1. Hiện trạng đã verify (code @ `355de30`)
+
+| Lớp | Sự thật | Bằng chứng |
+|---|---|---|
+| Route | Chỉ có `/customers` (list). **Không có** `/customers/new`, `/customers/[id]` | `app/(workspace)/customers/` chỉ 1 file `page.tsx` |
+| UI | 1 modal 1 cột qua `CrudPage` generic, 8 field | `app/(workspace)/customers/page.tsx:6-29`; `components/crud/CrudPage.tsx:338-395` |
+| Mutation | Direct `.insert()` / `.update()` / `.delete()` — **không có RPC** | `components/crud/CrudPage.tsx:160,167,194-197` |
+| DB thật | `customers`: id, name, phone, email, industry, contact_technical, contact_commercial, contact_emergency, created_at, updated_at — **không có** code/tax_id/headquarters_address/status/notes | `migrations/001_initial_schema.sql:38-48` |
+| Type drift | `lib/types.ts` khai báo `code` + `status` không có trong DB | `lib/types.ts:30-48` |
+| RBAC | `editableBy: ['manager','director']` — `manager` không có trong `ROLES` v1 | `page.tsx:11`; `lib/rbac/policy.core.mjs:4-6` |
+| RLS | Insert chỉ `fdi_is_manager_plus()`; select qua `fdi_can_read` | `migrations/002_rls_policies.sql:302-319` |
+
+**Kết luận:** mockup/spec là thiết kế đề xuất, code chưa triển khai. Đây là **gap-fill**, không phải "viết lại theo spec".
+
+## 2. Quyết định phân phase
+
+| | Phase 1 (lần này) | Phase 2 (sau) |
+|---|---|---|
+| Form | Trang riêng 3 card + summary, đúng mockup | Giữ nguyên, tinh chỉnh theo UAT |
+| Cột DB | Thêm 5 cột `tax_id`, `headquarters_address`, `primary_contact_name`, `primary_contact_position`, `notes` | `code` + trigger sinh `CUS-YYYY-XXX`, `relationships_start_date` |
+| Contact | 3 ô text + tên contact chính TEXT | Tách bảng `contacts`, contact selector, `customer_contact_roles` |
+| Validation | Inline blur/submit, required, 500 ký tự | Duplicate check, idempotency-key, transaction, audit correlation |
+| RBAC | Sửa `editableBy` + route gate `customer.create` | Không đổi |
+
+## 3. SQL migration đề xuất (008 — CHƯA apply)
+
+```sql
+-- 008_customer_create_fields.sql — bổ sung field cho màn tạo khách hàng.
+-- Idempotent; chạy trong Supabase SQL Editor. Không đổi cột đã có.
+BEGIN;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS tax_id TEXT;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS headquarters_address TEXT;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS primary_contact_name TEXT;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS primary_contact_position TEXT;
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS notes TEXT;
+INSERT INTO public.schema_migrations (version, note)
+VALUES ('008_customer_create_fields', 'Phase 1 Create Customer fields')
+ON CONFLICT (version) DO NOTHING;
+COMMIT;
+```
+
+`COMMENT ON TABLE customers` hiện ghi "không lưu nhạy cảm" — vẫn đúng (không lưu bank/NDA/mật khẩu). Không đổi RLS (policy đã cover mọi cột).
+
+## 4. Checklistcode (cần làm, tick sau verify)
+
+- [ ] **C1** Migration 008_customer_create_fields.sql — viết file + apply tay trên Supabase; verify bằng `SELECT column_name FROM information_schema.columns WHERE table_name='customers'`.
+- [ ] **C2** `lib/types.ts:30-48` — đổi `Row/Insert/Update` của `customers` theo schema thật: bỏ `code`/`status`, thêm 5 cột mới + các cột cũ. Verify `tsc --noEmit`.
+- [ ] **C3** `app/(workspace)/customers/page.tsx:11` — `editableBy: ['project_manager','director','super_admin']`. Verify role `project_manager` thấy nút Thêm trên list.
+- [ ] **C4** Route `app/(workspace)/customers/new/page.tsx` — `'use client'`, gate `customer.create`, form 3 card, breadcrumb, summary, sticky footer. Dùng `Card/Input/Label/Select/Textarea/Button/Badge/useToast` từ `components/ui/ui.tsx`.
+- [ ] **C5** Validation: required 5 field, email/phone, `maxLength=500` + counter, lỗi dưới field. Verify submit với field trống → không gọi insert.
+- [ ] **C6** Submit: `supabase.from('customers').insert(payload)`, disable+spinner, toast, `router.push('/customers')`, giữ form khi lỗi. Verify response thật từ DB local/prod.
+- [ ] **C7** Hủy + unsaved confirm; link quay lại list. Verify điều hướng.
+- [ ] **C8** Responsive `lg:grid-cols-3` → single column + a11y (label, aria-invalid, focus). Verify screenshot 390px.
+- [ ] **C9** Cập nhật 01-product/DATA_DICTIONARY.md (thêm 5 field) + 04-governance/CHECKLISTS.md "Nhật ký đồng bộ" **trong cùng commit**.
+- [ ] **C10** Chạy `npm run check:docs` (0 lỗi), `npm test` (24/24), `tsc --noEmit`; build để Vercel verify (máy 2GB không build local).
+
+## 5. Rủi ro & guardrails
+
+- **Không** claim xong trước khi migration 008 apply — field mới sẽ bị PostgREST trả lỗi `PGRST204` nếu DB chưa có cột.
+- **Không** đổi schema đã apply (001–007) hay force push; migration 008 là additive.
+- **Không** dùng `manager`/`leader` trong `editableBy` (role không tồn tại).
+- **Không** tự sinh `code` hay gửi `created_at` từ client.
+- Docs guard `CHECKLIST_BASE` chặn commit nếu đổi `app/|components|lib|migrations|docs/` mà không chạm `CHECKLISTS.md` (`scripts/docs-check.mjs:193-212`).
+- Token `vcp_...` nếu lộ trong chat → rotate, không lưu repo/config.
+
+## 6. Definition of Done
+
+Migration applied · `tsc` 0 · `check:docs` OK · `npm test` 24/24 · form `/customers/new` submit tạo được 1 customer thật với đủ 5 field mới · docs + checklist cùng commit · deploy prod READY · user chụp lại màn hình verify.
