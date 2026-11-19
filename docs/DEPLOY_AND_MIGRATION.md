@@ -147,3 +147,14 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Hành động user | **Hard refresh (Ctrl+Shift+R)** hoặc logout/login lại 1 lần để dọn cache JWT cũ |
 
 > Nếu sau hard refresh vẫn thiếu, gửi ảnh mới + báo thời điểm chụp để đối chiếu deployment SHA.
+
+## 13. Sidebar inactive items mờ — chỉ rõ khi hover (2026-11-18)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng | Mọi module inactive (Dashboard, Projects, Sites, Works...) chữ gần như vô hình; chỉ sáng lên khi trỏ chuột vào |
+| Loại trừ | Không phải opacity/filter/CSS layer — active item vẫn đúng mint-green; icon vẫn xanh; chỉ chữ nhãn mờ |
+| Nguyên nhân | `globals.css:86` map `--color-muted: var(--sidebar-group)` = `#f8fcf9` (màu NỀN nhóm) nhưng nav inactive dùng `text-muted` làm màu CHỮ trên nền sidebar trắng → contrast **1.04:1**. Design token `tokens.json:15` quy định màu chữ muted = `#445A7B` (7.01:1) qua `text-muted-foreground` |
+| Fix | `components/ClientBody.tsx`: đổi 9 chỗ `text-muted` → `text-muted-foreground` (nav inactive, logout, header buttons, email, bottom nav); giữ `--color-muted` làm nền `bg-muted` cho shadcn |
+| Verify | contrast 1.04:1 → 7.01:1 (tính bằng tool) · `tsc` 0 · docs-check OK · test 27/27 |
+| Hành động user | Hard refresh sau deploy để dọn CSS cũ |

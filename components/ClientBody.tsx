@@ -312,7 +312,7 @@ export default function ClientBody({
                         className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${
                           active
                             ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading'
-                            : 'border-transparent text-muted hover:bg-sidebar-group hover:text-sidebar-heading'
+                            : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'
                         }`}
                       >
                         <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
@@ -361,7 +361,7 @@ export default function ClientBody({
                 type="button"
                 onClick={handleLogout}
                 aria-label="Đăng xuất"
-                className="tap-target rounded-md text-muted hover:text-foreground"
+                className="tap-target rounded-md text-muted-foreground hover:text-foreground"
               >
                 <LogOut size={16} />
               </button>
@@ -376,7 +376,7 @@ export default function ClientBody({
           <button
             type="button"
             onClick={handleLogout}
-            className="tap-target mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted transition-colors hover:bg-sidebar-group hover:text-foreground"
+            className="tap-target mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-group hover:text-foreground"
             aria-label="Đăng xuất"
           >
             <LogOut size={16} aria-hidden="true" />
@@ -406,7 +406,7 @@ export default function ClientBody({
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="tap-target rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground md:hidden"
+                className="tap-target rounded-md text-muted-foreground transition-colors hover:bg-sidebar-group hover:text-foreground md:hidden"
                 aria-label="Mở menu điều hướng"
               >
                 <Menu size={20} />
@@ -414,7 +414,7 @@ export default function ClientBody({
               <button
                 type="button"
                 onClick={() => setCollapsed((v) => !v)}
-                className="tap-target hidden rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground md:flex"
+                className="tap-target hidden rounded-md text-muted-foreground transition-colors hover:bg-sidebar-group hover:text-foreground md:flex"
                 aria-label={collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
               >
                 {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
@@ -425,7 +425,7 @@ export default function ClientBody({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {user && (
-                <span className="hidden truncate text-sm text-muted sm:block">{user.email}</span>
+                <span className="hidden truncate text-sm text-muted-foreground sm:block">{user.email}</span>
               )}
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-heading" aria-hidden="true">
                 {(user?.email ?? '?').charAt(0).toUpperCase()}
@@ -451,7 +451,7 @@ export default function ClientBody({
                 <button
                   type="button"
                   onClick={closeMobile}
-                  className="tap-target rounded-md text-muted transition-colors hover:bg-sidebar-group hover:text-foreground"
+                  className="tap-target rounded-md text-muted-foreground transition-colors hover:bg-sidebar-group hover:text-foreground"
                   aria-label="Đóng menu điều hướng"
                 >
                   <X size={20} />
@@ -479,7 +479,7 @@ export default function ClientBody({
                 className={`tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors ${
                   active
                     ? 'border-t-[3px] border-sidebar-active-border bg-sidebar-active text-sidebar-heading'
-                    : 'text-muted hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon size={18} className="text-sidebar-icon" aria-hidden="true" />
@@ -490,7 +490,7 @@ export default function ClientBody({
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] text-muted transition-colors hover:text-foreground"
+            className="tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Mở menu điều hướng"
           >
             <Menu size={18} aria-hidden="true" />
