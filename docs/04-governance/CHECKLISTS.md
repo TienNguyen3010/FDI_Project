@@ -264,3 +264,4 @@ UI release checklist: verify sidebar section order, active route, collapsed mode
 | 2026-11-19 | bước-2 | Create Customer Phase 1 build | tsc 0 · docs-check OK 55 files · test 24/24 · build 0 (`/customers/new` ◐) |
 | 2026-11-19 | docs-plan-tick | Tick plan C1–C10 theo tool output thật | build exit 0 · docs-check OK · apply 008 ⏳ do user |
 | 2026-11-19 | deploy-4b9e3e0 | Push + deploy production | push `355de30..4b9e3e0` · Vercel `dpl_GXCYrzHzxkXcnb7ebtk524CT3Epa` status READY · target production · sha khớp · alias fdi-project.vercel.app · /customers/new → login 200 (auth gate) |
+| 2026-11-19 | logout-cookie | Fix logout không redirect (HttpOnly cookie sót) | regression 0/2→2/2 · tsc 0 · docs-check OK · build 0 · root-cause ghi DEPLOY_AND_MIGRATION §15 |

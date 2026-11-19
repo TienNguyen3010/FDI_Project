@@ -170,3 +170,14 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Guard gap | `scripts/docs-check.mjs:26` regex `v1[_.][1-9]` bỏ sót `_v1_0` → đổi `[0-9]` (archive vẫn exempt) |
 | Artifact local (~14MB) | Xóa log deploy cũ, screenshot QA, `/tmp` crop/chunk, scaffold `fdip_test/`, `tsconfig.tsbuildinfo` |
 | Giữ lại | `node_modules/`, `.next/`, cache Hermes, delegation live logs, docs archive provenance |
+
+## 15. Logout không redirect — HttpOnly cookie `sb-access-token` sót lại (2026-11-19)
+
+| Hạng mục | Kết quả |
+|---|---|
+| Triệu chứng | Sau bấm "Đăng xuất" vẫn đứng `/dashboard`: alert đỏ "Phiên đăng nhập không hợp lệ.", KPI = 0, sidebar "Không có mục được phép truy cập." + "Đăng nhập để tiếp tục" |
+| Nguyên nhân | `ClientBody.tsx:250` chỉ gọi `supabase.auth.signOut()` → xoá localStorage nhưng KHÔNG xoá cookie HttpOnly `sb-access-token` (do `POST /api/auth/session` set lúc login). `proxy.ts:123-139` đọc cookie này → vẫn thấy user → `/login` redirect ngược `/dashboard`. Dashboard API dùng token đã revoke → `authorize.ts:56` trả 401 đỏ. `tokenCache` 5 phút (`proxy.ts:9-10`) làm vòng lặp dai hơn |
+| Loại trừ | Không phải RBAC (`customer_viewer` có 9 quyền read → sidebar không trống nếu role hợp lệ); không phải migration 008 (đã apply thành công); không phải stale build |
+| Fix | Thêm `app/api/auth/logout/route.ts`: `getSupabaseClient().auth.signOut()` + `clearAccessTokenCookie(res)` (`lib/cookies.ts:30-37`). `handleLogout` gọi `signOut()` → `POST /api/auth/logout` → `router.replace('/login')` + `router.refresh()` |
+| Phòng ngừa | Regression test `tests/logout-cookie.test.mjs` (đỏ 0/2 trước fix, xanh 2/2 sau). Proxy vẫn là safety net nếu cookie stale |
+| Verify | `node --test tests/logout-cookie.test.mjs` 2/2 · `tsc` 0 · docs-check OK · build 0 |

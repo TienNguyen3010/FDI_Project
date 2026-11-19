@@ -247,7 +247,22 @@ export default function ClientBody({
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
   const handleLogout = useCallback(() => {
-    void supabase.auth.signOut().then(() => router.push('/login'))
+    void (async () => {
+      // Xoá HttpOnly cookie TRƯỚC khi chuyển hướng: proxy.ts đọc cookie này,
+      // nếu còn sẽ redirect /login → /dashboard (vòng lặp sau logout).
+      try {
+        await supabase.auth.signOut()
+      } catch {
+        // Token có thể đã hết hạn; vẫn tiếp tục xoá cookie phía server.
+      }
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' })
+      } catch {
+        // Network lỗi vẫn chuyển /login; cookie sẽ hết hạn tự nhiên.
+      }
+      router.replace('/login')
+      router.refresh()
+    })()
   }, [router])
 
   const isActive = useCallback(
