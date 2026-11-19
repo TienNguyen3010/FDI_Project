@@ -53,7 +53,8 @@ export async function checkRateLimitDistributed(
 
   try {
     const now = Date.now()
-    const raw = (await client.eval<number[]>(LUA_SLIDING_WINDOW, [key], [
+    // upstash Redis eval() expects string args; Lua returns numeric values as strings.
+    const raw = (await client.eval<unknown[]>(LUA_SLIDING_WINDOW, [key], [
       String(now),
       String(windowMs),
       String(limit),

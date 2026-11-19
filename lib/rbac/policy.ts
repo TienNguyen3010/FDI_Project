@@ -4,23 +4,18 @@ import {
   ROLES as _ROLES,
   PERMISSIONS as _PERMISSIONS,
   isRole as _isRole,
-  isPermission as _isPermission,
   hasPermission as _hasPermission,
   canAll as _canAll,
   canAccessScope as _canAccessScope,
-  SCOPE_RULES as _SCOPE_RULES,
 } from './policy.core.mjs'
 
 export const ROLES = _ROLES
 export type Role = (typeof _ROLES)[number]
-export const PERMISSIONS = _PERMISSIONS
 export type Permission = (typeof _PERMISSIONS)[number]
 
 export const isRole = _isRole as (v: unknown) => v is Role
-export const isPermission = _isPermission as (v: unknown) => v is Permission
 export const hasPermission = _hasPermission as (role: unknown, p: Permission) => boolean
 export const canAll = _canAll as (role: unknown, p: readonly Permission[]) => boolean
-export const SCOPE_RULES = _SCOPE_RULES
 
 export type ScopeKind = 'global' | 'customer' | 'site' | 'project' | 'team'
 export interface ScopeGrant {

@@ -78,6 +78,7 @@ Hệ tài liệu v1.0 được chuyển đổi từ `Project_OPS_Specification_T
 | `dashboard_openapi_v1_5_executable.json` | `03-contracts/api/dashboard_openapi_executable.json` |
 | `openapi_v1_2.yaml` | `03-contracts/api/openapi.yaml` |
 | `INTEGRATION_STATUS_v1_5.md` | `05-quality/INTEGRATION_STATUS.md` |
-| `validation_report_v1_4.json` | `05-quality/validation_report_legacy.json` |
+| `validation_report_v1_4.json` | `06-reference/archive/validation_report_legacy.json` |
+| `REWRITE_PLAN_v1_0.md` | `06-reference/archive/REWRITE_PLAN_v1_0.md` |
 
 Bản cũ (v1.1/v1.2/v1.3/v1.4) và `FIGMA_SYNC_v1_5.md` (artifact sync mới nhất, vẫn được `00-entry/README.md` dẫn chiếu) được giữ nguyên tên trong `06-reference/archive/` để truy vết — **không** mang version v1.0.

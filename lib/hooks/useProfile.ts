@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { ROLES, hasPermission, type Role, type Permission } from '@/lib/rbac/policy'
 
 export type { Role, Permission }
-export { ROLES, hasPermission }
 
 export interface Profile {
   id: string
@@ -62,9 +61,4 @@ export function useProfile() {
   }, [])
 
   return { profile, role, loading, can: (p: Permission) => hasPermission(role, p) }
-}
-
-/** Tương thích ngược cho code cũ gọi can(role, allowed). */
-export function can(role: Role, allowed: readonly Permission[]): boolean {
-  return allowed.some((p) => hasPermission(role, p))
 }

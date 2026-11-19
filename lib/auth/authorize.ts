@@ -5,11 +5,8 @@
 import { cookies } from 'next/headers'
 import { getSupabaseClient } from '@/lib/supabase/server'
 import {
-  ROLES, hasPermission, canAll, isRole, type Role, type Permission, type ScopeGrant,
+  canAll, isRole, type Role, type Permission, type ScopeGrant,
 } from '@/lib/rbac/policy'
-
-export { ROLES, hasPermission, canAll, isRole }
-export type { Role, Permission, ScopeGrant }
 
 export interface Authorized {
   ok: true

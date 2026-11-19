@@ -31,7 +31,7 @@
     "app/**/*.tsx",
     "components/**/*.ts",
     "components/**/*.tsx",
-    "middleware.ts",
+    "proxy.ts",
     "next.config.ts",
     "**/*.mts",
     ".next/types/**/*.ts",

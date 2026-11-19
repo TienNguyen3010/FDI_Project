@@ -158,3 +158,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Fix | `components/ClientBody.tsx`: đổi 9 chỗ `text-muted` → `text-muted-foreground` (nav inactive, logout, header buttons, email, bottom nav); giữ `--color-muted` làm nền `bg-muted` cho shadcn |
 | Verify | contrast 1.04:1 → 7.01:1 (tính bằng tool) · `tsc` 0 · docs-check OK · test 27/27 |
 | Hành động user | Hard refresh sau deploy để dọn CSS cũ |
+
+## 14. Dọn dẹp code/artifact cũ (2026-11-19)
+
+| Hạng mục | Kết quả |
+|---|---|
+| `legacy/` (14 file, 112K) | Xóa — 0 consumer active, đã bị rewrite v1.0 thay thế; 3 test `pdf.test.mjs` chỉ assert nội dung legacy cũng bỏ (giữ test font) |
+| Re-export thừa | `useProfile.ts`: bỏ `export { ROLES, hasPermission }` + `can()` (comment tự nhận "tương thích ngược"); `authorize.ts`: bỏ re-export + import unused; `policy.ts`: bỏ `PERMISSIONS`/`isPermission`/`SCOPE_RULES` value export (test import thẳng `policy.core.mjs`) |
+| `../tsconfig.json` | Sửa include `middleware.ts` → `proxy.ts` (Next 16 đổi tên) |
+| Docs convention | `REWRITE_PLAN_v1_0.md` + `validation_report_legacy.json` → `06-reference/archive/`; update `docs/README.md:81-82` |
+| Guard gap | `scripts/docs-check.mjs:26` regex `v1[_.][1-9]` bỏ sót `_v1_0` → đổi `[0-9]` (archive vẫn exempt) |
+| Artifact local (~14MB) | Xóa log deploy cũ, screenshot QA, `/tmp` crop/chunk, scaffold `fdip_test/`, `tsconfig.tsbuildinfo` |
+| Giữ lại | `node_modules/`, `.next/`, cache Hermes, delegation live logs, docs archive provenance |

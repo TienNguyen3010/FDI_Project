@@ -23,7 +23,7 @@ const DOCS = path.join(ROOT, 'docs');
 const ARCHIVE = path.join(DOCS, '06-reference', 'archive');
 const DOC_EXT = new Set(['.md', '.json', '.yaml', '.yml', '.sql', '.csv', '.txt', '.py', '.png']);
 const TEXT_EXT = new Set(['.md', '.json', '.yaml', '.yml', '.csv', '.txt', '.py', '.sql', '.mjs']);
-const VERSION_SUFFIX = /(^|[_.\-/])v1[_.][1-9]/i;
+const VERSION_SUFFIX = /(^|[_.\-/])v1[_.][0-9]/i;
 
 const errors = [];
 const fail = (kind, file, line, message) => {
