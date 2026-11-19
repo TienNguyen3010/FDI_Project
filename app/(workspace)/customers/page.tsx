@@ -8,7 +8,7 @@ const config: CrudConfig = {
     description: "Hồ sơ khách hàng, liên hệ kỹ thuật/thương mại/khẩn cấp.",
     table: "customers",
 
-    editableBy: ['manager', 'director'],
+    editableBy: ['project_manager', 'director', 'super_admin'],
     displayField: "name",
     defaultSort: { column: "created_at", ascending: false },
     fields: [

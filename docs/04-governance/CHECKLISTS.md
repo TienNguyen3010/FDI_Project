@@ -261,3 +261,4 @@ UI release checklist: verify sidebar section order, active route, collapsed mode
 | 2026-11-19 | HEAD trước | Checklist canonical + rule + CI guard | tsc 0 · test 24/24 · docs OK 53 files · guard A PASS+FAIL |
 | 2026-11-19 | `HEAD` (commit này) | Audit checklist theo code + production ready | 3 subagent audit read-only · 24/24 test · docs-check OK · deploy prod READY |
 | 2026-11-19 | docs-bước-1 | Create Customer: standard + plan (review-first) | 3-layer recon spec→mockup→code@355de30 · docs-check sẽ verify sau khi commit |
+| 2026-11-19 | bước-2 | Create Customer Phase 1 build | tsc 0 · docs-check OK 55 files · test 24/24 · build 0 (`/customers/new` ◐) |
