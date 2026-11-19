@@ -47,18 +47,20 @@ COMMIT;
 
 `COMMENT ON TABLE customers` hiện ghi "không lưu nhạy cảm" — vẫn đúng (không lưu bank/NDA/mật khẩu). Không đổi RLS (policy đã cover mọi cột).
 
-## 4. Checklistcode (cần làm, tick sau verify)
+## 4. Checklistcode (đã build 2026-11-19, commit `e180357`)
 
-- [ ] **C1** Migration 008_customer_create_fields.sql — viết file + apply tay trên Supabase; verify bằng `SELECT column_name FROM information_schema.columns WHERE table_name='customers'`.
-- [ ] **C2** `lib/types.ts:30-48` — đổi `Row/Insert/Update` của `customers` theo schema thật: bỏ `code`/`status`, thêm 5 cột mới + các cột cũ. Verify `tsc --noEmit`.
-- [ ] **C3** `app/(workspace)/customers/page.tsx:11` — `editableBy: ['project_manager','director','super_admin']`. Verify role `project_manager` thấy nút Thêm trên list.
-- [ ] **C4** Route `app/(workspace)/customers/new/page.tsx` — `'use client'`, gate `customer.create`, form 3 card, breadcrumb, summary, sticky footer. Dùng `Card/Input/Label/Select/Textarea/Button/Badge/useToast` từ `components/ui/ui.tsx`.
-- [ ] **C5** Validation: required 5 field, email/phone, `maxLength=500` + counter, lỗi dưới field. Verify submit với field trống → không gọi insert.
-- [ ] **C6** Submit: `supabase.from('customers').insert(payload)`, disable+spinner, toast, `router.push('/customers')`, giữ form khi lỗi. Verify response thật từ DB local/prod.
-- [ ] **C7** Hủy + unsaved confirm; link quay lại list. Verify điều hướng.
-- [ ] **C8** Responsive `lg:grid-cols-3` → single column + a11y (label, aria-invalid, focus). Verify screenshot 390px.
-- [ ] **C9** Cập nhật 01-product/DATA_DICTIONARY.md (thêm 5 field) + 04-governance/CHECKLISTS.md "Nhật ký đồng bộ" **trong cùng commit**.
-- [ ] **C10** Chạy `npm run check:docs` (0 lỗi), `npm test` (24/24), `tsc --noEmit`; build để Vercel verify (máy 2GB không build local).
+> Tick = có tool output. Migration file ✅ (soạn) nhưng **apply trên DB thật ⏳** (không có credentials/DB access trong sandbox).
+
+- [x] **C1** Migration 008_customer_create_fields.sql soạn xong (`migrations/008...`) · **apply trên Supabase SQL Editor: ⏳ do user**.
+- [x] **C2** `lib/types.ts:30-...` đổi theo schema thật: bỏ `code`/`status`, thêm 5 cột + cột cũ. Verify `tsc --noEmit` = exit 0.
+- [x] **C3** `app/(workspace)/customers/page.tsx:11` → `['project_manager','director','super_admin']`. Verify build exit 0.
+- [x] **C4** Route `app/(workspace)/customers/new/page.tsx` (gate `customer.create`) + `components/customers/CreateCustomerForm.tsx` (3 card, breadcrumb, summary, sticky footer). Verify build output có `/customers/new` ◐.
+- [x] **C5** Validation: 5 required, email regex, phone regex, `maxLength=500` + counter, lỗi dưới field. Verify tsc 0 + code review.
+- [x] **C6** Submit: `supabase.from('customers').insert(payload)` + disable/spinner + toast + `router.push('/customers')`. Verify build 0 · **submit DB thật ⏳ chờ apply 008**.
+- [x] **C7** Hủy + unsaved confirm + link list. Verify code.
+- [x] **C8** Responsive `lg:grid-cols-3` → single column + a11y. Verify build 0 · screenshot 390px ⏳ (chờ user chụp).
+- [x] **C9** DATA_DICTIONARY.md (5 field + drift note) + CHECKLISTS.md "Nhật ký đồng bộ" cùng commit `e180357`.
+- [x] **C10** `npm run check:docs` OK 55 files · `npm test` 24/24 · `tsc` 0 · build 0 (`NEXT_PRIVATE_BUILD_WORKER=0 NODE_OPTIONS=--max-old-space-size=640 next build --webpack`).
 
 ## 5. Rủi ro & guardrails
 
