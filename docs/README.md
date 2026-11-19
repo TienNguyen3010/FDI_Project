@@ -63,6 +63,7 @@ docs/
 - Khi thêm spec mới: đặt vào đúng nhóm ở mục 2, **không tạo README riêng**, không thêm suffix version vào tên file active.
 - Khi có bản mới thay thế: `git mv` bản cũ vào `06-reference/archive/`, giữ lịch sử git.
 - Mọi thay đổi contract (API/DB/RBAC) phải cập nhật `04-governance/TRACEABILITY_MATRIX.md` trong cùng commit.
+- **Checklist duy nhất:** `04-governance/CHECKLISTS.md`. Mọi thay đổi code (`app/`, `components/`, `lib/`, `migrations/`) hoặc docs phải cập nhật mốc tương ứng trong file này **trong cùng commit** — CI guard (`node scripts/docs-check.mjs`, env `CHECKLIST_BASE`) chặn commit/thiếu cập nhật. Không tạo checklist riêng ở file khác; bản cũ chỉ được archive kèm note trỏ về đây.
 - Không claim production-ready khi `05-quality/INTEGRATION_STATUS.md` còn liệt kê blocker.
 
 ## 6. Provenance (nguồn gốc)
@@ -80,5 +81,6 @@ Hệ tài liệu v1.0 được chuyển đổi từ `Project_OPS_Specification_T
 | `INTEGRATION_STATUS_v1_5.md` | `05-quality/INTEGRATION_STATUS.md` |
 | `validation_report_v1_4.json` | `06-reference/archive/validation_report_legacy.json` |
 | `REWRITE_PLAN_v1_0.md` | `06-reference/archive/REWRITE_PLAN_v1_0.md` |
+| `checklist.md` | `06-reference/archive/checklist_legacy.md` |
 
 Bản cũ (v1.1/v1.2/v1.3/v1.4) và `FIGMA_SYNC_v1_5.md` (artifact sync mới nhất, vẫn được `00-entry/README.md` dẫn chiếu) được giữ nguyên tên trong `06-reference/archive/` để truy vết — **không** mang version v1.0.

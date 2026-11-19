@@ -8,6 +8,8 @@
  *  2. Active docs use v1.0 naming (no inherited version suffix) and v1.0 markers.
  *  3. Every relative markdown link / inline path reference resolves to a real file.
  *  4. All JSON files under docs parse cleanly.
+ *  5. Canonical checklist exists; legacy checklist files are redirects; when CHECKLIST_BASE
+ *     is set, any code/doc change must also touch the canonical checklist in the same diff.
  *
  * Exemptions (intentional, documented in docs/README.md section 6):
  *  - `docs/06-reference/archive/**` keeps original names + content as snapshots.
@@ -15,6 +17,7 @@
  */
 
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -171,6 +174,44 @@ for (const file of allFiles) {
   }
 }
 
+// --- 5. canonical checklist + sync -----------------------------------------
+const CANONICAL = path.join(DOCS, '04-governance', 'CHECKLISTS.md');
+const canonRel = 'docs/04-governance/CHECKLISTS.md';
+if (!existsSync(CANONICAL)) {
+  fail('checklist', CANONICAL, 0, `canonical checklist missing: ${canonRel}`);
+} else {
+  // B — any non-archived *checklist* doc must redirect to the canonical one.
+  const REDIRECT = /CHECKLISTS\.md/i;
+  for (const f of allFiles) {
+    const rel = toRel(f);
+    if (rel === canonRel || isArchive(f) || !/checklist/i.test(path.basename(f))) continue;
+    const text = readFileSync(f, 'utf8');
+    if (!REDIRECT.test(text)) {
+      fail('checklist', f, 0, 'legacy checklist must redirect to canonical CHECKLISTS.md');
+    }
+  }
+  // A — diff-based sync: only when CHECKLIST_BASE is provided by CI.
+  const base = process.env.CHECKLIST_BASE;
+  if (base) {
+    try {
+      const changed = execFileSync('git', ['diff', '--name-only', `${base}...HEAD`],
+        { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+        .trim().split('\n').filter(Boolean);
+      const SCOPE = /^(app|components|lib|migrations|docs)\//;
+      const CODE = /\.(ts|tsx|js|mjs|sql|md)$/;
+      const AUTO = /^(AGENTS\.md$|.*(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$)/;
+      const touched = changed.filter((f) => SCOPE.test(f) && CODE.test(f)
+        && f !== canonRel && !AUTO.test(f));
+      if (touched.length && !changed.includes(canonRel)) {
+        fail('checklist', CANONICAL, 0,
+          `${touched.length} code/doc file(s) changed without updating ${canonRel}`);
+      }
+    } catch (e) {
+      fail('checklist', CANONICAL, 0, `git diff failed vs ${base}: ${e.message}`);
+    }
+  }
+}
+
 // --- report -----------------------------------------------------------------
 if (errors.length) {
   console.error(`docs-check: FAILED with ${errors.length} issue(s)\n`);
@@ -188,4 +229,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`docs-check: OK — ${allFiles.length} files, 0 secrets, 0 stale versions, 0 dangling links, JSON valid.`);
+console.log(`docs-check: OK — ${allFiles.length} files, 0 secrets, 0 stale versions, 0 dangling links, 0 invalid JSON, 0 checklist issues.`);

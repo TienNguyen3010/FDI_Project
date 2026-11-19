@@ -26,7 +26,7 @@ Inventory sources -> normalize customer/site/asset IDs -> detect duplicates -> d
 ## Operational runbooks
 Backup and restore; queue/DLQ replay; external provider outage; certificate renewal; access review; audit export; onboarding/offboarding; emergency break-glass access; retention purge approval.
 ## Release checklist
-Security scans, contract tests, performance checks, UAT evidence, RBAC negative tests, restore test, rollback plan, change approval, release notes, support training.
+Xem checklist phát hành duy nhất tại [`CHECKLISTS.md` → Release readiness](CHECKLISTS.md#release-readiness). Không copy nội dung vào đây.
 
 ## Baseline assumptions and boundaries
 - One operating company, multiple customers and sites; **not SaaS multi-tenant**.

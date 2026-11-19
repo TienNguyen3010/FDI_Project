@@ -5,12 +5,20 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'migrations/**'
       - 'scripts/docs-check.mjs'
       - '.github/workflows/docs-check.yml'
       - 'package.json'
   pull_request:
     paths:
       - 'docs/**'
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'migrations/**'
       - 'scripts/docs-check.mjs'
       - '.github/workflows/docs-check.yml'
       - 'package.json'
@@ -21,11 +29,13 @@ permissions:
 
 jobs:
   docs-guard:
-    name: Docs guard (v1.0)
+    name: Docs + checklist guard (v1.0)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -34,3 +44,7 @@ jobs:
 
       - name: Run docs check
         run: node scripts/docs-check.mjs
+        env:
+          # Diff-based checklist sync. Base SHA for PRs; for push use the commit
+          # before HEAD (fetch-depth: 0 makes it available). Manual dispatch skips.
+          CHECKLIST_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
