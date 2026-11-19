@@ -45,7 +45,23 @@ ON CONFLICT (version) DO NOTHING;
 COMMIT;
 ```
 
-`COMMENT ON TABLE customers` hiện ghi "không lưu nhạy cảm" — vẫn đúng (không lưu bank/NDA/mật khẩu). Không đổi RLS (policy đã cover mọi cột).
+`COMMENT ON TABLE customers` hiện ghi "không lưu nhạy cảm" — vẫn đúng (không lưu bank/NDA/mật khẩu). Không đổi RLS policy (009 chỉ `CREATE OR REPLACE` 2 helper).
+
+**Migration 009 (hardening, CHƯA apply)** — paste trong SQL Editor sau 008:
+
+```sql
+BEGIN;
+-- 1) super_admin vào whitelist fdi_current_role() + fdi_is_manager_plus()
+--    (copy nguyên thân hàm 002, chỉ đổi whitelist; xem file migrations/009_...sql)
+-- 2) DNC columns
+ALTER TABLE public.customers
+  ADD COLUMN IF NOT EXISTS consent_contact BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.customers
+  ADD COLUMN IF NOT EXISTS consent_contact_at TIMESTAMPTZ;
+COMMIT;
+```
+
+Chi tiết đầy đủ (CREATE OR REPLACE functions, COMMENT, schema_migrations): file migrations/009_customer_create_hardening.sql ở repo root.
 
 ## 4. Checklistcode (đã build 2026-11-19, commit `e180357`)
 
@@ -63,16 +79,17 @@ COMMIT;
 - [x] **C10** `npm run check:docs` OK 55 files · `npm test` 24/24 · `tsc` 0 · build 0 (`NEXT_PRIVATE_BUILD_WORKER=0 NODE_OPTIONS=--max-old-space-size=640 next build --webpack`).
 - [x] **C11** (bổ sung 2026-11-19) Nút "+ Thêm mới" trên list điều hướng `/customers/new` (CUS-L07) qua `CrudConfig.createHref`; module khác giữ modal. Verify `tests/customer-create-link.test.mjs` 2/2 · tsc 0.
 - [x] **C12** (bổ sung 2026-11-19) Rewrite Customers List theo spec 01: page standalone (`app/(workspace)/customers/page.tsx`) + API `GET /api/v1/customers` (`app/api/v1/customers/route.ts`, envelope `data.{items,pagination,summary}`, scope deny-by-default, CSAT null, `code` null, status `'active'`, count project/ticket theo scope) + form align prefix `CUS-` UI-only. Verify tsc 0 · test 29/29 · build 0 · docs-check OK · KHÔNG bịa KPI. Standard: `../02-design/CUSTOMERS_LIST_COMPONENTS_STANDARD.md` · `../02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md`.
+- [x] **C13** (hardening 2026-11-19, duyệt bởi Dev Director) — (a) migration 009_customer_create_hardening.sql: whitelist `super_admin` vào `fdi_current_role()`/`fdi_is_manager_plus()`, thêm `consent_contact`+`consent_contact_at` (**chưa apply**); (b) RBAC client cấp `customer.create` cho director+project_manager (khớp RLS); (c) form: bỏ input mã giả (readonly "Tự động tạo"), checkbox DNC, optional `null`, email lowercase, name ≥2, phone warning không chặn, blur + focus lỗi đầu, `title` trên summary, `htmlFor="f-notes"`, `Badge`/`Spinner`. Verify tsc 0 · test **47/47** · build 0 · docs-check OK.
 
 ## 5. Rủi ro & guardrails
 
-- **Không** claim xong trước khi migration 008 apply — field mới sẽ bị PostgREST trả lỗi `PGRST204` nếu DB chưa có cột.
-- **Không** đổi schema đã apply (001–007) hay force push; migration 008 là additive.
-- **Không** dùng `manager`/`leader` trong `editableBy` (role không tồn tại).
+- **Không** claim xong trước khi migration 008/009 apply — cột mới sẽ bị PostgREST trả lỗi `PGRST204` nếu DB chưa có; 009 còn đổi whitelist RLS nên chưa apply → super_admin vẫn bị chặn insert.
+- **Không** đổi schema đã apply (001–008) hay force push; migration 009 là additive + `CREATE OR REPLACE` function (signature không đổi).
+- **Không** dùng `manager`/`leader` trong `editableBy` (role không tồn tại); **không** để `super_admin` lọt khỏi whitelist RLS.
 - **Không** tự sinh `code` hay gửi `created_at` từ client.
 - Docs guard `CHECKLIST_BASE` chặn commit nếu đổi `app/|components|lib|migrations|docs/` mà không chạm `CHECKLISTS.md` (`scripts/docs-check.mjs:193-212`).
 - Token `vcp_...` nếu lộ trong chat → rotate, không lưu repo/config.
 
 ## 6. Definition of Done
 
-Migration file ✅ (apply ⏳ do user) · `tsc` 0 · `check:docs` OK · `npm test` 24/24 · build 0 · form `/customers/new` code có trong build chunk (`page-0df89820...js`) · docs + checklist cùng commit · **deploy prod READY** (`dpl_GXCYrzHzxkXcnb7ebtk524CT3Epa`, SHA `4b9e3e0`, alias `fdi-project.vercel.app`) · submit DB thật + screenshot 390px ⏳ chờ user apply 008 & chụp lại.
+Migration 008 ✅ (đã apply) · **009 file ✅ soạn, apply ⏳ do user** · `tsc` 0 · `check:docs` OK · `npm test` 47/47 · build 0 · form `/customers/new` hardening xong (bỏ input mã giả, RBAC 2 đầu, DNC checkbox, validation blur) · docs + checklist cùng commit · prod deploy trước đó READY (`3539c83`) — **chưa deploy hardening này**. Definition of Done cuối: user apply 009 → submit DB thật 1 customer có consent → chụp màn hình verify.

@@ -20,6 +20,15 @@ test('RBAC: super_admin wildcard; customer_viewer read-only', () => {
   assert.equal(canAll('engineer', ['project.approve', 'asset.read']), false)
 })
 
+test('RBAC: customer.create grant — manager+; deny engineer/support/viewer', () => {
+  assert.equal(hasPermission('director', 'customer.create'), true)
+  assert.equal(hasPermission('project_manager', 'customer.create'), true)
+  assert.equal(hasPermission('super_admin', 'customer.create'), true)
+  assert.equal(hasPermission('engineer', 'customer.create'), false)
+  assert.equal(hasPermission('support', 'customer.create'), false)
+  assert.equal(hasPermission('customer_viewer', 'customer.create'), false)
+})
+
 test('RBAC: role grant KHÔNG override scope (rbac_policy.json:163)', () => {
   const project = { customer_id: 'c1', site_id: 's1', project_id: 'p1' }
   assert.equal(canAccessScope('director', 'project.read', project, [{ kind: 'customer', id: 'c1' }]), true)

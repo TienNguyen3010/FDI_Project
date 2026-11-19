@@ -1,7 +1,7 @@
 # FDI_Project — Database migrations (Supabase)
 
 Bộ migration SQL chạy **trực tiếp trong Supabase SQL Editor** (không cần psc, không dùng `\i`).
-Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006**. Mỗi file idempotent, có thể chạy lại.
+Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009**. Mỗi file idempotent, có thể chạy lại. Trạng thái apply thực tế xem bảng dưới + `DEPLOY_AND_MIGRATION.md`.
 
 | File | Nội dung |
 |---|---|
@@ -11,6 +11,9 @@ Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006**. Mỗi 
 | `004_audit_trigger.sql` | Trigger audit `AFTER INSERT/UPDATE/DELETE` trên 11 bảng nghiệp vụ (ghi `user_id=auth.uid()`, diff OLD/NEW vào cột `changes JSONB`); chạy **sau 003**. |
 | `005_works_sla.sql` | View `v_alert_sla` (SLA/MTTR/% vi phạm, `security_invoker=true`) + 2 index composite `alerts(status,severity)`, `works(assignee_id,incident_id)`. |
 | `006_ops_core.sql` | **Bổ sung schema/RLS cho Dashboard — KHÔNG đụng migration đã apply, KHÔNG đổi cột bảng cũ.** Thêm `user_grants` (map user→customer scope), `project_baselines` + `acceptance_fractions` + view `v_project_progress_baseline` (MET-02 weighted progress), `sla_instances` + `sla_state` (**illustrative**, chờ PO sign-off — MET-04/MET-05); helper `auth_user_id()`, `auth_customer_ids()` + 6 role check `super_admin`/`director`/`project_manager`/`engineer`/`support`/`customer_viewer` (theo `rbac_policy.json`); bật RLS + policy theo customer scope cho **mọi bảng mới**; đăng ký version `006_ops_core`. Chạy **sau 005**. |
+| `007_ops_bridge.sql` | Grant customer scope cho `admin@fdi.local` + view `tickets` (từ `alerts`) — bridge runtime schema cũ sang contract v1.0. Đã apply. |
+| `008_customer_create_fields.sql` | Thêm 5 cột `customers`: `tax_id`, `headquarters_address`, `primary_contact_name`, `primary_contact_position`, `notes` — cho màn "Thêm khách hàng". **Đã apply theo user (2026-11-19).** |
+| `009_customer_create_hardening.sql` | Mở rộng `fdi_current_role()`/`fdi_is_manager_plus()` whitelist thêm `super_admin` (fix deadlock RBAC/RLS) + cột `consent_contact` (DNC, default false) và `consent_contact_at`. Chạy **sau 008**; **chưa apply** — user paste trong SQL Editor. |
 
 ## Cách chạy
 

@@ -42,6 +42,8 @@ export type Database = {
           primary_contact_name: string | null
           primary_contact_position: string | null
           notes: string | null
+          consent_contact: boolean
+          consent_contact_at: string | null
           created_at: string
           updated_at: string
         }
@@ -59,6 +61,8 @@ export type Database = {
           primary_contact_name?: string | null
           primary_contact_position?: string | null
           notes?: string | null
+          consent_contact?: boolean
+          consent_contact_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -76,6 +80,8 @@ export type Database = {
           primary_contact_name?: string | null
           primary_contact_position?: string | null
           notes?: string | null
+          consent_contact?: boolean
+          consent_contact_at?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -15,6 +15,8 @@ New dashboard response definitions: as_of, effective_scope, definition_id, basel
 | customers.primary_contact_name | text | no | Customer | primary contact name (+ phone) |
 | customers.primary_contact_position | text | no | Customer | ≤120 chars |
 | customers.notes | text | no | Customer | ≤500 chars; XSS-safe on display |
+| customers.consent_contact | boolean | yes | Customer | DNC; false = không được liên hệ; default false (migration 009) |
+| customers.consent_contact_at | timestamptz | no | Customer | UTC timestamp khi user đồng ý; null khi từ chối |
 | sites.customer_id | uuid | yes | Customer | FK, immutable except controlled transfer |
 | projects.customer_id | uuid | yes | Delivery | FK, cross-site invariant |
 | assets.asset_code | text | yes | Infrastructure | unique, QR payload references ID/code only |
@@ -32,6 +34,8 @@ New dashboard response definitions: as_of, effective_scope, definition_id, basel
 | outbox_events.dedupe_key | text | yes | Platform | unique logical delivery key |
 
 > **Drift note (2026-11-19):** `customers.code` / `customers.status` từng được khai báo trong `lib/types.ts` cũ nhưng **không tồn tại** trong schema đang chạy (migrations/001_initial_schema.sql). Type đã được sửa theo DB. `code` (CUS-YYYY-XXX) là hạng mục Phase 2, chưa có cột — không gửi từ client.
+
+> **Consent/DNC note (2026-11-19):** `customers.consent_contact` là boolean có audit (migration 009), mặc định `false` = không được liên hệ. Consent **KHÔNG** được lưu trong `customers.notes`; dùng cột chuyên biệt `consent_contact` + `consent_contact_at` (timestamp UTC lúc đồng ý, `null` khi từ chối).
 
 **Ownership rules:** only owning module writes core entity; other modules reference stable IDs. PII: contacts, email, phone; restricted: credentials, network diagrams, configuration backups. Secrets must never be stored as free-text fields. All timestamps UTC; site timezone IANA identifier.
 

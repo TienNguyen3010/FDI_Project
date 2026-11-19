@@ -42,6 +42,7 @@ Decision = authenticated AND permission granted AND resource scope matches AND r
 
 | Action | Admin | Director | PM | Engineer | Support | Customer |
 |---|---|---|---|---|---|---|
+| customer.create | all (super_admin) | managed | managed | deny | deny | deny |
 | project.read | all | managed | assigned | assigned | linked | customer-owned |
 | project.baseline.approve | deny* | managed | deny | deny | deny | deny |
 | asset.install | deny* | deny | assigned | assigned | deny | deny |
@@ -55,6 +56,8 @@ Decision = authenticated AND permission granted AND resource scope matches AND r
 | rbac.manage | all | deny | deny | deny | deny | deny |
 
 `deny*`: administrative account is not automatically an operational actor; emergency elevation is separately audited. Permissions in this table are baseline proposals requiring business sign-off.
+
+**customer.create (2026-11-19, sau migration 009):** trước 009 chỉ `super_admin` có quyền tạo customer. Nay `director` + `project_manager` cũng được cấp (khớp `ROLE_PERMISSIONS` trong `policy.core.mjs`). Phía DB, RLS `customers` INSERT dùng `fdi_is_manager_plus()` — SAU migration 009 hàm này đã thêm `super_admin` vào whitelist (`IN ('manager','director','super_admin')`), nên `super_admin` + `director` + `project_manager`(=manager) cùng khớp. Hai đầu (app policy + RLS) phải đồng bộ; migration 009 ⏳ do user apply.
 
 **Scopes:** `all`, `managed_customer`, `assigned_project`, `assigned_site`, `team`, `assigned_ticket`, `customer_self`. Evaluate server-side using relation joins, not client-supplied customer_id. Field-level deny for ticket SLA policy/priority/ownership unless specific action permission. Signed download URLs short-lived and reauthorized. Apply same policy to search indexes, exports, PDF generation, websocket topics and background jobs.
 
