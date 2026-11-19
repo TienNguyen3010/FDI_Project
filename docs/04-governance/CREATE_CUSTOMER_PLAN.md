@@ -61,6 +61,7 @@ COMMIT;
 - [x] **C8** Responsive `lg:grid-cols-3` → single column + a11y. Verify build 0 · screenshot 390px ⏳ (chờ user chụp).
 - [x] **C9** DATA_DICTIONARY.md (5 field + drift note) + CHECKLISTS.md "Nhật ký đồng bộ" cùng commit `e180357`.
 - [x] **C10** `npm run check:docs` OK 55 files · `npm test` 24/24 · `tsc` 0 · build 0 (`NEXT_PRIVATE_BUILD_WORKER=0 NODE_OPTIONS=--max-old-space-size=640 next build --webpack`).
+- [x] **C11** (bổ sung 2026-11-19) Nút "+ Thêm mới" trên list điều hướng `/customers/new` (CUS-L07) qua `CrudConfig.createHref`; module khác giữ modal. Verify `tests/customer-create-link.test.mjs` 2/2 · tsc 0.
 
 ## 5. Rủi ro & guardrails
 

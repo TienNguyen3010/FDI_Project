@@ -10,6 +10,7 @@ const config: CrudConfig = {
 
     editableBy: ['project_manager', 'director', 'super_admin'],
     displayField: "name",
+    createHref: "/customers/new",
     defaultSort: { column: "created_at", ascending: false },
     fields: [
       { key: "name", label: "Tên khách hàng", type: "text", required: true },

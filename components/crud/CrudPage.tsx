@@ -1,11 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { logAudit } from '@/lib/audit'
 import type { Role } from '@/lib/hooks/useProfile'
 import {
   Button,
+  buttonVariants,
   Input,
   Label,
   Select,
@@ -60,6 +62,8 @@ export interface CrudConfig {
   /** Cột dùng làm nhãn chính trong bảng & tiêu đề modal */
   displayField: string
   defaultSort?: { column: string; ascending?: boolean }
+  /** Nếu set, nút "Thêm mới" điều hướng tới route riêng thay vì mở modal generic. */
+  createHref?: string
 }
 
 type Row = Record<string, unknown>
@@ -235,9 +239,18 @@ export function CrudPage({ config, role }: { config: CrudConfig; role: Role }) {
             <RefreshCw className="h-4 w-4" />
           </Button>
           {editable && (
-            <Button size="sm" onClick={openNew}>
-              <Plus className="h-4 w-4" /> Thêm mới
-            </Button>
+            config.createHref ? (
+              <Link
+                href={config.createHref}
+                className={buttonVariants({ size: 'sm' })}
+              >
+                <Plus className="h-4 w-4" /> Thêm mới
+              </Link>
+            ) : (
+              <Button size="sm" onClick={openNew}>
+                <Plus className="h-4 w-4" /> Thêm mới
+              </Button>
+            )
           )}
         </div>
       </div>
