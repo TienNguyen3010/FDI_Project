@@ -265,3 +265,4 @@ UI release checklist: verify sidebar section order, active route, collapsed mode
 | 2026-11-19 | docs-plan-tick | Tick plan C1–C10 theo tool output thật | build exit 0 · docs-check OK · apply 008 ⏳ do user |
 | 2026-11-19 | deploy-4b9e3e0 | Push + deploy production | push `355de30..4b9e3e0` · Vercel `dpl_GXCYrzHzxkXcnb7ebtk524CT3Epa` status READY · target production · sha khớp · alias fdi-project.vercel.app · /customers/new → login 200 (auth gate) |
 | 2026-11-19 | logout-cookie | Fix logout không redirect (HttpOnly cookie sót) | regression 0/2→2/2 · tsc 0 · docs-check OK · build 0 · root-cause ghi DEPLOY_AND_MIGRATION §15 |
+| 2026-11-19 | deploy-949c5ab | Push + deploy production (fix logout) | push `f0652c3..949c5ab` · Vercel `dpl_BDzVMjSAk4pn529oKAXNQwDcuVwE` READY · sha khớp · alias fdi-project.vercel.app · prod `POST /api/auth/logout` → `set-cookie sb-access-token=; Max-Age=0` · /dashboard 307 login |
