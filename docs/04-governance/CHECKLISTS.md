@@ -268,3 +268,4 @@ UI release checklist: verify sidebar section order, active route, collapsed mode
 | 2026-11-19 | deploy-949c5ab | Push + deploy production (fix logout) | push `f0652c3..949c5ab` · Vercel `dpl_BDzVMjSAk4pn529oKAXNQwDcuVwE` READY · sha khớp · alias fdi-project.vercel.app · prod `POST /api/auth/logout` → `set-cookie sb-access-token=; Max-Age=0` · /dashboard 307 login |
 | 2026-11-19 | customer-cta | Nút "+ Thêm mới" → /customers/new (CUS-L07) | CrudConfig.createHref · regression 2/2 · tsc 0 · docs-check OK |
 | 2026-11-19 | design-customers | Customers List + Create theo spec/Figma | tsc 0 · test 29/29 · build 0 · docs-check OK · KHÔNG bịa KPI |
+| 2026-11-19 | deploy-f2c0c92 | Push + deploy production (redesign Customers) | push `3f3f363..f2c0c92` · Vercel `dpl_24B9dDAHmH8hSkFuq2u7JhZm7Cpm` READY · sha khớp · alias fdi-project.vercel.app · prod GET /api/v1/customers 401 · /customers + /customers/new 307 login |
