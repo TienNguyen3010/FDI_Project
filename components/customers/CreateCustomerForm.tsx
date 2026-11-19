@@ -94,10 +94,15 @@ export default function CreateCustomerForm() {
   const [form, setForm] = useState<FormState>(EMPTY)
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const [saving, setSaving] = useState(false)
+  // UI-only: không nằm trong FormState nên không bao giờ vào payload insert.
+  // DB chưa có cột code; backend tự sinh khi lưu.
+  const [codeInput, setCodeInput] = useState('')
 
   const dirty = useMemo(
-    () => (Object.keys(form) as FieldKey[]).some((k) => form[k] !== EMPTY[k]),
-    [form],
+    () =>
+      (Object.keys(form) as FieldKey[]).some((k) => form[k] !== EMPTY[k]) ||
+      Boolean(codeInput.trim()),
+    [form, codeInput],
   )
 
   const setField = (key: FieldKey, value: string) => {
@@ -186,24 +191,43 @@ export default function CreateCustomerForm() {
                 <Label htmlFor="f-name">
                   Tên khách hàng <span className="text-[var(--danger)]">*</span>
                 </Label>
-                <Input {...fieldProps('name')} placeholder="Tên công ty" maxLength={255} />
+                <Input
+                  {...fieldProps('name')}
+                  placeholder="Nhập tên khách hàng (ví dụ: Công ty ABC)"
+                  maxLength={255}
+                />
                 {errorFor('name')}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-code">Mã khách hàng</Label>
-                <div className="flex items-center gap-2">
-                  <Input id="f-code" value="Tự động tạo" readOnly className="bg-muted/40" />
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">CUS-…</span>
+                <div className="relative">
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground"
+                  >
+                    CUS-
+                  </span>
+                  <Input
+                    id="f-code"
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    placeholder="Nhập mã hoặc để hệ thống tự sinh"
+                    className="pl-12"
+                    aria-describedby="code-hint"
+                  />
                 </div>
+                <p id="code-hint" className="text-xs text-muted-foreground">
+                  Để trống để hệ thống tự sinh
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-tax_id">Mã số thuế</Label>
-                <Input {...fieldProps('tax_id')} placeholder="0123456789" />
+                <Input {...fieldProps('tax_id')} placeholder="Nhập mã số thuế (nếu có)" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-industry">Ngành nghề</Label>
                 <Select {...fieldProps('industry')}>
-                  <option value="">— Chọn ngành —</option>
+                  <option value="">Chọn ngành nghề</option>
                   {INDUSTRIES.map((i) => (
                     <option key={i.value} value={i.value}>{i.label}</option>
                   ))}
@@ -213,7 +237,10 @@ export default function CreateCustomerForm() {
                 <Label htmlFor="f-headquarters_address">
                   Địa chỉ trụ sở chính <span className="text-[var(--danger)]">*</span>
                 </Label>
-                <Input {...fieldProps('headquarters_address')} placeholder="Số nhà, đường, TP, quốc gia" />
+                <Input
+                  {...fieldProps('headquarters_address')}
+                  placeholder="Nhập địa chỉ trụ sở chính"
+                />
                 {errorFor('headquarters_address')}
               </div>
             </CardContent>
@@ -228,25 +255,40 @@ export default function CreateCustomerForm() {
                 <Label htmlFor="f-primary_contact_name">
                   Người liên hệ <span className="text-[var(--danger)]">*</span>
                 </Label>
-                <Input {...fieldProps('primary_contact_name')} placeholder="Họ tên + SĐT" />
+                <Input
+                  {...fieldProps('primary_contact_name')}
+                  placeholder="Nhập họ và tên người liên hệ"
+                />
                 {errorFor('primary_contact_name')}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-primary_contact_position">Chức vụ</Label>
-                <Input {...fieldProps('primary_contact_position')} placeholder="VD: IT Manager" maxLength={120} />
+                <Input
+                  {...fieldProps('primary_contact_position')}
+                  placeholder="Nhập chức vụ (ví dụ: Trưởng phòng IT)"
+                  maxLength={120}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-phone">
                   Số điện thoại <span className="text-[var(--danger)]">*</span>
                 </Label>
-                <Input {...fieldProps('phone')} type="tel" placeholder="09xxxxxxxx hoặc +84..." />
+                <Input
+                  {...fieldProps('phone')}
+                  type="tel"
+                  placeholder="Nhập số điện thoại (ví dụ: 0909 123 456)"
+                />
                 {errorFor('phone')}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-email">
                   Email <span className="text-[var(--danger)]">*</span>
                 </Label>
-                <Input {...fieldProps('email')} type="email" placeholder="name@company.com" />
+                <Input
+                  {...fieldProps('email')}
+                  type="email"
+                  placeholder="Nhập email (ví dụ: contact@company.com)"
+                />
                 {errorFor('email')}
               </div>
             </CardContent>
@@ -259,15 +301,24 @@ export default function CreateCustomerForm() {
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="f-contact_technical">Liên hệ kỹ thuật</Label>
-                <Input {...fieldProps('contact_technical')} placeholder="Tên + SĐT" />
+                <Input
+                  {...fieldProps('contact_technical')}
+                  placeholder="Nhập thông tin liên hệ kỹ thuật (nếu khác)"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-contact_commercial">Liên hệ thương mại</Label>
-                <Input {...fieldProps('contact_commercial')} placeholder="Tên + SĐT" />
+                <Input
+                  {...fieldProps('contact_commercial')}
+                  placeholder="Nhập thông tin liên hệ thương mại (nếu khác)"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-contact_emergency">Liên hệ khẩn cấp</Label>
-                <Input {...fieldProps('contact_emergency')} placeholder="Hotline 24/7" />
+                <Input
+                  {...fieldProps('contact_emergency')}
+                  placeholder="Nhập số điện thoại khẩn cấp (24/7)"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Ghi chú</Label>
@@ -275,7 +326,7 @@ export default function CreateCustomerForm() {
                   {...fieldProps('notes')}
                   maxLength={500}
                   rows={4}
-                  placeholder="Ghi chú nội bộ"
+                  placeholder="Nhập ghi chú, thông tin đặc biệt hoặc yêu cầu khác..."
                 />
                 <p className="text-right text-xs text-muted-foreground">{form.notes.length} / 500</p>
               </div>
@@ -302,7 +353,9 @@ export default function CreateCustomerForm() {
                     <dt className="shrink-0 text-muted-foreground">{label}</dt>
                     <dd className="truncate text-right text-foreground">
                       {key === 'code'
-                        ? 'Tự động tạo'
+                        ? codeInput.trim()
+                          ? `CUS-${codeInput.trim()}`
+                          : 'Tự động tạo'
                         : form[key as FieldKey]?.trim() || '—'}
                     </dd>
                   </div>
@@ -315,6 +368,67 @@ export default function CreateCustomerForm() {
               <CardTitle>Lưu ý</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-xs text-muted-foreground">
+              <div className="mb-3 flex justify-center" aria-hidden="true">
+                <svg
+                  width="120"
+                  height="100"
+                  viewBox="0 0 120 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <polygon
+                    points="22,30 60,12 98,30"
+                    style={{ fill: 'var(--sidebar-active)', stroke: 'var(--sidebar-icon)' }}
+                    strokeWidth="2"
+                  />
+                  <rect
+                    x="26"
+                    y="30"
+                    width="68"
+                    height="60"
+                    rx="3"
+                    style={{ fill: 'var(--sidebar-active)', stroke: 'var(--sidebar-icon)' }}
+                    strokeWidth="2"
+                  />
+                  {[
+                    [36, 42],
+                    [54, 42],
+                    [72, 42],
+                    [36, 58],
+                    [54, 58],
+                    [72, 58],
+                  ].map(([x, y], i) => (
+                    <rect
+                      key={i}
+                      x={x}
+                      y={y}
+                      width="10"
+                      height="8"
+                      rx="1"
+                      style={{ fill: 'var(--sidebar-icon)' }}
+                      opacity="0.4"
+                    />
+                  ))}
+                  <rect
+                    x="54"
+                    y="72"
+                    width="12"
+                    height="18"
+                    rx="1"
+                    style={{ fill: 'var(--sidebar-icon)' }}
+                    opacity="0.55"
+                  />
+                  <line
+                    x1="14"
+                    y1="92"
+                    x2="106"
+                    y2="92"
+                    style={{ stroke: 'var(--sidebar-icon)' }}
+                    strokeWidth="2"
+                    opacity="0.4"
+                  />
+                </svg>
+              </div>
               <p>• Các trường có dấu * là bắt buộc.</p>
               <p>• Mã khách hàng do hệ thống tạo khi lưu.</p>
               <p>• Thông tin liên hệ dùng cho hỗ trợ và thông báo.</p>

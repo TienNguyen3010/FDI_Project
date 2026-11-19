@@ -62,6 +62,7 @@ COMMIT;
 - [x] **C9** DATA_DICTIONARY.md (5 field + drift note) + CHECKLISTS.md "Nhật ký đồng bộ" cùng commit `e180357`.
 - [x] **C10** `npm run check:docs` OK 55 files · `npm test` 24/24 · `tsc` 0 · build 0 (`NEXT_PRIVATE_BUILD_WORKER=0 NODE_OPTIONS=--max-old-space-size=640 next build --webpack`).
 - [x] **C11** (bổ sung 2026-11-19) Nút "+ Thêm mới" trên list điều hướng `/customers/new` (CUS-L07) qua `CrudConfig.createHref`; module khác giữ modal. Verify `tests/customer-create-link.test.mjs` 2/2 · tsc 0.
+- [x] **C12** (bổ sung 2026-11-19) Rewrite Customers List theo spec 01: page standalone (`app/(workspace)/customers/page.tsx`) + API `GET /api/v1/customers` (`app/api/v1/customers/route.ts`, envelope `data.{items,pagination,summary}`, scope deny-by-default, CSAT null, `code` null, status `'active'`, count project/ticket theo scope) + form align prefix `CUS-` UI-only. Verify tsc 0 · test 29/29 · build 0 · docs-check OK · KHÔNG bịa KPI. Standard: `../02-design/CUSTOMERS_LIST_COMPONENTS_STANDARD.md` · `../02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md`.
 
 ## 5. Rủi ro & guardrails
 

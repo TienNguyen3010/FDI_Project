@@ -9,7 +9,7 @@
 | Đề xuất spec/mockup | Quyết định | Lý do (evidence) |
 |---|---|---|
 | REST `POST /api/v1/customers` + bảng `contacts`, `customer_contact_roles` | **Giữ Supabase query trực tiếp**, bảng `customers` flat | Kiến trúc repo đang chạy; `app/api/customers/` rỗng. Rebuild REST = phá schema đang dùng |
-| `code` do client nhập / prefix `CUS-` | **Readonly "Tự động tạo"**, không lưu ở Phase 1 | DB chưa có cột `code`; show input = false affordance |
+| `code` do client nhập / prefix `CUS-` | **Input prefix `CUS-` (UI-only, KHÔNG gửi payload; DB chưa có cột `code`)** | Prefix `CUS-` là minh họa theo mockup — DB chưa có cột `code`; input chỉ nhận phần sau prefix, backend tự sinh khi có migration |
 | Date picker `31/01/2025` cho Ngày tạo | **Không render**, backend `created_at DEFAULT now()` | Spec cấm user sửa `created_at`; DB đã đúng |
 | 3 ô liên hệ là contact selector | **Text input** Phase 1, gợi ý "Tên + SĐT" | DB lưu `TEXT`; selector cần bảng `contacts` (Phase 2) |
 | `industry_id` uuid | **`industry` TEXT + Select options cố định** | Schema đang chạy là `industry TEXT` |
@@ -30,7 +30,7 @@
 | Field | UI | Bắt buộc | Cột DB | Ghi chú |
 |---|---|---|---|---|
 | Tên khách hàng | `Input` text | Có | `customers.name` | Trim, 2–255 ký tự |
-| Mã khách hàng | readonly text | Hệ thống | — | Hiện `Tự động tạo`; không gửi payload |
+| Mã khách hàng | `Input` text + prefix `CUS-` (UI-only) | Không | — | Prefix `CUS-` là **minh họa** theo mockup; KHÔNG gửi payload, DB chưa có cột `code` |
 | Mã số thuế | `Input` text | Không | `customers.tax_id`* | Giữ chuỗi; duplicate check Phase 2 |
 | Ngành nghề | `Select` | Không | `customers.industry` | Options cố định lưu dạng TEXT |
 | Địa chỉ trụ sở | `Input` text | Có | `customers.headquarters_address`* | Text tự do |
@@ -45,6 +45,8 @@
 | Ngày tạo | readonly | Hệ thống | `customers.created_at` | Không render trong form |
 
 `*` = cột bổ sung bởi migration 008 (xem plan §3). Field không có cột (`code`, `created_at`) chỉ hiển thị/ready, không gửi payload.
+
+> **Minh họa, không phải dữ liệu thật:** prefix `CUS-` trên ô "Mã khách hàng" và trong panel tóm tắt chỉ là illustration theo mockup. DB chưa có cột `code` → giá trị này KHÔNG bao giờ vào payload `insert`; backend tự sinh `CUS-YYYY-XXX` ở Phase 2 (xem plan §2). Không hiểu prefix này là mã khách hàng đã tồn tại.
 
 ## 4. Validation & state
 

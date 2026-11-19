@@ -12,6 +12,7 @@
 | 4 | [`03-contracts/API_SPEC.md`](03-contracts/API_SPEC.md) + [`03-contracts/database/`](03-contracts/database/) | API & DB contract |
 | 5 | [`02-design/DESIGN_BASELINE.md`](02-design/DESIGN_BASELINE.md) + [`02-design/assets/tokens.json`](02-design/assets/tokens.json) | UI baseline đang approved |
 | 6 | [`02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md`](02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md) + [`04-governance/CREATE_CUSTOMER_PLAN.md`](04-governance/CREATE_CUSTOMER_PLAN.md) | Standard + plan màn "Thêm khách hàng" (Phase 1) |
+| 7 | [`02-design/CUSTOMERS_LIST_COMPONENTS_STANDARD.md`](02-design/CUSTOMERS_LIST_COMPONENTS_STANDARD.md) + [`02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md`](02-design/CREATE_CUSTOMER_COMPONENTS_STANDARD.md) | 2 standard Customers: List (rewrite theo spec 01) + Create (Phase 1) |
 
 ## 2. Cấu trúc thư mục
 
