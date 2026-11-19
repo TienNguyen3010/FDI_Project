@@ -34,6 +34,7 @@ import {
   Ticket,
   Trash2,
   Users,
+  X,
 } from 'lucide-react'
 import { useProfile } from '@/lib/hooks/useProfile'
 import { hasPermission } from '@/lib/rbac/policy'
@@ -52,6 +53,7 @@ interface Customer {
   email?: string | null
   industry?: string | { name?: string | null } | null
   tax_id?: string | null
+  headquarters_address?: string | null
   primary_contact_name?: string | null
   project_count?: number | null
   open_ticket_count?: number | null
@@ -195,10 +197,121 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
 /*  Page                                                                       */
 /* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
+/*  Right detail drawer — bấm vào khách hàng để xem thông tin                  */
+/* -------------------------------------------------------------------------- */
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5 border-b border-[var(--border)] py-2.5 last:border-b-0">
+      <dt className="text-xs text-[var(--muted)]">{label}</dt>
+      <dd className="break-words text-sm text-[var(--text)]">{value || '—'}</dd>
+    </div>
+  )
+}
+
+function CustomerDetailDrawer({ customer, onClose }: {
+  customer: Customer | null
+  onClose: () => void
+}) {
+  // Escape để đóng — chỉ mount listener khi drawer mở.
+  useEffect(() => {
+    if (!customer) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [customer, onClose])
+
+  if (!customer) return null
+
+  const statusKey = customer.status || ''
+  const statusMeta = STATUS_META[statusKey] ?? { label: statusKey || '—', variant: 'default' as const }
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end" role="presentation">
+      {/* Overlay mờ — click để đóng */}
+      <button
+        type="button"
+        aria-label="Đóng thông tin khách hàng"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-black/40"
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Thông tin khách hàng ${customer.name}`}
+        className="relative flex h-full w-full max-w-[440px] flex-col border-l border-[var(--border)] bg-[var(--surface)] shadow-xl"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="shrink-0 rounded-lg bg-[var(--sidebar-group)] p-2 text-[var(--sidebar-icon)]">
+              <Building2 size={20} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-semibold text-[var(--text)]">{customer.name || '—'}</h2>
+              <p className="text-xs text-[var(--muted)]">Mã: {customer.code || '—'}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Đóng"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--sidebar-group)] hover:text-[var(--text)]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-6 overflow-y-auto p-5">
+          <div className="flex items-center gap-2">
+            <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
+            {industryName(customer.industry) && <Badge variant="default">{industryName(customer.industry)}</Badge>}
+          </div>
+
+          <section>
+            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Thông tin doanh nghiệp</h3>
+            <dl>
+              <DetailRow label="Tên khách hàng" value={customer.name} />
+              <DetailRow label="Mã khách hàng" value={customer.code} />
+              <DetailRow label="Mã số thuế" value={customer.tax_id} />
+              <DetailRow label="Ngành nghề" value={industryName(customer.industry)} />
+              <DetailRow label="Địa chỉ trụ sở chính" value={customer.headquarters_address} />
+            </dl>
+          </section>
+
+          <section>
+            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Liên hệ chính</h3>
+            <dl>
+              <DetailRow label="Người liên hệ" value={customer.primary_contact_name} />
+              <DetailRow label="Email" value={customer.email} />
+              <DetailRow label="Điện thoại" value={customer.phone} />
+            </dl>
+          </section>
+
+          <section>
+            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Thống kê</h3>
+            <dl>
+              <DetailRow label="Dự án" value={formatNumber(customer.project_count)} />
+              <DetailRow label="Ticket đang mở" value={formatNumber(customer.open_ticket_count)} />
+              <DetailRow label="Ngày tạo" value={asOfLabel(customer.created_at ?? null)} />
+            </dl>
+          </section>
+        </div>
+
+        <div className="flex justify-end border-t border-[var(--border)] p-4">
+          <Button type="button" variant="outline" onClick={onClose}>Đóng</Button>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
 export default function CustomersPage() {
   const { role } = useProfile()
   const toast = useToast()
   const canCreate = hasPermission(role, 'customer.create')
+
+  const [selected, setSelected] = useState<Customer | null>(null)
 
   const [hydrated, setHydrated] = useState(false)
   const [search, setSearch] = useState('')
@@ -523,7 +636,11 @@ export default function CustomersPage() {
                     variant: 'default' as const,
                   }
                   return (
-                    <tr key={item.id} className="border-b border-[var(--border)] transition-colors hover:bg-[var(--sidebar-group)]">
+                    <tr
+                      key={item.id}
+                      onClick={() => setSelected(item)}
+                      className="cursor-pointer border-b border-[var(--border)] transition-colors hover:bg-[var(--sidebar-group)]"
+                    >
                       <td className="h-14 whitespace-nowrap px-4 text-[var(--muted)]">
                         {(currentPage - 1) * effectivePageSize + index + 1}
                       </td>
@@ -546,7 +663,7 @@ export default function CustomersPage() {
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.project_count)}</td>
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.open_ticket_count)}</td>
                       <td className="h-14 px-4"><Badge variant={statusMeta.variant}>{statusMeta.label}</Badge></td>
-                      <td className="h-14 whitespace-nowrap px-4">
+                      <td className="h-14 whitespace-nowrap px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -639,6 +756,8 @@ export default function CustomersPage() {
           </div>
         </div>
       </Card>
+
+      <CustomerDetailDrawer customer={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

@@ -96,10 +96,18 @@
 - UI: `hasPermission(role, 'customer.create')` → CTA "Thêm khách hàng" — `app/(workspace)/customers/page.tsx:38-39,201,463-471`; CTA trong empty state — `:587-593`.
 - `customer.update` / `customer.archive`: nút render **disabled**, KHÔNG phải RBAC gate — `app/(workspace)/customers/page.tsx:551-569`. Backend vẫn phải từ chối thao tác trái phép (spec §6) — không coi ẩn icon là kiểm tra quyền.
 
+## 6b. Right detail drawer (CUS-L08 — view)
+
+- Bấm vào **bất kỳ ô nào của row** (trừ cột Thao tác) → mở drawer phải `CustomerDetailDrawer` — `app/(workspace)/customers/page.tsx:200-312,638-642`; action cell `stopPropagation` nên nút Sửa/Lưu trữ không mở drawer — `:665`.
+- Drawer = overlay mờ + `aside role="dialog" aria-modal="true"`, đóng bằng nút X, nút "Đóng", click overlay, hoặc phím **Escape** — `:212-260`.
+- Nội dung lấy **trực tiếp từ `Customer` item đã fetch** (KHÔNG fetch riêng, KHÔNG bịa): header tên + mã + badge trạng thái/ngành; 3 nhóm **Thông tin doanh nghiệp** (name, code, tax_id, industry, headquarters_address), **Liên hệ chính** (primary_contact_name, email, phone), **Thống kê** (project_count, open_ticket_count, created_at) — `:262-308`. Trống → `—`.
+- `Customer` interface bổ sung `headquarters_address` để khớp contract API — `:54`. Regression: `tests/customer-detail-drawer.test.mjs` (3/3).
+- **Không** dùng modal: drawer giữ ngữ cảnh danh sách, đúng yêu cầu "right sidebar thông tin khách hàng".
+
 ## 7. Điểm sạch / Điểm cần làm rõ
 
-**Sạch:** mọi KPI/count lấy từ API theo scope, không hardcode; CSAT null → `Chưa có dữ liệu`; `code` null → `—`; status `'active'` không bịa; search debounce + URL state đầy đủ; skeleton/empty/error rõ; scope deny-by-default ở backend.
+**Sạch:** mọi KPI/count lấy từ API theo scope, không hardcode; CSAT null → `Chưa có dữ liệu`; `code` null → `—`; status `'active'` không bịa; search debounce + URL state đầy đủ; skeleton/empty/error rõ; scope deny-by-default ở backend; view chi tiết qua right drawer không fetch thừa.
 
-**Cần làm rõ:** KPI click-through (CUS-L01), View/Edit/Archive (CUS-L08/09/10) chưa implement; mobile chưa có customer cards; schema chưa có survey/CSAT → KPI mãi `Chưa có dữ liệu` tới Phase 2; `code` chờ migration sinh `CUS-YYYY-XXX`; options ngành chỉ suy từ page hiện tại (chưa có lookup đầy đủ); endpoint `/customers/summary` riêng chưa có; `data_quality` vẫn `'complete'` dù CSAT null — cần PO xác nhận có nên trả `'partial'` không.
+**Cần làm rõ:** KPI click-through (CUS-L01), Edit/Archive (CUS-L09/10) chưa implement (nút disabled); mobile chưa có customer cards; schema chưa có survey/CSAT → KPI mãi `Chưa có dữ liệu` tới Phase 2; `code` chờ migration sinh `CUS-YYYY-XXX`; options ngành chỉ suy từ page hiện tại (chưa có lookup đầy đủ); endpoint `/customers/summary` riêng chưa có; `data_quality` vẫn `'complete'` dù CSAT null — cần PO xác nhận có nên trả `'partial'` không. Drawer hiện là read-only — chưa có nút "Sửa" bên trong.
 
 Standard/plan liên quan: `CREATE_CUSTOMER_COMPONENTS_STANDARD.md` · `../04-governance/CREATE_CUSTOMER_PLAN.md` · nhật ký đồng bộ `../04-governance/CHECKLISTS.md`.
