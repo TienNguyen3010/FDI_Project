@@ -67,3 +67,17 @@ test('P1: GET /api/v1/customers/[id] có authorize(customer.read)', () => {
   const route = src('app/api/v1/customers/[id]/route.ts')
   assert.ok(route.includes("authorize('customer.read')"), 'phải authorize')
 })
+
+test('P0: mã hiển thị KHÔNG nhân đôi prefix CUS- (sửa form)', () => {
+  const form = src('components/customers/CreateCustomerForm.tsx')
+  // phải có biến display, không ghép span prefix cứng với giá trị đã đủ mã
+  assert.ok(form.includes('const codeDisplay'), 'có codeDisplay')
+  assert.ok(!/<span[^>]*aria-hidden[^>]*>\s*CUS-/.test(form), 'bỏ span prefix cứng')
+  assert.ok(form.includes('value={codeDisplay}'), 'input dùng codeDisplay')
+  assert.ok(form.includes('? codeDisplay\n                      : form[key as FieldKey]'), 'summary dùng codeDisplay (không bao giờ trống)')
+})
+
+test('P1: chế độ sửa ẩn nút "Lưu và tạo mới" (chỉ tạo mới ở form tạo)', () => {
+  const form = src('components/customers/CreateCustomerForm.tsx')
+  assert.ok(/!isEdit && \(\s*<Button/.test(form) || form.includes('{!isEdit && ('), 'gate nút saveAndNew')
+})

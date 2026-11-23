@@ -199,6 +199,17 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 
 > **Chưa làm (P1):** archive/xóa khách hàng — thiếu `deleted_at` + policy DELETE; giữ nút disabled thay vì giả affordance. Không claim xong.
 
+## 16c. Sửa lỗi mã nhân đôi `CUS-CUS-...` trên form sửa (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng (ảnh user) | Form sửa hiện ô mã `CUS-CUS-2026-006`; cột "Mã" trong summary trống | ảnh browser `/customers/<id>` |
+| Nguyên nhân #1 | UI ghép cứng span prefix `CUS-` bên trái input, nhưng value đã là mã **đủ** từ DB (`CUS-YYYY-NNN`) → nhân đôi prefix | `CreateCustomerForm.tsx:356-365` |
+| Nguyên nhân #2 | Summary dùng `customerCode ?? 'Tự động tạo'` nhưng render qua `<dd>{value}</dd>` khi `key==='code'` lại để trống khi rỗng (ẩn điền kiện) | `CreateCustomerForm.tsx:519-533` |
+| Fix | Bỏ span prefix; dùng `codeDisplay = customerCode \|\| (isEdit ? '—' : 'Tự động tạo')`; cả input và summary dùng chung biến → không nhân đôi, không trống | `components/customers/CreateCustomerForm.tsx` |
+| Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
+| Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
+
 ## 15. Logout không redirect — HttpOnly cookie `sb-access-token` sót lại (2026-11-19)
 
 | Hạng mục | Kết quả |

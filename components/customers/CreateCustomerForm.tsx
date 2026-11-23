@@ -150,6 +150,9 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
   const [saving, setSaving] = useState(false)
   // Mã do DB sinh (tạo) hoặc mã hiện có (sửa). Không cho client sửa mã.
   const [customerCode, setCustomerCode] = useState<string | null>(initial?.code ?? null)
+  /** Hiển thị: luôn là mã ĐỦ (CUS-YYYY-NNN) hoặc placeholder. KHÔNG ghép prefix ở UI
+   *  vì mã từ DB đã chứa `CUS-` → ghép nữa sẽ thành `CUS-CUS-...`. */
+  const codeDisplay = customerCode || (isEdit ? '—' : 'Tự động tạo')
   const [consentContact, setConsentContact] = useState(Boolean(initial?.consent_contact))
   // Confirm-exit: thay hộp thoại confirm() native của trình duyệt bằng modal UI.
   const [showExit, setShowExit] = useState(false)
@@ -352,22 +355,14 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="f-code">Mã khách hàng</Label>
-                <div className="relative">
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground"
-                  >
-                    CUS-
-                  </span>
-                  <Input
-                    id="f-code"
-                    readOnly
-                    value={customerCode ?? 'Tự động tạo'}
-                    className="pl-12 font-medium text-foreground"
-                    aria-describedby="code-hint"
-                    tabIndex={-1}
-                  />
-                </div>
+                <Input
+                  id="f-code"
+                  readOnly
+                  value={codeDisplay}
+                  className="font-medium text-foreground"
+                  aria-describedby="code-hint"
+                  tabIndex={-1}
+                />
                 <p id="code-hint" className="text-xs text-muted-foreground">
                   {customerCode
                     ? 'Mã khách hàng do hệ thống cấp'
@@ -524,7 +519,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
                 ].map(([label, key]) => {
                   const value =
                     key === 'code'
-                      ? customerCode ?? 'Tự động tạo'
+                      ? codeDisplay
                       : form[key as FieldKey]?.trim() || '—'
                   return (
                     <div key={label} className="flex justify-between gap-3">
@@ -616,16 +611,18 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
           Hủy
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => void submitCustomer('saveAndNew')}
-          disabled={saving || isEdit}
-          className="min-w-[168px]"
-        >
-          {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          Lưu và tạo mới
-        </Button>
+        {!isEdit && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void submitCustomer('saveAndNew')}
+            disabled={saving}
+            className="min-w-[168px]"
+          >
+            {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            Lưu và tạo mới
+          </Button>
+        )}
         <Button type="submit" disabled={saving} className="min-w-[152px]">
           {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Lưu khách hàng'}
