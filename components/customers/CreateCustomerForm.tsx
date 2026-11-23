@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save } from 'lucide-react'
+import { Plus, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import {
   Badge,
@@ -146,8 +146,7 @@ export default function CreateCustomerForm() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const submitCustomer = async (mode: 'save' | 'saveAndNew') => {
     if (saving || !validate()) return
     setSaving(true)
     const payload: Record<string, string | boolean | null> = {}
@@ -169,8 +168,21 @@ export default function CreateCustomerForm() {
       toast.error({ title: 'Lưu không thành công', description: error.message })
       return
     }
+    if (mode === 'saveAndNew') {
+      setForm(EMPTY)
+      setConsentContact(false)
+      setErrors({})
+      toast.success({ title: 'Thêm khách hàng thành công', description: 'Form đã được đặt lại để tạo khách hàng mới.' })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     toast.success({ title: 'Thêm khách hàng thành công' })
     router.push('/customers')
+  }
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    void submitCustomer('save')
   }
 
   const handleCancel = () => {
@@ -199,8 +211,8 @@ export default function CreateCustomerForm() {
   const phoneWarning = Boolean(form.phone.trim()) && !PHONE_RE.test(form.phone.replace(/[\s()-]/g, ''))
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <div className="mb-6">
+    <form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-[1180px]">
+      <div className="mb-5">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
           <span>Trang chủ</span> / <span>Khách hàng</span>{' '}
           <span className="text-foreground">/ Thêm khách hàng</span>
@@ -211,13 +223,13 @@ export default function CreateCustomerForm() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="space-y-5 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           <Card>
-            <CardHeader>
+            <CardHeader className="px-5 py-3">
               <CardTitle>Thông tin doanh nghiệp</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <CardContent className="grid grid-cols-1 gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="f-name">
                   Tên khách hàng <span className="text-destructive">*</span>
@@ -278,10 +290,10 @@ export default function CreateCustomerForm() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="px-5 py-3">
               <CardTitle>Người liên hệ chính</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <CardContent className="grid grid-cols-1 gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="f-primary_contact_name">
                   Người liên hệ <span className="text-destructive">*</span>
@@ -331,10 +343,10 @@ export default function CreateCustomerForm() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="px-5 py-3">
               <CardTitle>Thông tin bổ sung</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <CardContent className="grid grid-cols-1 gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="f-contact_technical">Liên hệ kỹ thuật</Label>
                 <Input
@@ -382,12 +394,12 @@ export default function CreateCustomerForm() {
           </Card>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="px-5 py-3">
               <CardTitle>Tóm tắt khách hàng</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-5 py-3">
               <dl className="space-y-2 text-sm">
                 {[
                   ['Tên', 'name'],
@@ -411,14 +423,14 @@ export default function CreateCustomerForm() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader>
+            <CardHeader className="px-5 py-3">
               <CardTitle>Lưu ý</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 text-xs text-muted-foreground">
-              <div className="mb-3 flex justify-center" aria-hidden="true">
+            <CardContent className="space-y-1 px-5 py-3 text-xs text-muted-foreground">
+              <div className="mb-2 flex justify-center" aria-hidden="true">
                 <svg
-                  width="120"
-                  height="100"
+                  width="96"
+                  height="80"
                   viewBox="0 0 120 100"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -484,11 +496,21 @@ export default function CreateCustomerForm() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 mt-6 flex justify-end gap-2 border-t border-border bg-background py-4">
-        <Button type="button" variant="outline" onClick={handleCancel} disabled={saving}>
+      <div className="sticky bottom-0 z-30 mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border bg-card/95 px-1 py-3 backdrop-blur">
+        <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
           Hủy
         </Button>
-        <Button type="submit" disabled={saving}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void submitCustomer('saveAndNew')}
+          disabled={saving}
+          className="min-w-[168px]"
+        >
+          {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          Lưu và tạo mới
+        </Button>
+        <Button type="submit" disabled={saving} className="min-w-[152px]">
           {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saving ? 'Đang lưu...' : 'Lưu khách hàng'}
         </Button>
