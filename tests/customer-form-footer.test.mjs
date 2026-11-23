@@ -36,12 +36,16 @@ test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua k
   assert.match(src, /sticky bottom-0[^\n]*-mx-4[^\n]*md:-mx-\[30px\]/, 'footer kéo hết padding ngang 2 breakpoint')
   // có spacer đệm dưới footer để card cuối không bị che khi cuộn tới cùng
   assert.match(src, /<\/footer>[\s\S]{0,400}?h-20 md:h-\[76px\]/, 'có spacer đệm dưới footer')
-  // footer phải nằm NGOÀI cột: chuỗi `lg:col-span-2` KHÔNG được xuất hiện
-  // ở mọi className của footer (kiểm tra bằng vị trí: footer đứng sau khi grid đóng).
+  // footer phải nằm NGOÀI grid (không lồng trong cột): footer xuất hiện SAU
+  // khi grid 2 cột đóng. Lưu ý grid đã chuyển sang dạng `lg:grid-cols-[..._272px]`
+  // (bản thiết kế lại theo Add Lead), nên KHÔNG còn chuỗi `lg:col-span-2`.
   const footerIdx = src.indexOf('<footer className="sticky bottom-0')
-  const gridIdx = src.indexOf('lg:col-span-2')
-  assert.ok(footerIdx !== -1 && gridIdx !== -1 && footerIdx > gridIdx, 'footer nằm sau vùng cột grid')
-  assert.ok(!/sticky bottom-0[^"]*lg:col-span-2/.test(src), 'footer không còn nằm trong cột grid')
+  const gridOpenIdx = src.indexOf('lg:grid-cols-[minmax(0,1fr)_272px]')
+  assert.ok(footerIdx !== -1, 'tìm thấy footer sticky')
+  assert.ok(gridOpenIdx !== -1, 'tìm thấy grid 2 cột')
+  assert.ok(footerIdx > gridOpenIdx, 'footer nằm sau vùng grid')
+  // footer không được mang class phân cột grid
+  assert.ok(!/sticky bottom-0[^"]*(col-span|grid-cols)/.test(src), 'footer không nằm trong cột grid')
 })
 
 // Regression: modal xác nhận thoát thay window.confirm() native (ảnh softnet-crm).

@@ -234,6 +234,19 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 
 > **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
 
+## 16i. Thiết kế lại form theo gốc Add Lead + bảng Activities (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Yêu cầu user | "dựa vào hình tôi đính kèm làm gốc, hãy thiết kế lại UI phần thêm khách hàng, đồng thời bổ sung thêm phần Next Action" + "làm thêm phần Hoạt Động/Activities giống SoftNET CRM để lưu mọi hoạt động liên quan đến khách hàng/dự án" | chat + ảnh Add Lead |
+| Gốc tham chiếu | `tien_crm/src/components/add-lead/AddLeadForm.tsx` (v4.0) + `DataChecklist.tsx` + migration activities 0012 của repo SoftNET CRM (ngoài FDI_Project) | đọc trực tiếp |
+| Form mới | Section đánh số + icon (1 Thông tin doanh nghiệp · 2 Người liên hệ chính · 3 Next Action đầu tiên · 4 Thông tin bổ sung); grid `lg:grid-cols-[minmax(0,1fr)_272px]`; panel 3 card (Kiểm tra trùng lặp · Hoàn thiện dữ liệu · Tóm tắt) | `components/customers/CreateCustomerForm.tsx` |
+| Next Action | checkbox `Tạo Next Action đầu tiên` + Loại hoạt động* + Ngày và giờ* (`datetime-local`) + Nội dung cần thực hiện; ẩn khi sửa | form §3 |
+| DB | `migrations/013_customer_activities.sql`: bảng `activities` ĐA HÌNH (`entity_type` customer/project/site, `entity_id` không FK vật lý), lookup `activity_types`/`channels`, RLS theo `fdi_can_read`, RPC `log_activity` + `create_customer_with_activity` (nguyên tử, idempotent qua `metadata.idem_key`, kiểm `fdi_is_manager_plus`) | 013 (517 dòng) |
+| Test | `npm test` **77/77** · `tsc` 0 · `build` EXIT 0 · docs-check OK | tool output |
+
+> **Migration 013 cần apply** trên Supabase SQL Editor (sau 012). Chưa apply → form gọi RPC `create_customer_with_activity` sẽ lỗi `PGRST202`; tính năng Next Action chưa dùng được.
+
 ### 16h. Admin lưu KH thành công nhưng danh sách rỗng (2026-11-23)
 
 | Hạng mục | Kết quả | Evidence |

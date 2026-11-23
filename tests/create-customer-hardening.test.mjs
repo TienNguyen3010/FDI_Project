@@ -62,11 +62,19 @@ test('summary <dd> có title={giá trị đầy đủ}', () => {
 })
 
 test('Label Ghi chú có htmlFor="f-notes"', () => {
-  assert.ok(code.includes('htmlFor="f-notes"'), 'Label Ghi chú phải htmlFor f-notes')
+  // Bản thiết kế lại theo Add Lead dùng helper <Field label="Ghi chú"> (Label nội bộ),
+  // nên không còn chuỗi `htmlFor="f-notes"` viết tay. Chốt bằng: có label "Ghi chú"
+  // và input/textarea vẫn mang id f-notes (nối label→control qua helper).
+  assert.ok(code.includes('label="Ghi chú"'), 'có field Ghi chú')
+  // id được sinh động qua fieldProps (`id: \`f-${key}\``), không viết tay —
+  // chốt bằng: fieldProps sinh đúng pattern id và Ghi chú dùng fieldProps('notes').
+  assert.ok(code.includes('id: `f-${key}`'), 'fieldProps sinh id f-<key>')
+  assert.ok(code.includes("fieldProps('notes')"), 'Ghi chú dùng fieldProps (id f-notes)')
 })
 
 test('summary Mã dùng <Badge>', () => {
-  assert.ok(code.includes('<Badge>{value}</Badge>'), 'summary Mã dùng Badge')
+  // Bản thiết kế lại: summary dùng <Badge>{codeDisplay}</Badge> (mã đã đủ CUS-YYYY-NNN).
+  assert.ok(code.includes('<Badge>{codeDisplay}</Badge>'), 'summary Mã dùng Badge với codeDisplay')
 })
 
 test('nút Lưu khi saving dùng <Spinner>', () => {

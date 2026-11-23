@@ -96,3 +96,10 @@ Token màu từ `app/globals.css:13-83`: `--primary #087f30`, `--border #d9e4f2`
 **Cần làm rõ:** migration 008 (đã apply theo user) + **migration 009 chưa apply** → cột `consent_contact` chưa tồn tại trên DB thật; user phải chạy 009 trong SQL Editor trước khi bấm Lưu (nếu không → `PGRST204`). Duplicate check/idempotency/transaction/audit correlation → Phase 2. Không claim production-ready khi 009 chưa apply.
 
 > **Bổ sung 2026-11-23:** migration **010** (mã `CUS-YYYY-NNN` do DB sinh) + **011** (RLS mở scope cho PM) + **012** (sửa gốc `fdi_current_role()` whitelist JWT thiếu `project_manager`). Riêng 011 **chưa đủ** — 012 mới là bản sửa gốc cho lỗi "mã KH không hiện khi sửa". Xem `DEPLOY_AND_MIGRATION.md` §16e.
+
+> **Bổ sung 2026-11-23 (v2) — THIẾT KẾ LẠI THEO GỐC ADD LEAD + NEXT ACTION.** User chốt: lấy `AddLeadForm.tsx` của SoftNET CRM làm gốc thiết kế lại form Thêm Khách hàng, và bổ sung mọi hoạt động liên quan khách hàng/dự án vào **bảng Activities**. Chi tiết:
+> - **Layout**: section đánh số + icon (`1. Thông tin doanh nghiệp` · `2. Người liên hệ chính` · `3. Next Action đầu tiên` · `4. Thông tin bổ sung`), grid `lg:grid-cols-[minmax(0,1fr)_272px]`, field grid `md:grid-cols-3`.
+> - **Panel phải 3 card**: Kiểm tra trùng lặp · Hoàn thiện dữ liệu (5 mục, `CheckCircle`/`Circle`) · Tóm tắt khách hàng.
+> - **Section 3 Next Action**: checkbox `Tạo Next Action đầu tiên` + Loại hoạt động* + Ngày và giờ* (`datetime-local`) + Nội dung cần thực hiện. Ẩn section khi sửa.
+> - **Lưu qua RPC `create_customer_with_activity`** (migration **013**, nguyên tử + idempotent qua `metadata.idem_key`) — không còn insert trực tiếp.
+> - **Bảng `activities` đa hình** (`entity_type` = customer/project/site, `entity_id` không FK vật lý) + lookup `activity_types`/`channels` + RLS theo `fdi_can_read` + RPC `log_activity`. Tham chiếu `migrations/013_customer_activities.sql`.

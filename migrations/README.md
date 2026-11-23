@@ -1,7 +1,7 @@
 # FDI_Project — Database migrations (Supabase)
 
 Bộ migration SQL chạy **trực tiếp trong Supabase SQL Editor** (không cần psc, không dùng `\i`).
-Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012**. Mỗi file idempotent, có thể chạy lại. Trạng thái apply thực tế xem bảng dưới + `DEPLOY_AND_MIGRATION.md`.
+Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012 → 013**. Mỗi file idempotent, có thể chạy lại. Trạng thái apply thực tế xem bảng dưới + `DEPLOY_AND_MIGRATION.md`.
 
 | File | Nội dung |
 |---|---|
@@ -17,6 +17,7 @@ Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 �
 | `010_customer_code.sql` | Cột `customers.code` (`CUS-YYYY-NNN`) + unique partial index; `fdi_next_customer_code(p_year)` (SECURITY DEFINER + advisory xact lock `7401000+year`); trigger `BEFORE INSERT` chỉ sinh khi client bỏ trống; backfill bản ghi cũ; đăng ký `010_customer_code`. **Đã apply** (user xác nhận, `fdi_next_customer_code()` → `CUS-2026-006`). |
 | `011_customer_edit_scope.sql` | Nới `fdi_can_read` nhánh toàn công ty sang `director/manager/project_manager`; `fdi_is_leader_plus` += `project_manager`; tái tạo `fdi_customers_update`. **Chưa đủ** — xem 012. |
 | `012_customer_edit_scope_v2.sql` | **Sửa gốc 3 lỗi RLS:** (1) `fdi_current_role()` whitelist JWT thêm `project_manager`; (2) `fdi_can_read()` nhánh toàn công ty thêm `super_admin` (admin lưu KH OK nhưng danh sách rỗng); (3) `fdi_is_manager_plus()` thêm `project_manager` (policy `fdi_customers_insert` chặn PM). Copy nguyên thân `fdi_is_leader_plus`/policy từ 011 + RPC dự phòng `fdi_get_customer_code(UUID)`. Chạy **sau 011**. |
+| `013_customer_activities.sql` | **Bảng `activities` ĐA HÌNH** (`entity_type` = customer/project/site, `entity_id` KHÔNG FK vật lý) để lưu mọi hoạt động liên quan KH/dự án/site — giống SoftNET CRM 0012. Lookup `activity_types` + `channels` (có seed), index theo entity/owner/scheduled, RLS theo `fdi_can_read`. RPC `log_activity` + `create_customer_with_activity` (nguyên tử, idempotent qua `metadata.idem_key`, kiểm `fdi_is_manager_plus`). Chạy **sau 012**. |
 
 ## Cách chạy
 

@@ -74,7 +74,9 @@ test('P0: mã hiển thị KHÔNG nhân đôi prefix CUS- (sửa form)', () => {
   assert.ok(form.includes('const codeDisplay'), 'có codeDisplay')
   assert.ok(!/<span[^>]*aria-hidden[^>]*>\s*CUS-/.test(form), 'bỏ span prefix cứng')
   assert.ok(form.includes('value={codeDisplay}'), 'input dùng codeDisplay')
-  assert.ok(form.includes('? codeDisplay\n                      : form[key as FieldKey]'), 'summary dùng codeDisplay (không bao giờ trống)')
+  // Bản thiết kế lại theo Add Lead: summary hiển thị <Badge>{codeDisplay}</Badge>
+  // (mã đã đủ CUS-YYYY-NNN) — hết lỗi CUS-CUS-... và hết summary trống.
+  assert.ok(form.includes('<Badge>{codeDisplay}</Badge>'), 'summary dùng codeDisplay (không bao giờ trống)')
 })
 
 test('P1: chế độ sửa ẩn nút "Lưu và tạo mới" (chỉ tạo mới ở form tạo)', () => {
@@ -161,7 +163,36 @@ test('DB: 012 fdi_can_read có super_admin (admin phải đọc được danh s�
   )
 })
 
-test('DB: 012 sửa fdi_is_manager_plus để INSERT khách hàng cho project_manager (lỗi RLS)', () => {
+// =====================================================================
+// 2026-11-23 — Activities (migration 013) + Next Action trong form Thêm KH.
+// =====================================================================
+
+test('Activities: form gọi RPC create_customer_with_activity, KHÔNG insert customers trực tiếp', () => {
+  const form = src('components/customers/CreateCustomerForm.tsx')
+  assert.ok(
+    /db\.rpc\(\s*'create_customer_with_activity'/.test(form),
+    'form phải gọi RPC create_customer_with_activity (không insert trực tiếp)',
+  )
+  assert.ok(
+    !/db\.from\(\s*'customers'\s*\)\s*\.insert\s*\(/.test(form),
+    'KHÔNG còn db.from(\'customers\').insert trực tiếp — phải qua RPC',
+  )
+})
+
+test('Activities: form có section Next Action (nhãn đúng chính tả)', () => {
+  const form = src('components/customers/CreateCustomerForm.tsx')
+  for (const label of [
+    'Next Action đầu tiên',
+    'Tạo Next Action đầu tiên',
+    'Nội dung cần thực hiện',
+  ]) {
+    assert.ok(form.includes(label), `thiếu nhãn "${label}" trong form`)
+  }
+  // Chặt chẽ chính tả: KHÔNG được viết "tiện" (lỗi gõ).
+  assert.ok(!form.includes('Tạo Next Action đầu tiện'), 'chính tả sai: "đầu tiện" → "đầu tiên"')
+})
+
+test('DB: migration 012 sửa fdi_is_manager_plus để INSERT khách hàng cho project_manager (lỗi RLS)', () => {
   const sql = src('migrations/012_customer_edit_scope_v2.sql')
   // Policy fdi_customers_insert dùng WITH CHECK (fdi_is_manager_plus()).
   // RBAC client cấp customer.create cho director + project_manager + super_admin,
