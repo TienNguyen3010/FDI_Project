@@ -247,6 +247,19 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 
 > **Migration 013 cần apply** trên Supabase SQL Editor (sau 012). Chưa apply → form gọi RPC `create_customer_with_activity` sẽ lỗi `PGRST202`; tính năng Next Action chưa dùng được.
 
+### 16j. Lịch sử hoạt động + vá lỗ hổng RLS ghi activities (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Yêu cầu user | "tiếp tục làm" — hoàn thiện phần Hoạt động/Activities (đã có bảng ở 013) | chat |
+| **Lỗ hổng 013** | `log_activity` GRANT `anon, authenticated` nhưng **không kiểm `fdi_can_read`** → bất kỳ user authenticated nào (kể cả employee/leader) đều ghi được hoạt động vào khách hàng của người khác. Comment 013 tự nhận "người không đọc được KH cũng không nên ghi" nhưng chưa vá | `migrations/013` mục 5 |
+| Fix DB | Migration **014**: thêm RPC `log_customer_activity(...)` **có kiểm `fdi_can_read(NULL, p_entity_id, ...)`**; copy lại nguyên `create_customer_with_activity`. `REVOKE ALL FROM PUBLIC` + `GRANT EXECUTE TO anon, authenticated, service_role` | `migrations/014_customer_activity_scope.sql` |
+| API | `GET /api/v1/customers/[id]/activities` (lịch sử, nhãn loại lấy từ lookup `activity_types`, RLS chặn phạm vi) · `POST` (thêm hoạt động, gọi RPC 014; phân loại lỗi 401/403/22023/42883→501 "cần chạy 014") | `app/api/v1/customers/[id]/activities/route.ts` |
+| UI | Drawer chi tiết khách hàng thêm section **"Lịch sử hoạt động"**: dòng thời gian (label loại + thời gian + subject/body + badge status), empty state "Chưa có hoạt động nào.", nút **Thêm hoạt động** (form inline: Loại/Ngày giờ/Nội dung/Trạng thái), refetch sau khi thêm | `app/(workspace)/customers/page.tsx` |
+| Verify | `npm test` **77/77** · `tsc` 0 · `build` EXIT 0 | tool output |
+
+> **Migration 014 cần apply** (sau 013). Chưa apply → `POST` trả 501 kèm hướng dẫn chạy migration.
+
 ### 16h. Admin lưu KH thành công nhưng danh sách rỗng (2026-11-23)
 
 | Hạng mục | Kết quả | Evidence |

@@ -13,21 +13,26 @@ import {
   Button,
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
   EmptyState,
   Input,
   Select,
   Skeleton,
+  Textarea,
   buttonVariants,
   useToast,
 } from '@/components/ui/ui'
 import {
   AlertCircle,
   Building2,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   FolderKanban,
   Inbox,
   Pencil,
+  Phone,
   Plus,
   RefreshCw,
   Search,
@@ -195,6 +200,195 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Hoạt động / Activities (migration 013 — bảng đa hình entity_type/entity_id) */
+/* -------------------------------------------------------------------------- */
+
+type ActivityStatus = 'planned' | 'done' | 'failed' | 'no_answer'
+
+interface Activity {
+  id?: string
+  entity_type?: string
+  entity_id?: string
+  activity_type?: string | null
+  channel?: string | null
+  direction?: string | null
+  status?: ActivityStatus | string | null
+  subject?: string | null
+  body?: string | null
+  occurred_at?: string | null
+  scheduled_at?: string | null
+  done_at?: string | null
+  owner_id?: string | null
+  created_at?: string | null
+  metadata?: { ui_type?: string | null } | null
+}
+
+/** Lookup `activity_types` của migration 013 (seed): call/email/meeting/note/task/other. */
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  call: 'Gọi điện',
+  email: 'Email',
+  meeting: 'Gặp mặt',
+  note: 'Ghi chú',
+  task: 'Công việc',
+  other: 'Khác',
+}
+
+/**
+ * Lựa chọn UI giữ đúng nhãn tiếng Việt yêu cầu; `message` và `demo` KHÔNG có
+ * trong lookup `activity_types` của 013 (chỉ call/email/meeting/note/task/other)
+ * → khi ghi map về note/other, giữ lại lựa chọn gốc ở `metadata.ui_type`
+ * (giống section Next Action của form Thêm KH).
+ */
+const ACTIVITY_TYPE_OPTIONS = [
+  { value: 'call', label: 'Gọi điện', uiType: null },
+  { value: 'email', label: 'Email', uiType: null },
+  { value: 'message', label: 'Nhắn tin', uiType: 'message' },
+  { value: 'meeting', label: 'Gặp mặt', uiType: null },
+  { value: 'demo', label: 'Demo', uiType: 'demo' },
+  { value: 'task', label: 'Công việc', uiType: null },
+] as const
+
+/** `activity_type` gửi cho DB: message → note, demo → other (đúng lookup 013). */
+function dbActivityType(uiType: string): string {
+  if (uiType === 'message') return 'note'
+  if (uiType === 'demo') return 'other'
+  return uiType
+}
+
+/** Nhãn hiển thị: ưu tiên lựa chọn gốc (metadata.ui_type) → lookup 013 → code thô. */
+function activityTypeLabel(a: Activity): string {
+  const uiType = a.metadata?.ui_type
+  if (typeof uiType === 'string' && uiType) {
+    const opt = ACTIVITY_TYPE_OPTIONS.find((o) => o.uiType === uiType)
+    if (opt) return opt.label
+  }
+  const code = typeof a.activity_type === 'string' ? a.activity_type : ''
+  return ACTIVITY_TYPE_LABELS[code] ?? code ?? 'Hoạt động'
+}
+
+/** Trạng thái ∈ {planned, done, failed, no_answer} — CHECK của bảng 013. */
+const ACTIVITY_STATUS_META: Record<
+  string,
+  { label: string; variant: 'active' | 'inactive' | 'planned' | 'ended' | 'critical' }
+> = {
+  planned: { label: 'Đã lên kế hoạch', variant: 'planned' },
+  done: { label: 'Đã hoàn thành', variant: 'active' },
+  failed: { label: 'Thất bại', variant: 'critical' },
+  no_answer: { label: 'Không bắt máy', variant: 'ended' },
+}
+
+function activityStatusMeta(status: string | null | undefined) {
+  const key = typeof status === 'string' ? status : ''
+  return ACTIVITY_STATUS_META[key] ?? { label: key || '—', variant: 'inactive' as const }
+}
+
+/** Mốc thời gian hiển thị: occurred_at → scheduled_at → done_at → created_at. */
+function activityTimestamp(a: Activity): string | null {
+  return asOfLabel(a.occurred_at ?? a.scheduled_at ?? a.done_at ?? a.created_at ?? null)
+}
+
+/** Thời gian tương đối (chênh), vd "3 ngày trước". null khi không parse được. */
+function relativeTimeLabel(value: string | null): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  const diffMs = Date.now() - date.getTime()
+  const abs = Math.abs(diffMs)
+  const minutes = Math.round(abs / 60000)
+  const hours = Math.round(abs / 3600000)
+  const days = Math.round(abs / 86400000)
+  const months = Math.round(abs / (86400000 * 30))
+  const years = Math.round(abs / (86400000 * 365))
+  const span =
+    minutes < 1 ? 'vừa xong'
+      : minutes < 60 ? `${minutes} phút`
+        : hours < 24 ? `${hours} giờ`
+          : days < 30 ? `${days} ngày`
+            : months < 12 ? `${months} tháng`
+              : `${years} năm`
+  return diffMs >= 0 ? `${span} trước` : `sau ${span}`
+}
+
+/** Bóc thông điệp lỗi API thành chữ đọc được; KHÔNG bịa thành công. */
+function describeActivityError(payload: unknown, status: number): string {
+  if (payload && typeof payload === 'object') {
+    const err = (payload as { error?: { message?: string } }).error
+    if (typeof err?.message === 'string' && err.message.trim()) return err.message
+  }
+  if (status === 401) return 'Phiên đăng nhập đã hết hạn — vui lòng đăng nhập lại.'
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
+  if (status === 404) return 'Không tìm thấy khách hàng trong phạm vi của bạn.'
+  return `Lỗi máy chủ (${status}).`
+}
+
+/** API trả `data` là mảng hoặc `{ items }` — chuẩn hoá về mảng. */
+function normalizeActivities(payload: unknown): Activity[] {
+  if (Array.isArray(payload)) return payload as Activity[]
+  if (payload && typeof payload === 'object') {
+    const items = (payload as { items?: unknown }).items
+    if (Array.isArray(items)) return items as Activity[]
+  }
+  return []
+}
+
+/** Sắp xếp dòng thời gian: mốc thời gian mới nhất lên đầu. */
+function sortActivities(list: Activity[]): Activity[] {
+  const ts = (a: Activity): number => {
+    const n = Date.parse(a.occurred_at ?? a.scheduled_at ?? a.done_at ?? a.created_at ?? '')
+    return Number.isFinite(n) ? n : 0
+  }
+  return [...list].sort((a, b) => ts(b) - ts(a))
+}
+
+function ActivityIcon({ activity }: { activity: Activity }) {
+  const uiType = activity.metadata?.ui_type
+  const type = uiType ?? activity.activity_type ?? ''
+  const iconProps = { size: 14, className: 'shrink-0' }
+  switch (type) {
+    case 'call':
+      return <Phone {...iconProps} />
+    case 'message':
+      return <Inbox {...iconProps} />
+    case 'meeting':
+      return <Users {...iconProps} />
+    case 'task':
+      return <CalendarClock {...iconProps} />
+    default:
+      return <FolderKanban {...iconProps} />
+  }
+}
+
+function ActivityTimelineItem({ activity }: { activity: Activity }) {
+  const time = activityTimestamp(activity)
+  const relative = relativeTimeLabel(
+    activity.occurred_at ?? activity.scheduled_at ?? activity.done_at ?? activity.created_at ?? null,
+  )
+  const statusMeta = activityStatusMeta(activity.status)
+  const subject = activity.subject?.trim()
+  const body = activity.body?.trim()
+  return (
+    <li className="flex gap-3">
+      <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--sidebar-group)] text-[var(--muted)]">
+        <ActivityIcon activity={activity} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text)]">{activityTypeLabel(activity)}</span>
+          <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
+          {time && (
+            <span className="text-xs text-[var(--muted)]">
+              {time}{relative ? ` · ${relative}` : ''}
+            </span>
+          )}
+        </div>
+        {subject && <p className="mt-0.5 break-words text-sm text-[var(--text)]">{subject}</p>}
+        {body && <p className="mt-0.5 break-words text-xs text-[var(--muted)]">{body}</p>}
+      </div>
+    </li>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Page                                                                       */
 /* -------------------------------------------------------------------------- */
 
@@ -211,12 +405,148 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   )
 }
 
-function CustomerDetailDrawer({ customer, onClose, onEdit }: {
+function ActivityForm({ customerId, onDone, onCancel }: {
+  customerId: string
+  onDone: () => void
+  onCancel: () => void
+}) {
+  const toast = useToast()
+  const [type, setType] = useState('')
+  const [at, setAt] = useState('')
+  const [body, setBody] = useState('')
+  const [status, setStatus] = useState<'planned' | 'done'>('planned')
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (saving) return
+    if (!type.trim()) {
+      setError('Vui lòng chọn loại hoạt động.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    const payload = {
+      activity_type: dbActivityType(type.trim()),
+      status,
+      subject: body.trim() || null,
+      scheduled_at: at ? new Date(at).toISOString() : null,
+      metadata: JSON.stringify({
+        ui_type: ACTIVITY_TYPE_OPTIONS.find((o) => o.value === type)?.uiType ?? null,
+      }),
+    }
+    try {
+      const res = await fetch(`/api/v1/customers/${customerId}/activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as unknown
+        setError(describeActivityError(json, res.status))
+        setSaving(false)
+        return
+      }
+      toast.success({ title: 'Đã thêm hoạt động', description: 'Lịch sử hoạt động đã được cập nhật.' })
+      setSaving(false)
+      onDone()
+    } catch {
+      setError('Không gọi được máy chủ — vui lòng thử lại.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={submit} noValidate className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="f-activity-type" className="mb-1 block text-[12px] font-semibold text-foreground">
+            Loại hoạt động <span className="text-destructive">*</span>
+          </label>
+          <Select
+            id="f-activity-type"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            aria-invalid={Boolean(error && !type)}
+            className={error && !type ? 'border-destructive' : undefined}
+          >
+            <option value="">Chọn loại</option>
+            {ACTIVITY_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <label htmlFor="f-activity-at" className="mb-1 block text-[12px] font-semibold text-foreground">
+            Ngày &amp; giờ
+          </label>
+          <Input
+            id="f-activity-at"
+            type="datetime-local"
+            value={at}
+            onChange={(e) => setAt(e.target.value)}
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="f-activity-body" className="mb-1 block text-[12px] font-semibold text-foreground">
+          Nội dung
+        </label>
+        <Textarea
+          id="f-activity-body"
+          rows={3}
+          maxLength={500}
+          placeholder="Nhập nội dung hoạt động (ví dụ: Gọi xác nhận nhu cầu SIP Trunk)"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
+      </div>
+      <div>
+        <label htmlFor="f-activity-status" className="mb-1 block text-[12px] font-semibold text-foreground">
+          Trạng thái
+        </label>
+        <Select
+          id="f-activity-status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value === 'done' ? 'done' : 'planned')}
+        >
+          <option value="planned">Đã lên kế hoạch</option>
+          <option value="done">Đã hoàn thành</option>
+        </Select>
+      </div>
+      {error && (
+        <p role="alert" className="rounded-md border border-[var(--danger)] bg-[var(--surface)] p-2 text-xs text-[var(--danger)]">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={saving} className="min-w-[80px]">
+          Hủy
+        </Button>
+        <Button type="submit" disabled={saving} className="min-w-[130px]">
+          {saving ? 'Đang lưu...' : 'Thêm hoạt động'}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+function CustomerDetailDrawer({ customer, onClose, onEdit, canAddActivity = false }: {
   customer: Customer | null
   onClose: () => void
   /** Mở form sửa — chỉ render khi role có `customer.update`. */
   onEdit?: (id: string) => void
+  /** Hiện nút "Thêm hoạt động" — chỉ khi role có `customer.read` (POST cần quyền đọc KH). */
+  canAddActivity?: boolean
 }) {
+  const toast = useToast()
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [activitiesError, setActivitiesError] = useState<string | null>(null)
+  const [showActivityForm, setShowActivityForm] = useState(false)
+
   // Escape để đóng — chỉ mount listener khi drawer mở.
   useEffect(() => {
     if (!customer) return
@@ -224,6 +554,58 @@ function CustomerDetailDrawer({ customer, onClose, onEdit }: {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [customer, onClose])
+
+  // Lịch sử hoạt động — fetch khi drawer mở (cache no-store). Reset khi đổi KH.
+  useEffect(() => {
+    // Không có khách hàng → không fetch; state đã reset khi đóng drawer.
+    if (!customer) return
+    let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- bắt buộc chạy sau khi
+    // customer thay đổi: đặt loading trước khi gọi fetch để UI hiện skeleton ngay.
+    setActivitiesLoading(true)
+    setActivitiesError(null)
+    const run = async () => {
+      try {
+        const res = await fetch(`/api/v1/customers/${customer.id}/activities`, { cache: 'no-store' })
+        if (!res.ok) {
+          const json = (await res.json().catch(() => null)) as unknown
+          throw new Error(describeActivityError(json, res.status))
+        }
+        const json = (await res.json().catch(() => null)) as unknown
+        if (cancelled) return
+        setActivities(sortActivities(normalizeActivities((json as { data?: unknown })?.data)))
+      } catch (err) {
+        if (cancelled) return
+        setActivitiesError(err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.')
+      } finally {
+        if (!cancelled) setActivitiesLoading(false)
+      }
+    }
+    void run()
+    return () => { cancelled = true }
+  }, [customer])
+
+  // Đọc lại sau khi thêm hoạt động thành công.
+  const reloadActivities = useCallback(async () => {
+    if (!customer) return
+    setActivitiesLoading(true)
+    try {
+      const res = await fetch(`/api/v1/customers/${customer.id}/activities`, { cache: 'no-store' })
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as unknown
+        throw new Error(describeActivityError(json, res.status))
+      }
+      const json = (await res.json().catch(() => null)) as unknown
+      setActivities(sortActivities(normalizeActivities((json as { data?: unknown })?.data)))
+      setActivitiesError(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.'
+      setActivitiesError(message)
+      toast.error({ title: 'Tải lịch sử hoạt động thất bại', description: message })
+    } finally {
+      setActivitiesLoading(false)
+    }
+  }, [customer, toast])
 
   if (!customer) return null
 
@@ -299,6 +681,77 @@ function CustomerDetailDrawer({ customer, onClose, onEdit }: {
               <DetailRow label="Ngày tạo" value={asOfLabel(customer.created_at ?? null)} />
             </dl>
           </section>
+
+          {/* Lịch sử hoạt động — dữ liệu từ GET /api/v1/customers/[id]/activities */}
+          <section aria-label="Lịch sử hoạt động">
+            <Card className="border border-[var(--border)] bg-[var(--surface)]">
+              <CardHeader className="flex-row items-center justify-between gap-2 px-5 py-3 space-y-0">
+                <CardTitle className="flex items-center gap-2 text-[15px]">
+                  <CalendarClock className="h-4 w-4 text-[var(--muted)]" /> Lịch sử hoạt động
+                </CardTitle>
+                {canAddActivity && !showActivityForm && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowActivityForm(true)}
+                    aria-label="Thêm hoạt động"
+                  >
+                    <Plus size={14} /> Thêm hoạt động
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="px-5 py-3">
+                {activitiesLoading && activities.length === 0 ? (
+                  <div className="space-y-2" aria-hidden="true">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : activitiesError ? (
+                  <div className="flex flex-col items-start gap-2">
+                    <p className="text-xs text-[var(--danger)]">{activitiesError}</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void reloadActivities()}
+                    >
+                      <RefreshCw size={14} /> Thử lại
+                    </Button>
+                  </div>
+                ) : activities.length === 0 ? (
+                  <EmptyState
+                    icon={<CalendarClock size={28} strokeWidth={1.5} />}
+                    title="Chưa có hoạt động nào."
+                    description="Thêm hoạt động đầu tiên cho khách hàng này."
+                  />
+                ) : (
+                  <ul className="space-y-3">
+                    {activities.map((activity) => (
+                      <ActivityTimelineItem
+                        key={activity.id ?? `${activity.activity_type}-${activity.created_at}-${activity.subject ?? ''}`}
+                        activity={activity}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            {canAddActivity && showActivityForm && (
+              <div className="mt-3">
+                <ActivityForm
+                  customerId={customer.id}
+                  onDone={() => {
+                    setShowActivityForm(false)
+                    void reloadActivities()
+                  }}
+                  onCancel={() => setShowActivityForm(false)}
+                />
+              </div>
+            )}
+          </section>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-[var(--border)] p-4">
@@ -323,6 +776,8 @@ export default function CustomersPage() {
   const toast = useToast()
   const canCreate = hasPermission(role, 'customer.create')
   const canEdit = hasPermission(role, 'customer.update')
+  /** POST hoạt động cần quyền ĐỌC khách hàng (RLS đọc theo fdi_can_read). */
+  const canAddActivity = hasPermission(role, 'customer.read')
 
   const [selected, setSelected] = useState<Customer | null>(null)
 
@@ -784,7 +1239,12 @@ export default function CustomersPage() {
         </div>
       </Card>
 
-      <CustomerDetailDrawer customer={selected} onClose={() => setSelected(null)} onEdit={canEdit ? editCustomer : undefined} />
+      <CustomerDetailDrawer
+        customer={selected}
+        onClose={() => setSelected(null)}
+        onEdit={canEdit ? editCustomer : undefined}
+        canAddActivity={canAddActivity}
+      />
     </div>
   )
 }
