@@ -234,6 +234,17 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 
 > **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
 
+### 16h. Admin lưu KH thành công nhưng danh sách rỗng (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng | `admin@fdi.local` (Quản trị hệ thống) bấm Lưu → **thành công**, nhưng trang `/customers` hiện "Chưa có khách hàng nào" (Tổng KH = 0) | ảnh user `/customers` |
+| Nguyên nhân | Policy `fdi_customers_select` dùng `fdi_can_read(NULL, id, ...)`. Nhánh toàn công ty của `fdi_can_read` (002 gốc) chỉ `('director','manager')`; 011 thêm `project_manager` nhưng **thiếu `super_admin`**. RBAC client cấp `customer.read` cho super_admin (ALL) → UI hiện dữ liệu đúng quyền nhưng **RLS chặn SELECT** → list rỗng. Lỗi này có từ 002, chỉ lộ ra khi admin insert thành công (trước đó không có row nào để thấy) | `migrations/002:176` + `011:37` vs `policy.core.mjs:27` |
+| Fix | Migration **012** `fdi_can_read` nhánh toàn công ty → `('director','manager','project_manager','super_admin')`. Chỉ sửa 1 dòng, giữ nguyên phần còn lại | `migrations/012_customer_edit_scope_v2.sql` mục 2 |
+| Verify | `npm test` **68/68** · `node --test tests/customer-code-edit.test.mjs` 16/16 | tool output |
+
+> **Cần apply lại 012** (bản đã thêm `super_admin` vào `fdi_can_read`). Idempotent.
+
 ### 16g. Footer che nội dung khi cuộn tới cùng (2026-11-23)
 
 | Hạng mục | Kết quả | Evidence |

@@ -133,15 +133,31 @@ test('DB: 012 giữ nguyên thân fdi_can_read/fdi_is_leader_plus như 011', () 
     const ends = [sql.indexOf('$$;', i), sql.indexOf('$fn$;', i)].filter((x) => x !== -1)
     return strip(sql.slice(i, Math.min(...ends) + 3))
   }
+  // 012 CỐ Ý khác 011 ở nhánh toàn công ty: thêm 'super_admin' (011 thiếu →
+  // admin bị fdi_customers_select chặn → danh sách KH rỗng dù đã lưu thành công).
+  // Các đoạn còn lại phải giống hệt 011.
+  const norm = (lines) => lines.filter((l) => !/IF r IN \(.*\) THEN/.test(l))
   assert.deepEqual(
-    body(s12, 'CREATE OR REPLACE FUNCTION public.fdi_can_read('),
-    body(s11, 'CREATE OR REPLACE FUNCTION public.fdi_can_read('),
-    'thân fdi_can_read phải giống hệt 011',
+    norm(body(s12, 'CREATE OR REPLACE FUNCTION public.fdi_can_read(')),
+    norm(body(s11, 'CREATE OR REPLACE FUNCTION public.fdi_can_read(')),
+    'fdi_can_read chỉ khác 011 ở nhánh thêm super_admin',
   )
   assert.deepEqual(
     body(s12, 'CREATE OR REPLACE FUNCTION public.fdi_is_leader_plus()'),
     body(s11, 'CREATE OR REPLACE FUNCTION public.fdi_is_leader_plus()'),
     'thân fdi_is_leader_plus phải giống hệt 011',
+  )
+})
+
+test('DB: 012 fdi_can_read có super_admin (admin phải đọc được danh sách KH)', () => {
+  const sql = src('migrations/012_customer_edit_scope_v2.sql')
+  // Policy fdi_customers_select dùng fdi_can_read. RBAC client cấp customer.read
+  // cho super_admin (ALL) nên nhánh toàn công ty phải có super_admin — nếu không
+  // admin lưu KH thành công nhưng danh sách vẫn rỗng.
+  assert.match(
+    sql,
+    /IF r IN \('director','manager','project_manager','super_admin'\) THEN/,
+    'fdi_can_read phải có super_admin',
   )
 })
 

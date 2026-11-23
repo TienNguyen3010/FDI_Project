@@ -107,7 +107,13 @@ DECLARE
   uid    UUID := public.fdi_current_user_id();
   myteam TEXT := public.fdi_current_team();
 BEGIN
-  IF r IN ('director','manager','project_manager') THEN
+  -- 012: thêm 'super_admin'. RBAC client (lib/rbac/policy.core.mjs) cấp
+  -- customer.read cho super_admin (ALL), nhưng nhánh này chỉ có
+  -- director/manager/project_manager → admin bị policy fdi_customers_select
+  -- chặn → danh sách khách hàng rống dù DB có dữ liệu.
+  -- (002 gốc chỉ có director/manager; 009 thêm super_admin cho
+  --  fdi_is_manager_plus nhưng QUÊN fdi_can_read.)
+  IF r IN ('director','manager','project_manager','super_admin') THEN
     RETURN TRUE;
   END IF;
 
