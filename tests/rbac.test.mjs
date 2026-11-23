@@ -44,3 +44,13 @@ test('RBAC: isRole rejects legacy roles (leader/manager/employee)', () => {
     assert.equal(hasPermission(legacy, 'dashboard.read'), false)
   }
 })
+
+// 2026-11-23: sửa khách hàng được. Khớp RLS fdi_is_leader_plus() + fdi_can_read.
+test('RBAC: customer.update grant — director/PM/super_admin; deny engineer/support/viewer', () => {
+  assert.equal(hasPermission('director', 'customer.update'), true)
+  assert.equal(hasPermission('project_manager', 'customer.update'), true)
+  assert.equal(hasPermission('super_admin', 'customer.update'), true)
+  assert.equal(hasPermission('engineer', 'customer.update'), false)
+  assert.equal(hasPermission('support', 'customer.update'), false)
+  assert.equal(hasPermission('customer_viewer', 'customer.update'), false)
+})

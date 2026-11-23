@@ -182,7 +182,22 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Verify DB | `SELECT fdi_next_customer_code()` → **`CUS-2026-006`** (backfill 5 bản ghi cũ 001–005; hàm còn số 006) | output user dán vào chat |
 | Verify code | `tsc` exit 0 · `npm test` 51/51 · `next build --webpack` EXIT=0 (`/customers/new` ◐) · `check:docs` OK | tool output |
 
-> Code form gọi `rpc('fdi_next_customer_code')` lúc submit (`components/customers/CreateCustomerForm.tsx:188`) → chỉ chạy được sau khi 010 apply. Còn **việc tiếp theo**: `/api/v1/customers` vẫn hardcode `code: null` → thêm `code` vào select để list/drawer hiện mã thật.
+> Code form gọi `rpc('fdi_next_customer_code')` lúc submit (`components/customers/CreateCustomerForm.tsx:188`) → chỉ chạy được sau khi 010 apply. **Đã xong tiếp (C15):** API `/api/v1/customers` trả `code` thật (list + drawer hiện mã), `PATCH /api/v1/customers/[id]` + `GET .../[id]`, route `/customers/[id]`, nút Sửa ở cột Thao tác + drawer (gate `customer.update`: director/PM/super_admin). Còn **archive/xóa** chưa làm (thiếu `deleted_at` + policy DELETE).
+
+## 16b. Hiển thị mã + sửa khách hàng (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng (ảnh user) | List + drawer hiện `Mã: —`; nút Sửa disabled "sẽ hỗ trợ ở bản sau" | ảnh browser + `page.tsx:652,671` |
+| Nguyên nhân #1 | API hardcode `code: null` (`route.ts:34,155`) → UI không có dữ liệu dù DB đã có cột | grep code |
+| Nguyên nhân #2 | RBAC chỉ `super_admin` có `customer.update`; RLS lại cho leader/manager/director → hai đầu lệch | `policy.core.mjs` vs `migrations/002:147-150,310-314` |
+| Fix API | `select` thêm `code`; map `code: c.code ?? null`; `SEARCH_FIELDS` += `code` | `app/api/v1/customers/route.ts` |
+| Fix RBAC | `director` + `project_manager` += `customer.update` | `lib/rbac/policy.core.mjs:29,35` |
+| Fix backend | `PATCH /api/v1/customers/[id]`: authorize + whitelist cột + **`code` immutable → 400** + phân loại lỗi RLS/CHECK; `GET .../[id]` authorize `customer.read` | `app/api/v1/customers/[id]/route.ts` |
+| Fix UI | Nút Sửa cột Thao tác + drawer (gated); cột mã `font-mono`; fallback `—`; form tái dùng prop `initial` gọi PATCH (không gửi `code`) | `app/(workspace)/customers/page.tsx`, `[id]/page.tsx`, `CreateCustomerForm.tsx` |
+| Verify | tsc 0 · test **59/59** (thêm `customer-code-edit.test.mjs` 7 case + rbac 1 case) · build EXIT=0 · docs-check OK | tool output |
+
+> **Chưa làm (P1):** archive/xóa khách hàng — thiếu `deleted_at` + policy DELETE; giữ nút disabled thay vì giả affordance. Không claim xong.
 
 ## 15. Logout không redirect — HttpOnly cookie `sb-access-token` sót lại (2026-11-19)
 

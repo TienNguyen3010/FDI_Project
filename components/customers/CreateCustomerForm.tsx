@@ -41,6 +41,25 @@ type FieldKey =
 
 type FormState = Record<FieldKey, string>
 
+/** Giá trị khởi tạo cho form SỬA — chỉ lấy field text; code/consent xử lý riêng. */
+export interface CustomerFormInitial {
+  id: string
+  code?: string | null
+  name: string
+  phone?: string | null
+  email?: string | null
+  industry?: string | null
+  tax_id?: string | null
+  headquarters_address?: string | null
+  primary_contact_name?: string | null
+  primary_contact_position?: string | null
+  notes?: string | null
+  consent_contact?: boolean | null
+  contact_technical?: string | null
+  contact_commercial?: string | null
+  contact_emergency?: string | null
+}
+
 const EMPTY: FormState = {
   name: '',
   tax_id: '',
@@ -108,16 +127,30 @@ const db = supabase as unknown as {
   ) => Promise<{ data: string | null; error: { message: string } | null }>
 }
 
-export default function CreateCustomerForm() {
+export default function CreateCustomerForm({ initial }: { initial?: CustomerFormInitial } = {}) {
+  const isEdit = Boolean(initial)
   const router = useRouter()
   const toast = useToast()
-  const [form, setForm] = useState<FormState>(EMPTY)
+  const [form, setForm] = useState<FormState>(() => initial ? {
+    ...EMPTY,
+    name: initial.name ?? '',
+    phone: initial.phone ?? '',
+    email: initial.email ?? '',
+    industry: initial.industry ?? '',
+    tax_id: initial.tax_id ?? '',
+    headquarters_address: initial.headquarters_address ?? '',
+    primary_contact_name: initial.primary_contact_name ?? '',
+    primary_contact_position: initial.primary_contact_position ?? '',
+    notes: initial.notes ?? '',
+    contact_technical: initial.contact_technical ?? '',
+    contact_commercial: initial.contact_commercial ?? '',
+    contact_emergency: initial.contact_emergency ?? '',
+  } : EMPTY)
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const [saving, setSaving] = useState(false)
-  const [consentContact, setConsentContact] = useState(false)
-  // Mã khách hàng do BACKEND sinh (migration 010): RPC trả customer_code,
-  // không được client bịa mã. Chưa lưu → null (hiển thị "Tự động tạo").
-  const [customerCode, setCustomerCode] = useState<string | null>(null)
+  // Mã do DB sinh (tạo) hoặc mã hiện có (sửa). Không cho client sửa mã.
+  const [customerCode, setCustomerCode] = useState<string | null>(initial?.code ?? null)
+  const [consentContact, setConsentContact] = useState(Boolean(initial?.consent_contact))
   // Confirm-exit: thay hộp thoại confirm() native của trình duyệt bằng modal UI.
   const [showExit, setShowExit] = useState(false)
 
@@ -181,6 +214,27 @@ export default function CreateCustomerForm() {
     }
     payload.consent_contact = consentContact
     payload.consent_contact_at = consentContact ? new Date().toISOString() : null
+
+    if (isEdit && initial) {
+      // SỬA: KHÔNG gửi `code` (danh tính do DB sinh, PATCH từ chối field này).
+      const res = await fetch(`/api/v1/customers/${initial.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      setSaving(false)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null
+        toast.error({
+          title: 'Lưu không thành công',
+          description: body?.error?.message ?? `Lỗi máy chủ (${res.status}).`,
+        })
+        return
+      }
+      toast.success({ title: 'Cập nhật khách hàng thành công', description: `Mã khách hàng: ${customerCode ?? initial.code}` })
+      router.push('/customers')
+      return
+    }
 
     // Mã do DB sinh ở RPC (SECURITY DEFINER + advisory lock). Client KHÔNG bịa mã.
     // Lưu ý: trigger BEFORE INSERT vẫn là rào cuối nếu RPC lỗi → insert sẽ fail thay vì
@@ -266,11 +320,15 @@ export default function CreateCustomerForm() {
       <div className="mb-5">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
           <span>Trang chủ</span> / <span>Khách hàng</span>{' '}
-          <span className="text-foreground">/ Thêm khách hàng</span>
+          <span className="text-foreground">/ {isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng'}</span>
         </nav>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">Thêm khách hàng mới</h1>
+        <h1 className="mt-2 text-2xl font-bold text-foreground">
+          {isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng mới'}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tạo hồ sơ khách hàng (doanh nghiệp/đơn vị) để quản lý dự án, dịch vụ và hỗ trợ vận hành.
+          {isEdit
+            ? 'Cập nhật hồ sơ khách hàng. Mã khách hàng do hệ thống sinh và không thể thay đổi.'
+            : 'Tạo hồ sơ khách hàng (doanh nghiệp/đơn vị) để quản lý dự án, dịch vụ và hỗ trợ vận hành.'}
         </p>
       </div>
 
@@ -311,7 +369,11 @@ export default function CreateCustomerForm() {
                   />
                 </div>
                 <p id="code-hint" className="text-xs text-muted-foreground">
-                  {customerCode ? 'Mã khách hàng đã cấp' : 'Mã được hệ thống tạo khi lưu'}
+                  {customerCode
+                    ? 'Mã khách hàng do hệ thống cấp'
+                    : isEdit
+                      ? 'Mã khách hàng hiện tại'
+                      : 'Mã được hệ thống tạo khi lưu'}
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -558,7 +620,7 @@ export default function CreateCustomerForm() {
           type="button"
           variant="outline"
           onClick={() => void submitCustomer('saveAndNew')}
-          disabled={saving}
+          disabled={saving || isEdit}
           className="min-w-[168px]"
         >
           {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -566,7 +628,7 @@ export default function CreateCustomerForm() {
         </Button>
         <Button type="submit" disabled={saving} className="min-w-[152px]">
           {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saving ? 'Đang lưu...' : 'Lưu khách hàng'}
+          {saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Lưu khách hàng'}
         </Button>
       </div>
 

@@ -274,3 +274,4 @@ UI release checklist: verify sidebar section order, active route, collapsed mode
 | 2026-11-19 | customer-hardening | Sửa P0 mã giả + RBAC 2 đầu + consent DNC + UI P1 | tsc 0 · test 47/47 · build 0 · docs-check OK · migration 009 ⏳ do user apply |
 | 2026-11-23 | customer-form-footer | Footer 3 action (Hủy / Lưu và tạo mới / Lưu) + bố cục gọn max-w-1180 | regression 3/3 · tsc 0 · test 50/50 · build 0 · docs-check OK 56 files |
 | 2026-11-23 | customer-code-db | Mã KH do DB sinh: migration 010 (cột+trigger+backfill) + form gọi RPC, footer 3 action, safe-area padding | **010 applied thật** (user SQL Editor): `fdi_next_customer_code()` → `CUS-2026-006`; tsc 0 · test 51/51 · build EXIT=0 (`/customers/new` ◐) · docs-check OK |
+| 2026-11-23 | customer-edit-ui | Hiện mã KH thật + sửa khách hàng được (API `code`, PATCH `[id]`, `/customers/[id]`, nút Sửa list+drawer, RBAC director/PM) | tsc 0 · test **59/59** · build EXIT=0 · docs-check OK 56 files |

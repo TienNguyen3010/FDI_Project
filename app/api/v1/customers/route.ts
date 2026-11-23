@@ -20,7 +20,7 @@ const CUSTOMER_PROJECT_STATUSES = new Set<string>(['active', 'in_progress', 'dep
  */
 const OPEN_TICKET_STATUS_SET = new Set<string>(OPEN_TICKET_STATUSES)
 
-const SEARCH_FIELDS = ['name', 'phone', 'email', 'industry', 'tax_id'] as const
+const SEARCH_FIELDS = ['name', 'phone', 'email', 'industry', 'tax_id', 'code'] as const
 
 type SortField = 'name' | 'created_at' | 'industry' | 'project_count' | 'open_ticket_count'
 const SORT_WHITELIST = new Set<string>([
@@ -29,9 +29,9 @@ const SORT_WHITELIST = new Set<string>([
 
 interface CustomerItem {
   id: string
-  /** DB chưa có cột `code` (CUS-YYYY-XXX là hạng mục Phase 2) → null.
-   *  KHÔNG suy từ tax_id: tax_id là mã thuế, không phải mã khách hàng. */
-  code: null
+  /** `customers.code` — do DB sinh (migration 010, `CUS-YYYY-NNN`).
+   *  NULL chỉ khi bản ghi chưa được backfill; KHÔNG suy từ tax_id. */
+  code: string | null
   name: string
   phone: string | null
   email: string | null
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
 
   let customersQuery = auth.supabase
     .from('customers')
-    .select('id, name, phone, email, industry, tax_id, headquarters_address, primary_contact_name, created_at')
+    .select('id, name, code, phone, email, industry, tax_id, headquarters_address, primary_contact_name, created_at')
   // `customers` dùng PK `id` (KHÔNG có cột `customer_id`), nên không thể dùng
   // scoped() trực tiếp ở đây — scoped() lọc theo cột `customer_id`. Áp grant bằng `id`:
   if (scope.customer_ids !== null) {
@@ -152,7 +152,7 @@ export async function GET(request: Request) {
 
   let items: CustomerItem[] = (customersRes.data ?? []).map((c) => ({
     id: c.id,
-    code: null, // DB chưa có cột code — không lấy từ tax_id.
+    code: c.code ?? null, // migration 010: mã do DB sinh; null chỉ khi chưa backfill.
     name: c.name,
     phone: c.phone,
     email: c.email,

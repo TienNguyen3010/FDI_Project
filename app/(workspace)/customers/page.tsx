@@ -7,6 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Badge,
   Button,
@@ -210,9 +211,11 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   )
 }
 
-function CustomerDetailDrawer({ customer, onClose }: {
+function CustomerDetailDrawer({ customer, onClose, onEdit }: {
   customer: Customer | null
   onClose: () => void
+  /** Mở form sửa — chỉ render khi role có `customer.update`. */
+  onEdit?: (id: string) => void
 }) {
   // Escape để đóng — chỉ mount listener khi drawer mở.
   useEffect(() => {
@@ -298,8 +301,17 @@ function CustomerDetailDrawer({ customer, onClose }: {
           </section>
         </div>
 
-        <div className="flex justify-end border-t border-[var(--border)] p-4">
+        <div className="flex justify-end gap-2 border-t border-[var(--border)] p-4">
           <Button type="button" variant="outline" onClick={onClose}>Đóng</Button>
+          {onEdit && (
+            <Button
+              type="button"
+              onClick={() => onEdit(customer.id)}
+              aria-label={`Sửa khách hàng ${customer.name}`}
+            >
+              <Pencil size={16} /> Sửa
+            </Button>
+          )}
         </div>
       </aside>
     </div>
@@ -310,6 +322,7 @@ export default function CustomersPage() {
   const { role } = useProfile()
   const toast = useToast()
   const canCreate = hasPermission(role, 'customer.create')
+  const canEdit = hasPermission(role, 'customer.update')
 
   const [selected, setSelected] = useState<Customer | null>(null)
 
@@ -452,6 +465,13 @@ export default function CustomersPage() {
   }
 
   const hasFilters = Boolean(debouncedSearch || industry || status || hasProject)
+
+  /* --- Điều hướng sang form sửa (id trong URL; form tự fetch qua API) --------- */
+  const router = useRouter()
+  const editCustomer = useCallback((id: string) => {
+    setSelected(null)
+    router.push(`/customers/${encodeURIComponent(id)}`)
+  }, [router])
 
   /* --- Derived ------------------------------------------------------------ */
   const { items, pagination, summary, asOf, dataQuality, comparison } = data
@@ -649,7 +669,10 @@ export default function CustomersPage() {
                           <Building2 size={18} className="shrink-0 text-[var(--muted)]" aria-hidden />
                           <div className="min-w-0">
                             <p className="truncate font-medium">{name}</p>
-                            <p className="text-xs text-[var(--muted)]">Mã: {code}</p>
+                            {/* Mã do DB sinh (migration 010). null/'' → '—', KHÔNG suy từ tax_id. */}
+                            <p className="text-xs text-[var(--muted)]">
+                              {code === '—' ? 'Mã: —' : <span className="font-mono">{code}</span>}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -663,20 +686,24 @@ export default function CustomersPage() {
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.project_count)}</td>
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.open_ticket_count)}</td>
                       <td className="h-14 px-4"><Badge variant={statusMeta.variant}>{statusMeta.label}</Badge></td>
-                      <td className="h-14 whitespace-nowrap px-4" onClick={(e) => e.stopPropagation()}>
+                      <td className="h-14 px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
+                          {canEdit && (
+                            <button
+                              type="button"
+                              title="Sửa khách hàng"
+                              aria-label={`Sửa ${name}`}
+                              onClick={() => editCustomer(item.id)}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--sidebar-group)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+                          {/* Archive cần soft-delete (`deleted_at`) + policy DELETE — chưa có,
+                              nên giữ disabled thay vì giả affordance. */}
                           <button
                             type="button"
-                            title="Sẽ hỗ trợ ở bản sau"
-                            aria-label="Sửa (sẽ hỗ trợ ở bản sau)"
-                            aria-disabled="true"
-                            className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-md text-[var(--muted)] opacity-50"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            type="button"
-                            title="Sẽ hỗ trợ ở bản sau"
+                            title="Lưu trữ (cần bổ sung soft delete)"
                             aria-label="Lưu trữ (sẽ hỗ trợ ở bản sau)"
                             aria-disabled="true"
                             className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-md text-[var(--muted)] opacity-50"
@@ -757,7 +784,7 @@ export default function CustomersPage() {
         </div>
       </Card>
 
-      <CustomerDetailDrawer customer={selected} onClose={() => setSelected(null)} />
+      <CustomerDetailDrawer customer={selected} onClose={() => setSelected(null)} onEdit={canEdit ? editCustomer : undefined} />
     </div>
   )
 }

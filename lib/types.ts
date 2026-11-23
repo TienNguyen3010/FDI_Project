@@ -30,6 +30,8 @@ export type Database = {
       customers: {
         Row: {
           id: string
+          /** migration 010 — do DB sinh, định dạng CUS-YYYY-NNN. */
+          code: string | null
           name: string
           phone: string | null
           email: string | null
@@ -49,6 +51,8 @@ export type Database = {
         }
         Insert: {
           id?: string
+          /** Chỉ gửi khi lấy từ RPC `fdi_next_customer_code`; trigger là rào cuối. */
+          code?: string | null
           name: string
           phone?: string | null
           email?: string | null
@@ -68,6 +72,8 @@ export type Database = {
         }
         Update: {
           id?: string
+          /** Mã là danh tính do DB sinh — KHÔNG cho sửa từ client. */
+          code?: string | null
           name?: string
           phone?: string | null
           email?: string | null
