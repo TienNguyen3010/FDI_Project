@@ -81,3 +81,25 @@ test('P1: chế độ sửa ẩn nút "Lưu và tạo mới" (chỉ tạo mới 
   const form = src('components/customers/CreateCustomerForm.tsx')
   assert.ok(/!isEdit && \(\s*<Button/.test(form) || form.includes('{!isEdit && ('), 'gate nút saveAndNew')
 })
+
+test('UI: form rộng full màn hình + footer nền đục + modal căn giữa viewport', () => {
+  const form = src('components/customers/CreateCustomerForm.tsx')
+  // full-width container (trước là max-w-[1180px])
+  assert.ok(form.includes('max-w-[1600px]'), 'container full màn hình')
+  // footer không dùng nền mờ (chữ card lọt qua khi cuộn) — chỉ kiểm tra className thật
+  const classLines = form.split('\n').filter((l) => l.includes('className=')).join('\n')
+  assert.ok(!/bg-card\/95/.test(classLines), 'không còn bg-card/95 trong className')
+  assert.ok(/sticky bottom-0[^"]*bg-card/.test(form), 'footer nền đục bg-card')
+  assert.ok(form.includes('safe-area-inset-bottom'), 'footer padding safe-area')
+  // modal căn giữa thật (important) — trước bị lệch khi cuộn
+  assert.ok(form.includes('!items-center'), 'modal có !items-center')
+})
+
+test('DB: migration 011 nới RLS scope cho project_manager (khớp RBAC client)', () => {
+  const sql = src('migrations/011_customer_edit_scope.sql')
+  assert.ok(sql.includes("r IN ('director','manager','project_manager')"), 'fdi_can_read có PM')
+  assert.ok(sql.includes("'leader','manager','director','project_manager','super_admin'"), 'fdi_is_leader_plus có PM')
+  assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.fdi_can_read'), 'định nghĩa lại fdi_can_read')
+  assert.ok(sql.includes('fdi_customers_update'), 'tái tạo policy update')
+  assert.ok(/INSERT INTO public.schema_migrations[\s\S]*011_customer_edit_scope/.test(sql), 'ghi schema_migrations 011')
+})

@@ -319,7 +319,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
   const phoneWarning = Boolean(form.phone.trim()) && !PHONE_RE.test(form.phone.replace(/[\s()-]/g, ''))
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-[1180px]">
+    <form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-[1600px]">
       <div className="mb-5">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
           <span>Trang chủ</span> / <span>Khách hàng</span>{' '}
@@ -607,7 +607,11 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-30 mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border bg-card/95 px-1 py-3 backdrop-blur">
+      {/* Footer hành động: cố định cuối vùng cuộn, NỀN ĐỤC + padding dưới thật.
+          Trước đây dùng `bg-card/95 backdrop-blur` nên chữ card bị lọt qua khi cuộn. */}
+      <div className="sticky bottom-0 z-30 mt-5 -mx-5 border-t border-border bg-card px-4 py-3 sm:px-5"
+           style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+        <div className="flex flex-wrap items-center justify-end gap-2">
         <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
           Hủy
         </Button>
@@ -627,12 +631,18 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Lưu khách hàng'}
         </Button>
+        </div>
       </div>
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
           Modal component không tự ẩn theo prop `open`, nên gate bằng && . */}
       {showExit && (
-        <Modal data-testid="exit-confirm-modal" className="max-w-[420px] p-5">
+        <Modal
+          data-testid="exit-confirm-modal"
+          /* `!items-center` + `pb-[max(1.25rem,env(safe-area-inset-bottom))]` (important):
+             modal căn giữa VIEWPORT thật, không bị lệch khi form cuộn xuống dưới. */
+          className="max-w-[420px] p-5 !items-center"
+        >
           <ModalContent className="relative p-5">
           <button
             type="button"

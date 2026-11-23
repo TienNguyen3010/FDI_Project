@@ -13,15 +13,23 @@ test('Footer có nút Lưu và tạo mới (saveAndNew)', () => {
   assert.match(src, /setForm\(EMPTY\)/, 'saveAndNew phải reset form')
 })
 
-test('Bố cục gọn: max-width + gap nhỏ + header padding thấp', () => {
-  assert.match(src, /max-w-\[1180px\]/, 'khung nội dung có max-width')
+test('Bố cục: full màn hình + gap nhỏ + header padding thấp', () => {
+  // 2026-11-23: user yêu cầu form full màn hình → container nới rộng, không còn 1180px.
+  assert.match(src, /max-w-\[1600px\]/, 'khung nội dung full màn hình')
+  assert.doesNotMatch(src, /max-w-\[1180px\]/, 'bỏ max-width hẹp cũ')
   assert.match(src, /gap-x-4 gap-y-3/, 'field gap dọc nhỏ hơn')
   assert.match(src, /CardHeader className="px-5 py-3"/, 'card header gọn')
 })
 
-test('Footer sticky có z-index và backdrop', () => {
+test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua khi cuộn)', () => {
   assert.match(src, /sticky bottom-0 z-30/, 'footer không bị bottom nav che')
-  assert.match(src, /bg-card\/95[^"]*backdrop-blur/, 'footer nền mờ chuyên nghiệp')
+  assert.match(src, /sticky bottom-0[^"]*bg-card/, 'footer nền đục')
+  assert.doesNotMatch(
+    src.split('\n').filter((l) => l.includes('className=')).join('\n'),
+    /bg-card\/95/,
+    'KHÔNG dùng nền mờ ở footer (chữ card lọt qua)',
+  )
+  assert.match(src, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
 })
 
 // Regression: modal xác nhận thoát thay window.confirm() native (ảnh softnet-crm).

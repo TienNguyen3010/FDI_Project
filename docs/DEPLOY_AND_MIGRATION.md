@@ -199,6 +199,22 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 
 > **Chưa làm (P1):** archive/xóa khách hàng — thiếu `deleted_at` + policy DELETE; giữ nút disabled thay vì giả affordance. Không claim xong.
 
+## 16d. UI/UX form KH + khớp RLS 2 đầu cho project_manager (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Yêu cầu user | Thêm KH full màn hình; sửa KH phải hiện Mã; footer không che chữ khi cuộn; modal "Xác nhận thoát" căn giữa màn hình | chat + ảnh browser |
+| Nguyên nhân footer | Footer `sticky bottom-0` dùng `bg-card/95 backdrop-blur` → nền mờ, chữ card lọt qua khi cuộn | `CreateCustomerForm.tsx:610` |
+| Fix footer | Nền đục `bg-card`, padding ngang `-mx-5 px-4`, `paddingBottom = calc(0.75rem + env(safe-area-inset-bottom))` | `CreateCustomerForm.tsx:610-616` |
+| Nguyên nhân modal lệch | Modal `fixed inset-0 flex items-center` nhưng nằm trong vùng cuộn `main` → bị lệch khi scroll; thiếu `!important` nên utility bị ghi đè | `ui.tsx:271` vs `ClientBody.tsx:454` |
+| Fix modal | Thêm `!items-center` (important) để căn giữa viewport thật, độc lập với trạng thái cuộn | `CreateCustomerForm.tsx:640-645` |
+| Full màn hình | Container `max-w-[1180px]` → `max-w-[1600px]` (grid vẫn 2 cột, giãn theo màn hình) | `CreateCustomerForm.tsx:322` |
+| **Lỗi DB: mã không hiện khi sửa** | RBAC client cấp `customer.update` cho director+PM+super_admin, nhưng RLS `fdi_can_read()` chỉ director/manager được TRUE toàn công ty → PM SELECT rỗng → ô Mã không có dữ liệu; `fdi_is_leader_plus()` thiếu PM → PATCH bị DB từ chối | `migrations/002:176,147-150` vs `policy.core.mjs` |
+| Fix DB | Migration **011_customer_edit_scope.sql**: nới `fdi_can_read` nhánh toàn công ty sang `director/manager/project_manager`; `fdi_is_leader_plus` += `project_manager`; tái tạo `fdi_customers_update`. Đã ghi `schema_migrations`. | `migrations/011_customer_edit_scope.sql` |
+| Verify | test `customer-code-edit.test.mjs` **11/11** · tsc 0 · build 0 · docs-check OK | tool output |
+
+> **Migration 011 cần apply** trên Supabase SQL Editor (như 008/009/010). Chưa apply thì role PM vẫn không sửa/hiện mã được; super_admin/director vẫn chạy đúng như cũ.
+
 ## 16c. Sửa lỗi mã nhân đôi `CUS-CUS-...` trên form sửa (2026-11-23)
 
 | Hạng mục | Kết quả | Evidence |
