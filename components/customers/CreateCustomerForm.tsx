@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Save, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -153,6 +153,14 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
   /** Hiển thị: luôn là mã ĐỦ (CUS-YYYY-NNN) hoặc placeholder. KHÔNG ghép prefix ở UI
    *  vì mã từ DB đã chứa `CUS-` → ghép nữa sẽ thành `CUS-CUS-...`. */
   const codeDisplay = customerCode || (isEdit ? '—' : 'Tự động tạo')
+  // MÃ KH LUÔN HIỆN khi sửa: component dùng chung cho cả tạo và sửa nên useState chỉ
+  // lấy initial lần đầu. Khi fetch GET /api/v1/customers/[id] trả về MUỘN (hoặc initial
+  // tới sau lần mount), customerCode vẫn null → ô mã kẹt ở '—' dù DB đã có mã.
+  // useEffect này sync lại mỗi khi initial.code thay đổi, CHỈ áp dụng ở chế độ sửa
+  // (chế độ tạo không có mã ban đầu → mã do RPC sinh sau khi lưu, giữ nguyên luồng cũ).
+  useEffect(() => {
+    if (isEdit) setCustomerCode(initial?.code ?? null)
+  }, [isEdit, initial?.code])
   const [consentContact, setConsentContact] = useState(Boolean(initial?.consent_contact))
   // Confirm-exit: thay hộp thoại confirm() native của trình duyệt bằng modal UI.
   const [showExit, setShowExit] = useState(false)
@@ -335,6 +343,13 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </p>
       </div>
 
+      {/* Wrapper chứa grid + footer. Sticky CHỈ ăn khi nằm trong một container đủ
+          cao (cao bằng chiều cao NỘI DUNG form). Trước đây footer nằm trong cột trái
+          `div.space-y-4.lg:col-span-2` — flex item có align-self stretch nên cao bằng
+          nội dung, không phải grid track → khi cuộn tới cuối footer không phủ kín
+          viewport còn lại, chữ card lọt qua. Đặt footer NGAY sau wrapper (cùng cấp với
+          grid) thì container cao = toàn bộ form → sticky phủ kín vùng cuộn. */}
+      <div className="space-y-5">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card>
@@ -606,44 +621,51 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           </Card>
         </div>
       </div>
+      </div>{/* /wrapper (grid + footer) */}
 
-      {/* Footer hành động: cố định cuối vùng cuộn, NỀN ĐỤC + padding dưới thật.
-          Trước đây dùng `bg-card/95 backdrop-blur` nên chữ card bị lọt qua khi cuộn. */}
-      <div className="sticky bottom-0 z-30 mt-5 -mx-5 border-t border-border bg-card px-4 py-3 sm:px-5"
-           style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+      {/* Footer hành động: cố định cuối vùng cuộn, NỀN ĐỤC TUYỆT ĐỐI + full-width.
+          Đặt NGAY sau wrapper (không lồng trong cột trái) để sticky phủ kín vùng cuộn.
+          Nền: `bg-surface` (#ffffff) KHÔNG trong suốt — trước đây `bg-card/95
+          backdrop-blur` để lọt chữ card khi cuộn. Bỏ hẳn mọi biến thể mờ/blur.
+          `-mx-5 px-4 sm:px-5` kéo footer sát lề container; paddingBottom safe-area inline. */}
+      <footer className="sticky bottom-0 z-30 -mx-5 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-4px_12px_rgba(16,32,62,0.06)] sm:px-5"
+              style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
-          Hủy
-        </Button>
-        {!isEdit && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void submitCustomer('saveAndNew')}
-            disabled={saving}
-            className="min-w-[168px]"
-          >
-            {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            Lưu và tạo mới
+          <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
+            Hủy
           </Button>
-        )}
-        <Button type="submit" disabled={saving} className="min-w-[152px]">
-          {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Lưu khách hàng'}
-        </Button>
+          {!isEdit && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void submitCustomer('saveAndNew')}
+              disabled={saving}
+              className="min-w-[168px]"
+            >
+              {saving ? <Spinner className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              Lưu và tạo mới
+            </Button>
+          )}
+          <Button type="submit" disabled={saving} className="min-w-[152px]">
+            {saving ? <Spinner className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {saving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Lưu khách hàng'}
+          </Button>
         </div>
-      </div>
+      </footer>
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
-          Modal component không tự ẩn theo prop `open`, nên gate bằng && . */}
+          Modal component không tự ẩn theo prop `open`, nên gate bằng && .
+          Đặt TRỰC TIẾP trong <form>, KHÔNG lồng trong cột: trước đây parent là flex item
+          bị co ngặt (cao bằng nội dung) nên overlay `fixed inset-0` không phủ full viewport,
+          không căn giữa được. Nay `fixed inset-0 z-50 flex items-center justify-center
+          !items-center` (important thắng utility khác) + content `max-w-[420px] w-full`
+          → modal căn giữa VIEWPORT thật, không dựa vào parent. */}
       {showExit && (
         <Modal
           data-testid="exit-confirm-modal"
-          /* `!items-center` + `pb-[max(1.25rem,env(safe-area-inset-bottom))]` (important):
-             modal căn giữa VIEWPORT thật, không bị lệch khi form cuộn xuống dưới. */
-          className="max-w-[420px] p-5 !items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center !items-center max-w-[420px]"
         >
-          <ModalContent className="relative p-5">
+          <ModalContent className="relative mx-4 w-full max-w-[420px] p-5">
           <button
             type="button"
             aria-label="Đóng"

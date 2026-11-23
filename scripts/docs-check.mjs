@@ -120,6 +120,9 @@ function resolveCandidate(fromFile, raw) {
   else {
     tries.push(path.resolve(path.dirname(fromFile), token));
     tries.push(path.resolve(DOCS, token)); // root-relative style from entrypoint
+    // Repo-root-relative: docs thường trỏ `migrations/...`, `components/...`,
+    // `lib/...`, `app/...` (ví dụ DEPLOY_AND_MIGRATION.md liệt kê file migration).
+    tries.push(path.resolve(ROOT, token));
   }
   for (const t of tries) {
     if (existsSync(t) && (statSync(t).isFile() || statSync(t).isDirectory())) return true;

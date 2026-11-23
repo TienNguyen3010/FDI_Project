@@ -23,13 +23,21 @@ test('Bố cục: full màn hình + gap nhỏ + header padding thấp', () => {
 
 test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua khi cuộn)', () => {
   assert.match(src, /sticky bottom-0 z-30/, 'footer không bị bottom nav che')
-  assert.match(src, /sticky bottom-0[^"]*bg-card/, 'footer nền đục')
+  // nền đục TUYỆT ĐỐI #ffffff (2026-11-23: bg-card/bg-surface có thể nhòe khi footer
+  // nằm trong flex item bị stretch) + bị đổ bóng để tách lớp khỏi nội dung.
+  assert.match(src, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
   assert.doesNotMatch(
     src.split('\n').filter((l) => l.includes('className=')).join('\n'),
     /bg-card\/95/,
     'KHÔNG dùng nền mờ ở footer (chữ card lọt qua)',
   )
   assert.match(src, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
+  // footer phải nằm NGOÀI cột: chuỗi `lg:col-span-2` KHÔNG được xuất hiện
+  // ở mọi className của footer (kiểm tra bằng vị trí: footer đứng sau khi grid đóng).
+  const footerIdx = src.indexOf('<footer className="sticky bottom-0')
+  const gridIdx = src.indexOf('lg:col-span-2')
+  assert.ok(footerIdx !== -1 && gridIdx !== -1 && footerIdx > gridIdx, 'footer nằm sau vùng cột grid')
+  assert.ok(!/sticky bottom-0[^"]*lg:col-span-2/.test(src), 'footer không còn nằm trong cột grid')
 })
 
 // Regression: modal xác nhận thoát thay window.confirm() native (ảnh softnet-crm).

@@ -1,7 +1,7 @@
 # FDI_Project — Database migrations (Supabase)
 
 Bộ migration SQL chạy **trực tiếp trong Supabase SQL Editor** (không cần psc, không dùng `\i`).
-Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009**. Mỗi file idempotent, có thể chạy lại. Trạng thái apply thực tế xem bảng dưới + `DEPLOY_AND_MIGRATION.md`.
+Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 → 008 → 009 → 010 → 011 → 012**. Mỗi file idempotent, có thể chạy lại. Trạng thái apply thực tế xem bảng dưới + `DEPLOY_AND_MIGRATION.md`.
 
 | File | Nội dung |
 |---|---|
@@ -14,6 +14,9 @@ Thứ tự bắt buộc: **001 → 002 → 003 → 004 → 005 → 006 → 007 �
 | `007_ops_bridge.sql` | Grant customer scope cho `admin@fdi.local` + view `tickets` (từ `alerts`) — bridge runtime schema cũ sang contract v1.0. Đã apply. |
 | `008_customer_create_fields.sql` | Thêm 5 cột `customers`: `tax_id`, `headquarters_address`, `primary_contact_name`, `primary_contact_position`, `notes` — cho màn "Thêm khách hàng". **Đã apply theo user (2026-11-19).** |
 | `009_customer_create_hardening.sql` | Mở rộng `fdi_current_role()`/`fdi_is_manager_plus()` whitelist thêm `super_admin` (fix deadlock RBAC/RLS) + cột `consent_contact` (DNC, default false) và `consent_contact_at`. Chạy **sau 008**; **chưa apply** — user paste trong SQL Editor. |
+| `010_customer_code.sql` | Cột `customers.code` (`CUS-YYYY-NNN`) + unique partial index; `fdi_next_customer_code(p_year)` (SECURITY DEFINER + advisory xact lock `7401000+year`); trigger `BEFORE INSERT` chỉ sinh khi client bỏ trống; backfill bản ghi cũ; đăng ký `010_customer_code`. **Đã apply** (user xác nhận, `fdi_next_customer_code()` → `CUS-2026-006`). |
+| `011_customer_edit_scope.sql` | Nới `fdi_can_read` nhánh toàn công ty sang `director/manager/project_manager`; `fdi_is_leader_plus` += `project_manager`; tái tạo `fdi_customers_update`. **Chưa đủ** — xem 012. |
+| `012_customer_edit_scope_v2.sql` | **Sửa gốc:** `fdi_current_role()` whitelist JWT thêm `project_manager` (011 bỏ sót → PM bị coi `anon` → GET detail 404 → mã KH không hiện khi sửa). Copy nguyên thân `fdi_can_read`/`fdi_is_leader_plus`/policy từ 011 + RPC dự phòng `fdi_get_customer_code(UUID)` (kiểm đúng `fdi_can_read`, không lách RLS). Chạy **sau 011**. |
 
 ## Cách chạy
 

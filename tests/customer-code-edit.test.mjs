@@ -89,7 +89,10 @@ test('UI: form rộng full màn hình + footer nền đục + modal căn giữa 
   // footer không dùng nền mờ (chữ card lọt qua khi cuộn) — chỉ kiểm tra className thật
   const classLines = form.split('\n').filter((l) => l.includes('className=')).join('\n')
   assert.ok(!/bg-card\/95/.test(classLines), 'không còn bg-card/95 trong className')
-  assert.ok(/sticky bottom-0[^"]*bg-card/.test(form), 'footer nền đục bg-card')
+  assert.ok(!/backdrop-blur/.test(classLines), 'footer không còn backdrop-blur (nền mờ)')
+  // nền ĐỤC TUYỆT ĐỐI: bg-[#ffffff] (2026-11-23 — bg-card/bg-surface vẫn có thể nhòe
+  // khi đặt trong cột bị stretch; chốt bằng mã màu trắng đục)
+  assert.match(classLines, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối #ffffff')
   assert.ok(form.includes('safe-area-inset-bottom'), 'footer padding safe-area')
   // modal căn giữa thật (important) — trước bị lệch khi cuộn
   assert.ok(form.includes('!items-center'), 'modal có !items-center')
@@ -102,4 +105,52 @@ test('DB: migration 011 nới RLS scope cho project_manager (khớp RBAC client)
   assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.fdi_can_read'), 'định nghĩa lại fdi_can_read')
   assert.ok(sql.includes('fdi_customers_update'), 'tái tạo policy update')
   assert.ok(/INSERT INTO public.schema_migrations[\s\S]*011_customer_edit_scope/.test(sql), 'ghi schema_migrations 011')
+})
+
+test('DB: migration 012 SỬA GỐC — fdi_current_role whitelist JWT có project_manager', () => {
+  const sql = src('migrations/012_customer_edit_scope_v2.sql')
+  assert.ok(/^\s*BEGIN\s*;/m.test(sql), '012 có BEGIN;')
+  assert.ok(/^\s*COMMIT\s*;/m.test(sql), '012 có COMMIT;')
+  assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.fdi_current_role()'), '012 định nghĩa lại fdi_current_role')
+  // whitelist JWT phải có ĐỦ cả project_manager và super_admin
+  assert.ok(
+    sql.includes("('employee','leader','manager','director','super_admin','project_manager')"),
+    'whitelist JWT phải có project_manager + super_admin',
+  )
+  // KHÔNG được DROP function (chỉ CREATE OR REPLACE)
+  assert.ok(!/^\s*DROP\s+FUNCTION/im.test(sql), '012 KHÔNG DROP FUNCTION')
+  assert.ok(sql.includes('DROP POLICY IF EXISTS fdi_customers_update'), '012 tái tạo policy update')
+  assert.ok(sql.includes('CREATE POLICY fdi_customers_update'), '012 có CREATE POLICY update')
+  assert.ok(/INSERT INTO public.schema_migrations[\s\S]*012_customer_edit_scope_v2/.test(sql), 'ghi schema_migrations 012')
+})
+
+test('DB: 012 giữ nguyên thân fdi_can_read/fdi_is_leader_plus như 011', () => {
+  const s11 = src('migrations/011_customer_edit_scope.sql')
+  const s12 = src('migrations/012_customer_edit_scope_v2.sql')
+  const strip = (t) => t.split('\n').filter((l) => !l.includes('--') && l.trim() !== '')
+  const body = (sql, header) => {
+    const i = sql.indexOf(header)
+    const ends = [sql.indexOf('$$;', i), sql.indexOf('$fn$;', i)].filter((x) => x !== -1)
+    return strip(sql.slice(i, Math.min(...ends) + 3))
+  }
+  assert.deepEqual(
+    body(s12, 'CREATE OR REPLACE FUNCTION public.fdi_can_read('),
+    body(s11, 'CREATE OR REPLACE FUNCTION public.fdi_can_read('),
+    'thân fdi_can_read phải giống hệt 011',
+  )
+  assert.deepEqual(
+    body(s12, 'CREATE OR REPLACE FUNCTION public.fdi_is_leader_plus()'),
+    body(s11, 'CREATE OR REPLACE FUNCTION public.fdi_is_leader_plus()'),
+    'thân fdi_is_leader_plus phải giống hệt 011',
+  )
+})
+
+test('DB: 012 có RPC dự phòng fdi_get_customer_code (kiểm quyền fdi_can_read)', () => {
+  const sql = src('migrations/012_customer_edit_scope_v2.sql')
+  assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.fdi_get_customer_code(p_customer_id UUID)'), 'có fdi_get_customer_code')
+  assert.ok(sql.includes('RETURNS TEXT'), 'RPC RETURNS TEXT')
+  // KHÔNG lách RLS: bắt buộc kiểm tra fdi_can_read
+  assert.ok(/fdi_get_customer_code[\s\S]*?fdi_can_read\(NULL, p_customer_id, NULL, NULL, NULL, NULL\)/.test(sql), 'RPC phải kiểm fdi_can_read')
+  assert.ok(sql.includes('REVOKE ALL ON FUNCTION public.fdi_get_customer_code(UUID) FROM PUBLIC'), 'RPC REVOKE PUBLIC')
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.fdi_get_customer_code(UUID) TO authenticated, anon, service_role'), 'RPC GRANT roles')
 })

@@ -261,6 +261,23 @@ export function Tab({ className, ...props }: React.HTMLAttributes<HTMLButtonElem
   )
 }
 
+/*
+ * Modal primitive — BỀN, căn giữa VIEWPORT thật, phủ full màn hình.
+ *
+ * Vì sao:
+ *  - `fixed inset-0 z-50` → overlay neo vào viewport; KHÔNG bị lồng theo
+ *    container cha (vd `main` cuộn được) nên không lệch khi trang đã cuộn.
+ *  - `!items-center` (important) → căn giữa dọc bằng `!important`, nên utility
+ *    consumer truyền qua `className` (items-start/items-end/...) không ghi đè
+ *    được; `cn()` (tailwind-merge) chỉ loại trùng lặp, không bắt buộc important.
+ *    Chỉ giữ 1 chiều `!important` (align-items); justify-center không cần
+ *    important nên modal vẫn căn giữa ngang như mặc định.
+ *  - `overflow-y-auto` + `p-4` → modal dài/nội dung tràn vẫn cuộn được trên
+ *    mobile, overlay luôn có đệm bao quanh. Không thêm `my-auto` ở ModalContent
+ *    (sẽ phá `items-center` ở overlay).
+ *  - `ModalContent` thêm `mx-4` để không dính sát mép màn hình mobile; giữ
+ *    `w-full max-w-lg` → consumer truyền `max-w-[420px]` thì `cn()` merge được.
+ */
 export function Modal({
   className,
   children,
@@ -268,7 +285,10 @@ export function Modal({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('fixed inset-0 z-50 flex items-center justify-center bg-foreground/40', className)}
+      className={cn(
+        'fixed inset-0 z-50 flex !items-center justify-center overflow-y-auto bg-foreground/40 p-4',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -283,7 +303,10 @@ export function ModalContent({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('w-full max-w-lg rounded-section border border-border bg-card text-card-foreground shadow-lg', className)}
+      className={cn(
+        'mx-4 w-full max-w-lg rounded-section border border-border bg-card text-card-foreground shadow-lg',
+        className,
+      )}
       {...props}
     >
       {children}

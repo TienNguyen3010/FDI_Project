@@ -1,6 +1,6 @@
 # Apply Migration & Deploy — FDI_Project v1.0
 
-> Trạng thái 2026-11-23: **Migration 006–010 đã apply (010 = `customers.code` + trigger sinh mã); Deploy ✅ production `https://fdi-project.vercel.app`**.
+> Trạng thái 2026-11-23: **Migration 006–012 đã apply (010 = `customers.code` + trigger sinh mã; 012 = sửa gốc RLS role `project_manager`); Deploy ✅ production `https://fdi-project.vercel.app`**.
 
 ## 1. Phát hiện quan trọng (audit thực, 2026-11-18)
 
@@ -214,6 +214,25 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Verify | test `customer-code-edit.test.mjs` **11/11** · tsc 0 · build 0 · docs-check OK | tool output |
 
 > **Migration 011 cần apply** trên Supabase SQL Editor (như 008/009/010). Chưa apply thì role PM vẫn không sửa/hiện mã được; super_admin/director vẫn chạy đúng như cũ.
+
+> **⚠️ BỔ SUNG 2026-11-23 (v2): migration 011 CHƯA sửa hết.** Verify lại trên prod (`d79ae7d`) thấy ô Mã KH vẫn trống khi sửa với role `project_manager`. Nguyên nhân gốc nằm ở `public.fdi_current_role()`: nhánh lọc JWT chỉ nhận `('employee','leader','manager','director','super_admin')` — **thiếu `project_manager`** → role bị đánh thành `NULL`; fallback đọc `public.users.role` cũng không có `project_manager` (CHECK constraint cũ chỉ 4 role legacy, `migrations/001:25-26`) → hàm trả `'anon'` → `fdi_can_read` FALSE → `GET /api/v1/customers/[id]` trả 404 → form không có `code`. Xem §16e + `migrations/012_customer_edit_scope_v2.sql`.
+
+## 16e. Sửa GỐC mã KH không hiện khi sửa + chặn chẽ footer/modal (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng 1 | Footer vẫn bị chữ lọt qua khi cuộn xuống cuối (dù `d79ae7d` đã đổi `bg-card` đục) | ảnh browser `/customers/new` |
+| Nguyên nhân 1 | Footer `sticky` nằm **trong cột trái** `div.space-y-4.lg:col-span-2` — flex item `align-self: stretch` nên cao bằng **nội dung**, không phải grid track; sticky chỉ phủ trong phạm vi đó, không phủ vùng viewport còn lại khi cuộn | `CreateCustomerForm.tsx` (bản `d79ae7d`) |
+| Fix 1 | Đưa `<footer>` **ra ngoài cột**, cùng cấp với grid; nền **đục tuyệt đối** `bg-[#ffffff]` + `shadow-[0_-4px_12px_rgba(16,32,62,0.06)]`; bỏ `bg-card`/`bg-card/95`/`backdrop-blur`; giữ `-mx-5 px-4` + safe-area | `CreateCustomerForm.tsx` |
+| Triệu chứng 2 | Modal "Xác nhận thoát" không center màn hình | ảnh browser |
+| Nguyên nhân 2 | Modal lồng trong **cùng cột bị co hẹp** → overlay `fixed inset-0` không phủ full viewport, không căn giữa được | `CreateCustomerForm.tsx` (bản `d79ae7d`) |
+| Fix 2 | Modal đặt **trực tiếp trong `<form>`**, không lồng cột; `fixed inset-0 z-50 flex !items-center justify-center`; primitive `Modal` (`ui.tsx`) cũng chốt `!items-center` + `p-4` + `overflow-y-auto`, `ModalContent` thêm `mx-4` | `CreateCustomerForm.tsx`, `components/ui/ui.tsx` |
+| Nguyên nhân 3 | `fdi_current_role()` whitelist JWT **thiếu `project_manager`** → RLS coi PM là `anon` → `customers_select` chặn → GET detail 404 → ô Mã trống. Migration 011 chỉ sửa `fdi_can_read`/`fdi_is_leader_plus` nên **không đủ** | `migrations/002:113` + `migrations/009:38` + `migrations/001:25-26` |
+| Fix 3 | Migration **012_customer_edit_scope_v2.sql**: mở rộng whitelist JWT thêm `project_manager`; copy nguyên thân `fdi_can_read`/`fdi_is_leader_plus`/policy từ 011; thêm RPC dự phòng `fdi_get_customer_code(UUID)` (kiểm đúng `fdi_can_read`, **không lách RLS**). UI thêm `useEffect` đồng bộ `customerCode` khi `initial.code` đến muộn | `migrations/012_customer_edit_scope_v2.sql`, `CreateCustomerForm.tsx` |
+| Phụ | Guard `scripts/docs-check.mjs` chỉ resolve path trong `docs/` → báo `migrations/011_customer_edit_scope.sql` là dangling (false positive). Thêm nhánh resolve theo repo root | `scripts/docs-check.mjs:123` |
+| Verify | `tsc` EXIT 0 · `npm test` **66/66** · `check:docs` OK 56 files · build EXIT 0 | tool output |
+
+> **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
 
 ## 16c. Sửa lỗi mã nhân đôi `CUS-CUS-...` trên form sửa (2026-11-23)
 

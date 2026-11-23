@@ -84,6 +84,8 @@ Token màu từ `app/globals.css:13-83`: `--primary #087f30`, `--border #d9e4f2`
 ## 7. Responsive & accessibility
 
 - `<lg`: single column, summary xuống dưới form, footer sticky.
+- **Footer sticky bền (2026-11-23):** footer phải nằm **ngoài cột grid** (không lồng trong `lg:col-span-2`) vì flex item `stretch` khiến chiều cao chỉ bằng nội dung → sticky không phủ viewport. Nền **đục tuyệt đối** `bg-[#ffffff]` + bóng đổ nhẹ; **cấm** `bg-*/95` / `backdrop-blur` (chữ card lọt qua khi cuộn).
+- **Modal căn giữa viewport:** đặt trực tiếp trong `<form>` (không lồng cột), `fixed inset-0 z-50 flex !items-center justify-center`. Primitive `Modal` (`components/ui/ui.tsx`) đã chốt `!items-center` + `p-4` + `overflow-y-auto`; `ModalContent` có `mx-4`.
 - Mọi input có `<Label htmlFor>`; required có dấu `*` + giải thích; lỗi có `aria-invalid` + `aria-describedby`.
 - Focus ring theo token; target ≥44px; thứ tự tab theo thứ tự field; không mất dữ liệu khi submit lỗi.
 
@@ -92,3 +94,5 @@ Token màu từ `app/globals.css:13-83`: `--primary #087f30`, `--border #d9e4f2`
 **Điểm sạch:** schema flat đang chạy covers phone/email/industry/3 contact; `created_at` đúng chuẩn backend; RLS chặn mutation; primitive + token đầy đủ; **hardening 2026-11-19**: bỏ input mã giả, RBAC 2 đầu đồng bộ, consent/DNC checkbox, validation blur + focus lỗi đầu, phone warning không chặn, null thay ''.
 
 **Cần làm rõ:** migration 008 (đã apply theo user) + **migration 009 chưa apply** → cột `consent_contact` chưa tồn tại trên DB thật; user phải chạy 009 trong SQL Editor trước khi bấm Lưu (nếu không → `PGRST204`). Duplicate check/idempotency/transaction/audit correlation → Phase 2. Không claim production-ready khi 009 chưa apply.
+
+> **Bổ sung 2026-11-23:** migration **010** (mã `CUS-YYYY-NNN` do DB sinh) + **011** (RLS mở scope cho PM) + **012** (sửa gốc `fdi_current_role()` whitelist JWT thiếu `project_manager`). Riêng 011 **chưa đủ** — 012 mới là bản sửa gốc cho lỗi "mã KH không hiện khi sửa". Xem `DEPLOY_AND_MIGRATION.md` §16e.
