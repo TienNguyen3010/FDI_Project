@@ -145,6 +145,24 @@ test('DB: 012 giữ nguyên thân fdi_can_read/fdi_is_leader_plus như 011', () 
   )
 })
 
+test('DB: 012 sửa fdi_is_manager_plus để INSERT khách hàng cho project_manager (lỗi RLS)', () => {
+  const sql = src('migrations/012_customer_edit_scope_v2.sql')
+  // Policy fdi_customers_insert dùng WITH CHECK (fdi_is_manager_plus()).
+  // RBAC client cấp customer.create cho director + project_manager + super_admin,
+  // nên hàm phải có ĐỦ cả 4 role, nếu không PM bấm Lưu bị DB chặn:
+  //   "new row violates row-level security policy for table \"customers\""
+  assert.ok(
+    sql.includes("CREATE OR REPLACE FUNCTION public.fdi_is_manager_plus()"),
+    '012 phải định nghĩa lại fdi_is_manager_plus',
+  )
+  assert.match(
+    sql,
+    /fdi_is_manager_plus\(\)[\s\S]{0,200}?IN \('manager','director','super_admin','project_manager'\)/,
+    'fdi_is_manager_plus phải có project_manager',
+  )
+  assert.ok(!/^\s*DROP\s+FUNCTION/im.test(sql), '012 KHÔNG DROP FUNCTION')
+})
+
 test('DB: 012 có RPC dự phòng fdi_get_customer_code (kiểm quyền fdi_can_read)', () => {
   const sql = src('migrations/012_customer_edit_scope_v2.sql')
   assert.ok(sql.includes('CREATE OR REPLACE FUNCTION public.fdi_get_customer_code(p_customer_id UUID)'), 'có fdi_get_customer_code')

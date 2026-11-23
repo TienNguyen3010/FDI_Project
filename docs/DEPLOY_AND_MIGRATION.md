@@ -228,11 +228,23 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Nguyên nhân 2 | Modal lồng trong **cùng cột bị co hẹp** → overlay `fixed inset-0` không phủ full viewport, không căn giữa được | `CreateCustomerForm.tsx` (bản `d79ae7d`) |
 | Fix 2 | Modal đặt **trực tiếp trong `<form>`**, không lồng cột; `fixed inset-0 z-50 flex !items-center justify-center`; primitive `Modal` (`ui.tsx`) cũng chốt `!items-center` + `p-4` + `overflow-y-auto`, `ModalContent` thêm `mx-4` | `CreateCustomerForm.tsx`, `components/ui/ui.tsx` |
 | Nguyên nhân 3 | `fdi_current_role()` whitelist JWT **thiếu `project_manager`** → RLS coi PM là `anon` → `customers_select` chặn → GET detail 404 → ô Mã trống. Migration 011 chỉ sửa `fdi_can_read`/`fdi_is_leader_plus` nên **không đủ** | `migrations/002:113` + `migrations/009:38` + `migrations/001:25-26` |
-| Fix 3 | Migration **012_customer_edit_scope_v2.sql**: mở rộng whitelist JWT thêm `project_manager`; copy nguyên thân `fdi_can_read`/`fdi_is_leader_plus`/policy từ 011; thêm RPC dự phòng `fdi_get_customer_code(UUID)` (kiểm đúng `fdi_can_read`, **không lách RLS**). UI thêm `useEffect` đồng bộ `customerCode` khi `initial.code` đến muộn | `migrations/012_customer_edit_scope_v2.sql`, `CreateCustomerForm.tsx` |
+| Fix 3 | Migration **012_customer_edit_scope_v2.sql**: (a) mở rộng `fdi_current_role()` whitelist JWT thêm `project_manager`; (b) **`fdi_is_manager_plus()` += `project_manager`** để policy `fdi_customers_insert` cho PM tạo khách hàng (trước bị chặn `new row violates row-level security policy`); (c) copy nguyên thân `fdi_can_read`/`fdi_is_leader_plus`/policy từ 011; (d) RPC dự phòng `fdi_get_customer_code(UUID)` (kiểm đúng `fdi_can_read`, **không lách RLS**). UI thêm `useEffect` đồng bộ `customerCode` khi `initial.code` đến muộn | `migrations/012_customer_edit_scope_v2.sql`, `CreateCustomerForm.tsx` |
 | Phụ | Guard `scripts/docs-check.mjs` chỉ resolve path trong `docs/` → báo `migrations/011_customer_edit_scope.sql` là dangling (false positive). Thêm nhánh resolve theo repo root | `scripts/docs-check.mjs:123` |
 | Verify | `tsc` EXIT 0 · `npm test` **66/66** · `check:docs` OK 56 files · build EXIT 0 | tool output |
 
 > **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
+
+### 16f. Lỗi `new row violates row-level security policy for table "customers"` (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng | Bấm **Lưu khách hàng** báo đỏ "Lưu không thành công — new row violates row-level security policy for table \"customers\"" | ảnh user `/customers/new` |
+| Nguyên nhân | Policy `fdi_customers_insert` dùng `WITH CHECK (public.fdi_is_manager_plus())`; hàm này (009) = `('manager','director','super_admin')` — **thiếu `project_manager`**. RBAC client (`lib/rbac/policy.core.mjs`) **cấp `customer.create` cho director + project_manager + super_admin** → nút Lưu hiện nhưng DB chặn → 2 đầu lệch | `migrations/002:308` + `migrations/009:62-65` vs `policy.core.mjs:29,35` |
+| Đính chính | Migration 012 bản đầu **bỏ sót** hàm này (chỉ sửa `fdi_current_role`/`fdi_can_read`/`fdi_is_leader_plus`) → đã bổ sung `fdi_is_manager_plus` += `project_manager` trong **012** (đừng tạo 013) | `migrations/012_customer_edit_scope_v2.sql` mục 3b |
+| Fix | `CREATE OR REPLACE fdi_is_manager_plus()` = `('manager','director','super_admin','project_manager')` + `REVOKE/GRANT`. Policy INSERT tham chiếu hàm theo **tên** nên thay hàm là có hiệu lực ngay, không cần tái tạo policy | 012 mục 3b |
+| Verify | `node --test tests/customer-code-edit.test.mjs` 15/15 · `npm test` **67/67** | tool output |
+
+> **Cần apply lại 012** (bản đã bổ sung mục 3b). Nếu anh đã apply bản cũ rồi, chạy lại đúng file 012 này — nó idempotent (`CREATE OR REPLACE`), chỉ cần chạy lần nữa.
 
 ## 16c. Sửa lỗi mã nhân đôi `CUS-CUS-...` trên form sửa (2026-11-23)
 

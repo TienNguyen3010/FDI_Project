@@ -193,6 +193,25 @@ REVOKE ALL ON FUNCTION public.fdi_is_leader_plus() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.fdi_is_leader_plus() TO authenticated, anon, service_role;
 
 -- =====================================================================
+-- 3b) fdi_is_manager_plus(): BỔ SUNG trong 012 — thêm 'project_manager'.
+--     CHÍNH SÁCH INSERT/DELETE của customers dùng hàm này:
+--       fdi_customers_insert → WITH CHECK (fdi_is_manager_plus())
+--     RBAC client (lib/rbac/policy.core.mjs) CẤP customer.create cho
+--     director + project_manager + super_admin, nhưng 009 chỉ có
+--     ('manager','director','super_admin') → PM bấm Lưu bị DB chặn:
+--       "new row violates row-level security policy for table \"customers\""
+--     Hai đầu lệch → thêm PM. Copy thân 009, chỉ sửa 1 dòng IN (...).
+--     Signature không đổi (BOOLEAN, no args) → CREATE OR REPLACE, KHÔNG DROP.
+-- =====================================================================
+CREATE OR REPLACE FUNCTION public.fdi_is_manager_plus()
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$ SELECT public.fdi_current_role() IN ('manager','director','super_admin','project_manager') $$;
+
+REVOKE ALL ON FUNCTION public.fdi_is_manager_plus() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.fdi_is_manager_plus() TO authenticated, anon, service_role;
+
+-- =====================================================================
 -- 4) fdi_customers_update: tạo lại đúng chuẩn 011 (DROP POLICY IF EXISTS
 --    + CREATE POLICY ... USING/WITH CHECK). KHÔNG DROP function.
 -- =====================================================================
