@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Save } from 'lucide-react'
+import { Plus, Save, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import {
   Badge,
@@ -13,6 +13,12 @@ import {
   CardTitle,
   Input,
   Label,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
   Select,
   Spinner,
   Textarea,
@@ -90,8 +96,16 @@ const PHONE_RE = /^(\+?84|0)[0-9]{9,10}$/
 // null (optional để trống) nên type là Record<string, string | boolean | null>.
 const db = supabase as unknown as {
   from: (table: string) => {
-    insert: (v: Record<string, string | boolean | null>) => Promise<{ error: { message: string } | null }>
+    insert: (
+      v: Record<string, string | boolean | null>,
+    ) => PromiseLike<{ error: { message: string } | null; data?: unknown }> & {
+      select: () => PromiseLike<{ error: { message: string } | null; data?: unknown }>
+    }
   }
+  rpc: (
+    fn: 'fdi_next_customer_code',
+    args: Record<string, never>,
+  ) => Promise<{ data: string | null; error: { message: string } | null }>
 }
 
 export default function CreateCustomerForm() {
@@ -101,6 +115,11 @@ export default function CreateCustomerForm() {
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const [saving, setSaving] = useState(false)
   const [consentContact, setConsentContact] = useState(false)
+  // Mã khách hàng do BACKEND sinh (migration 010): RPC trả customer_code,
+  // không được client bịa mã. Chưa lưu → null (hiển thị "Tự động tạo").
+  const [customerCode, setCustomerCode] = useState<string | null>(null)
+  // Confirm-exit: thay hộp thoại confirm() native của trình duyệt bằng modal UI.
+  const [showExit, setShowExit] = useState(false)
 
   // Mã do backend tự sinh khi lưu; UI chỉ hiển thị readonly "Tự động tạo".
   // dirty chỉ tính từ form — không tính từ ô mã hiển thị.
@@ -162,21 +181,44 @@ export default function CreateCustomerForm() {
     }
     payload.consent_contact = consentContact
     payload.consent_contact_at = consentContact ? new Date().toISOString() : null
+
+    // Mã do DB sinh ở RPC (SECURITY DEFINER + advisory lock). Client KHÔNG bịa mã.
+    // Lưu ý: trigger BEFORE INSERT vẫn là rào cuối nếu RPC lỗi → insert sẽ fail thay vì
+    // gán mã client tự chọn.
+    const { data: code, error: codeError } = await db.rpc('fdi_next_customer_code', {})
+    if (codeError || !code) {
+      setSaving(false)
+      toast.error({
+        title: 'Lưu không thành công',
+        description: codeError?.message ?? 'Không sinh được mã khách hàng',
+      })
+      return
+    }
+    payload.code = code
+
     const { error } = await db.from('customers').insert(payload)
     setSaving(false)
     if (error) {
       toast.error({ title: 'Lưu không thành công', description: error.message })
       return
     }
+
+    // Hiển thị mã THẬT ngay trên form (user thấy mã đã cấp).
+    setCustomerCode(code)
+
     if (mode === 'saveAndNew') {
       setForm(EMPTY)
       setConsentContact(false)
       setErrors({})
-      toast.success({ title: 'Thêm khách hàng thành công', description: 'Form đã được đặt lại để tạo khách hàng mới.' })
+      setCustomerCode(null)
+      toast.success({
+        title: 'Thêm khách hàng thành công',
+        description: `Đã cấp mã ${code}. Form đã đặt lại để tạo khách hàng mới.`,
+      })
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
-    toast.success({ title: 'Thêm khách hàng thành công' })
+    toast.success({ title: 'Thêm khách hàng thành công', description: `Mã khách hàng: ${code}` })
     router.push('/customers')
   }
 
@@ -186,7 +228,16 @@ export default function CreateCustomerForm() {
   }
 
   const handleCancel = () => {
-    if (dirty && !window.confirm('Rời trang và bỏ thay đổi?')) return
+    if (!dirty) {
+      router.push('/customers')
+      return
+    }
+    setShowExit(true)
+  }
+
+  // "Thoát mà không lưu" — bỏ hết thay đổi và quay về danh sách.
+  const confirmExit = () => {
+    setShowExit(false)
     router.push('/customers')
   }
 
@@ -253,14 +304,14 @@ export default function CreateCustomerForm() {
                   <Input
                     id="f-code"
                     readOnly
-                    value="Tự động tạo"
-                    className="pl-12"
+                    value={customerCode ?? 'Tự động tạo'}
+                    className="pl-12 font-medium text-foreground"
                     aria-describedby="code-hint"
                     tabIndex={-1}
                   />
                 </div>
                 <p id="code-hint" className="text-xs text-muted-foreground">
-                  Mã được hệ thống tạo khi lưu
+                  {customerCode ? 'Mã khách hàng đã cấp' : 'Mã được hệ thống tạo khi lưu'}
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -409,7 +460,10 @@ export default function CreateCustomerForm() {
                   ['Email', 'email'],
                   ['Địa chỉ', 'headquarters_address'],
                 ].map(([label, key]) => {
-                  const value = key === 'code' ? 'Tự động tạo' : form[key as FieldKey]?.trim() || '—'
+                  const value =
+                    key === 'code'
+                      ? customerCode ?? 'Tự động tạo'
+                      : form[key as FieldKey]?.trim() || '—'
                   return (
                     <div key={label} className="flex justify-between gap-3">
                       <dt className="shrink-0 text-muted-foreground">{label}</dt>
@@ -515,6 +569,47 @@ export default function CreateCustomerForm() {
           {saving ? 'Đang lưu...' : 'Lưu khách hàng'}
         </Button>
       </div>
+
+      {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
+          Modal component không tự ẩn theo prop `open`, nên gate bằng && . */}
+      {showExit && (
+        <Modal data-testid="exit-confirm-modal" className="max-w-[420px] p-5">
+          <ModalContent className="relative p-5">
+          <button
+            type="button"
+            aria-label="Đóng"
+            onClick={() => setShowExit(false)}
+            className="absolute right-4 top-4 rounded-sm p-1 text-muted transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          <ModalHeader className="flex-row items-center gap-2 space-y-0 p-0">
+            <ModalTitle className="flex items-center gap-2 text-base font-semibold">
+              <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+              Xác nhận thoát
+            </ModalTitle>
+          </ModalHeader>
+          <ModalBody className="p-0 pt-3 text-sm text-muted-foreground">
+            Bạn có thay đổi chưa được lưu. Bạn có muốn tiếp tục thoát mà không lưu không?
+          </ModalBody>
+          <ModalFooter className="flex justify-end gap-2 p-0 pt-4">
+            <Button type="button" variant="outline" onClick={() => setShowExit(false)} className="min-w-[96px]">
+              Ở lại
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmExit}
+              className="min-w-[180px] bg-[#E11D48] hover:bg-[#BE123C]"
+            >
+              Thoát mà không lưu
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      )}
     </form>
   )
 }

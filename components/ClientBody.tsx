@@ -448,8 +448,10 @@ export default function ClientBody({
             </div>
           </header>
 
-          {/* pb-20 trên mobile để bottom nav không che nội dung */}
-          <main className="min-h-0 flex-1 overflow-auto p-4 pb-20 md:p-[30px] md:pb-[30px]">
+          {/* pb-20 trên mobile để bottom nav không che nội dung; md trở lại bình thường.
+              Thêm pb-[calc(4.75rem+env(safe-area-inset-bottom))] để footer form (sticky)
+              KHÔNG bị bottom-nav chồng lên khi cuộn tới cuối trang. */}
+          <main className="min-h-0 flex-1 overflow-auto p-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[30px]">
             {children}
           </main>
         </div>

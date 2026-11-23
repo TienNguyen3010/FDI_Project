@@ -1,6 +1,6 @@
 # Apply Migration & Deploy — FDI_Project v1.0
 
-> Trạng thái 2026-11-18: **Migration 006 ✅ applied; Deploy ✅ production `https://fdi-project.vercel.app`**.
+> Trạng thái 2026-11-23: **Migration 006–010 đã apply (010 = `customers.code` + trigger sinh mã); Deploy ✅ production `https://fdi-project.vercel.app`**.
 
 ## 1. Phát hiện quan trọng (audit thực, 2026-11-18)
 
@@ -170,6 +170,19 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Guard gap | `scripts/docs-check.mjs:26` regex `v1[_.][1-9]` bỏ sót `_v1_0` → đổi `[0-9]` (archive vẫn exempt) |
 | Artifact local (~14MB) | Xóa log deploy cũ, screenshot QA, `/tmp` crop/chunk, scaffold `fdip_test/`, `tsconfig.tsbuildinfo` |
 | Giữ lại | `node_modules/`, `.next/`, cache Hermes, delegation live logs, docs archive provenance |
+
+## 16. Migration 010 — mã khách hàng do DB sinh (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng gốc | Form tạo KH hiển thị "Tự động tạo" nhưng DB **không có cột `code`** → mã biến mất, không có định danh khách hàng | `DATA_DICTIONARY.md` drift note 2026-11-19; `app/api/v1/customers/route.ts:32,155` trả `code: null` |
+| Nguyên nhân | Mã là danh tính công khai — client ghi đè/bịa được; chưa có trigger | migration audit |
+| Fix | `../migrations/010_customer_code.sql`: `customers.code TEXT` + unique partial index; hàm `fdi_next_customer_code(p_year)` SECURITY DEFINER + advisory xact lock `7401000+year` (chống trùng khi 2 request song song); trigger `BEFORE INSERT` chỉ sinh khi client bỏ trống; backfill bản ghi cũ **gọi đúng hàm**; đăng ký `schema_migrations` | file migration 113 dòng |
+| Apply | User chạy trong Supabase SQL Editor (máy agent không có DB password hợp lệ; env `sensitive` trên Vercel API trả rỗng) | user xác nhận "sql 010 success" |
+| Verify DB | `SELECT fdi_next_customer_code()` → **`CUS-2026-006`** (backfill 5 bản ghi cũ 001–005; hàm còn số 006) | output user dán vào chat |
+| Verify code | `tsc` exit 0 · `npm test` 51/51 · `next build --webpack` EXIT=0 (`/customers/new` ◐) · `check:docs` OK | tool output |
+
+> Code form gọi `rpc('fdi_next_customer_code')` lúc submit (`components/customers/CreateCustomerForm.tsx:188`) → chỉ chạy được sau khi 010 apply. Còn **việc tiếp theo**: `/api/v1/customers` vẫn hardcode `code: null` → thêm `code` vào select để list/drawer hiện mã thật.
 
 ## 15. Logout không redirect — HttpOnly cookie `sb-access-token` sót lại (2026-11-19)
 

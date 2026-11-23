@@ -23,3 +23,20 @@ test('Footer sticky có z-index và backdrop', () => {
   assert.match(src, /sticky bottom-0 z-30/, 'footer không bị bottom nav che')
   assert.match(src, /bg-card\/95[^"]*backdrop-blur/, 'footer nền mờ chuyên nghiệp')
 })
+
+// Regression: modal xác nhận thoát thay window.confirm() native (ảnh softnet-crm).
+test('Modal "Xác nhận thoát" thay window.confirm', () => {
+  assert.doesNotMatch(
+    src,
+    /window\.confirm/,
+    'KHÔNG được dùng window.confirm — phải là modal UI',
+  )
+  for (const s of ['Xác nhận thoát', 'Ở lại', 'Thoát mà không lưu', 'setShowExit(true)', 'confirmExit']) {
+    assert.ok(src.includes(s), `thiếu "${s}" trong form`)
+  }
+  // Cỡ modal + nút destructive màu rose đúng chuẩn CRM.
+  assert.match(src, /max-w-\[420px\]/, 'modal cỡ 420px')
+  assert.match(src, /#E11D48/, 'nút "Thoát mà không lưu" dùng rose-600')
+  assert.match(src, /AlertTriangle/, 'có icon cảnh báo')
+})
+

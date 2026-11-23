@@ -10,7 +10,7 @@
 |---|---|---|
 | Các con số **36 / 28 / 47 / 98%** trên mockup | Là **minh họa (illustration)** — KHÔNG bịa, KHÔNG hardcode thành KPI. Mọi giá trị lấy từ `summary` API | spec §1 "Các số liệu trên mockup là dữ liệu minh họa"; `app/(workspace)/customers/page.tsx:6,374-408` |
 | CSAT có % trên mockup | Schema không có survey/CSAT → API trả `csat: null`; UI hiện `Chưa có dữ liệu`, KHÔNG hiện `0%`, KHÔNG render delta giả | `app/api/v1/customers/route.ts:226-227`; `app/(workspace)/customers/page.tsx:356-358,141-158` |
-| Mã `CUS-0001` (spec §5) | DB chưa có cột `code` → API trả `code: null`; bảng hiện `—`. KHÔNG suy từ `tax_id` (mã thuế ≠ mã khách hàng) | `app/api/v1/customers/route.ts:30-34,155`; `app/(workspace)/customers/page.tsx:516,535` |
+| Mã `CUS-0001` (spec §5) | DB **đã có** `customers.code` (migration 010, apply 2026-11-23). API **hiện trả `code: null`** (chưa thêm vào select — việc còn lại) | `app/api/v1/customers/route.ts:30-34,155`; `app/(workspace)/customers/page.tsx:516,535` |
 | `status` active/inactive/archived | DB chưa có cột `customers.status` → API gán `'active'` cho mọi item; filter `inactive`/`archived` trả rỗng (KHÔNG bịa trạng thái) | `app/api/v1/customers/route.ts:44-45,165,184-189`; `DATA_DICTIONARY.md:34` |
 | `project_count` / `open_ticket_count` | Đếm theo **scope backend** (grant), không phải global. Project = `active\|in_progress\|deployed`; ticket = `OPEN_TICKET_STATUSES` | `app/api/v1/customers/route.ts:15,21,100-132,141-151` |
 | Spec §5 response flat `{items, pagination, as_of}` + endpoint `/summary` riêng | Thực thi envelope `{ data: { items, pagination, summary }, as_of, effective_scope, data_quality }`; summary nhúng trong list, KHÔNG có `/summary` riêng | `app/api/v1/customers/route.ts:232-243` |
@@ -108,6 +108,6 @@
 
 **Sạch:** mọi KPI/count lấy từ API theo scope, không hardcode; CSAT null → `Chưa có dữ liệu`; `code` null → `—`; status `'active'` không bịa; search debounce + URL state đầy đủ; skeleton/empty/error rõ; scope deny-by-default ở backend; view chi tiết qua right drawer không fetch thừa.
 
-**Cần làm rõ:** KPI click-through (CUS-L01), Edit/Archive (CUS-L09/10) chưa implement (nút disabled); mobile chưa có customer cards; schema chưa có survey/CSAT → KPI mãi `Chưa có dữ liệu` tới Phase 2; `code` chờ migration sinh `CUS-YYYY-XXX`; options ngành chỉ suy từ page hiện tại (chưa có lookup đầy đủ); endpoint `/customers/summary` riêng chưa có; `data_quality` vẫn `'complete'` dù CSAT null — cần PO xác nhận có nên trả `'partial'` không. Drawer hiện là read-only — chưa có nút "Sửa" bên trong.
+**Cần làm rõ:** KPI click-through (CUS-L01), Edit/Archive (CUS-L09/10) chưa implement (nút disabled); mobile chưa có customer cards; schema chưa có survey/CSAT → KPI mãi `Chưa có dữ liệu` tới Phase 2; **`customers.code` đã có (010) nhưng API `/api/v1/customers` vẫn hardcode `code: null`** → phải thêm `code` vào select + trả thật (việc tiếp theo); options ngành chỉ suy từ page hiện tại (chưa có lookup đầy đủ); endpoint `/customers/summary` riêng chưa có; `data_quality` vẫn `'complete'` dù CSAT null — cần PO xác nhận có nên trả `'partial'` không. Drawer hiện là read-only — chưa có nút "Sửa" bên trong.
 
 Standard/plan liên quan: `CREATE_CUSTOMER_COMPONENTS_STANDARD.md` · `../04-governance/CREATE_CUSTOMER_PLAN.md` · nhật ký đồng bộ `../04-governance/CHECKLISTS.md`.

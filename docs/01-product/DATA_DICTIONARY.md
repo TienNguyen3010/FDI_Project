@@ -33,7 +33,7 @@ New dashboard response definitions: as_of, effective_scope, definition_id, basel
 | audit_events.actor_id | uuid | yes | Platform | actor or system identity; immutable |
 | outbox_events.dedupe_key | text | yes | Platform | unique logical delivery key |
 
-> **Drift note (2026-11-19):** `customers.code` / `customers.status` từng được khai báo trong `lib/types.ts` cũ nhưng **không tồn tại** trong schema đang chạy (migrations/001_initial_schema.sql). Type đã được sửa theo DB. `code` (CUS-YYYY-XXX) là hạng mục Phase 2, chưa có cột — không gửi từ client.
+> **Drift note (2026-11-19, cập nhật 2026-11-23):** `customers.code` / `customers.status` từng được khai báo trong `lib/types.ts` cũ nhưng **không tồn tại** trong schema đang chạy (migrations/001_initial_schema.sql). `status` vẫn chưa có; còn **`code` ĐÃ có** sau migration **010_customer_code** (áp dụng thật 2026-11-23 trên Supabase, `schema_migrations` = `010_customer_code`): `code TEXT` + unique partial index + trigger BEFORE INSERT sinh `CUS-YYYY-NNN` bằng hàm `fdi_next_customer_code()` (SECURITY DEFINER, advisory xact lock chống race) + backfill bản ghi cũ. Client KHÔNG tự bịa mã — form gọi RPC rồi gửi `code` trong payload; trigger là rào cuối nếu client bỏ trống.
 
 > **Consent/DNC note (2026-11-19):** `customers.consent_contact` là boolean có audit (migration 009), mặc định `false` = không được liên hệ. Consent **KHÔNG** được lưu trong `customers.notes`; dùng cột chuyên biệt `consent_contact` + `consent_contact_at` (timestamp UTC lúc đồng ý, `null` khi từ chối).
 

@@ -9,7 +9,7 @@
 | Đề xuất spec/mockup | Quyết định | Lý do (evidence) |
 |---|---|---|
 | REST `POST /api/v1/customers` + bảng `contacts`, `customer_contact_roles` | **Giữ Supabase query trực tiếp**, bảng `customers` flat | Kiến trúc repo đang chạy; `app/api/customers/` rỗng. Rebuild REST = phá schema đang dùng |
-| `code` do client nhập / prefix `CUS-` | **BỎ input — readonly "Tự động tạo"** (2026-11-19 hardening) | Input UI-only nhưng KHÔNG vào payload → user nhập xong mã biến mất (false affordance + mất data). DB chưa có cột `code`; Phase 2 mới thêm trigger sinh mã |
+| `code` do client nhập / prefix `CUS-` | **BỎ input — readonly, hiển thị mã THẬT** (hardening 2026-11-19; 010 apply 2026-11-23) | Input UI-only nhưng KHÔNG vào payload → user nhập xong mã biến mất (false affordance + mất data). DB có `customers.code` (migration 010); form gọi RPC `fdi_next_customer_code` lúc submit, ô mã hiện `CUS-2026-NNN` thật hoặc "Tự động tạo" trước khi lưu |
 | Date picker `31/01/2025` cho Ngày tạo | **Không render**, backend `created_at DEFAULT now()` | Spec cấm user sửa `created_at`; DB đã đúng |
 | 3 ô liên hệ là contact selector | **Text input** Phase 1, gợi ý "Tên + SĐT" | DB lưu `TEXT`; selector cần bảng `contacts` (Phase 2) |
 | `industry_id` uuid | **`industry` TEXT + Select options cố định** | Schema đang chạy là `industry TEXT` |
@@ -32,7 +32,7 @@
 | Field | UI | Bắt buộc | Cột DB | Ghi chú |
 |---|---|---|---|---|
 | Tên khách hàng | `Input` text | Có | `customers.name` | Trim, 2–255 ký tự |
-| Mã khách hàng | readonly display `Tự động tạo` | Không | — | **BỎ input** (hardening 2026-11-19): input UI-only gây mất dữ liệu. DB chưa có cột `code`, Phase 2 mới sinh mã |
+| Mã khách hàng | readonly display, mã THẬT `CUS-YYYY-NNN` | Không | `customers.code` (migration 010) | **BỎ input** (hardening 2026-11-19): input UI-only gây mất dữ liệu. Form gọi RPC `fdi_next_customer_code` khi submit; ô hiện mã thật sau khi lưu, "Tự động tạo" trước đó. DB trigger là rào cuối |
 | Mã số thuế | `Input` text | Không | `customers.tax_id`* | Giữ chuỗi; duplicate check Phase 2 |
 | Ngành nghề | `Select` | Không | `customers.industry` | Options cố định lưu dạng TEXT |
 | Địa chỉ trụ sở | `Input` text | Có | `customers.headquarters_address`* | Text tự do |
@@ -49,7 +49,7 @@
 
 `*` = cột bổ sung bởi migration 008 · `**` = cột bổ sung bởi migration 009 (xem plan §3). Field không có cột (`code`, `created_at`) chỉ hiển thị/ready, không gửi payload.
 
-> **Minh họa, không phải dữ liệu thật:** prefix `CUS-` / nhãn "Tự động tạo" là illustration theo mockup. DB chưa có cột `code` → **không có ô nhập**; backend tự sinh ở Phase 2. Không hiểu đây là mã khách hàng đã tồn tại. DNC (`consent_contact`) là boolean có audit, **không lưu trong `notes`**.
+> **Minh họa, không phải dữ liệu thật:** prefix `CUS-` theo mockup. DB **đã có** `customers.code` (migration 010, apply 2026-11-23) → ô hiển thị mã THẬT do backend sinh, không có ô nhập. Không suy mã từ `tax_id`. DNC (`consent_contact`) là boolean có audit, **không lưu trong `notes`**.
 
 ## 4. Validation & state
 
