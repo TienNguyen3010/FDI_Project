@@ -223,7 +223,7 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 |---|---|---|
 | Triệu chứng 1 | Footer vẫn bị chữ lọt qua khi cuộn xuống cuối (dù `d79ae7d` đã đổi `bg-card` đục) | ảnh browser `/customers/new` |
 | Nguyên nhân 1 | Footer `sticky` nằm **trong cột trái** `div.space-y-4.lg:col-span-2` — flex item `align-self: stretch` nên cao bằng **nội dung**, không phải grid track; sticky chỉ phủ trong phạm vi đó, không phủ vùng viewport còn lại khi cuộn | `CreateCustomerForm.tsx` (bản `d79ae7d`) |
-| Fix 1 | Đưa `<footer>` **ra ngoài cột**, cùng cấp với grid; nền **đục tuyệt đối** `bg-[#ffffff]` + `shadow-[0_-4px_12px_rgba(16,32,62,0.06)]`; bỏ `bg-card`/`bg-card/95`/`backdrop-blur`; giữ `-mx-5 px-4` + safe-area | `CreateCustomerForm.tsx` |
+| Fix 1 | Đưa `<footer>` **ra ngoài cột**, cùng cấp với grid; nền **đục tuyệt đối** `bg-[#ffffff]` + `shadow-[0_-4px_12px_rgba(16,32,62,0.06)]`; bỏ `bg-card`/`bg-card/95`/`backdrop-blur`; kéo hết padding 2 breakpoint `-mx-4 md:-mx-[30px]`; thêm **spacer** `h-20 md:h-[76px]` để card cuối không bị footer che khi cuộn tới cùng | `CreateCustomerForm.tsx` |
 | Triệu chứng 2 | Modal "Xác nhận thoát" không center màn hình | ảnh browser |
 | Nguyên nhân 2 | Modal lồng trong **cùng cột bị co hẹp** → overlay `fixed inset-0` không phủ full viewport, không căn giữa được | `CreateCustomerForm.tsx` (bản `d79ae7d`) |
 | Fix 2 | Modal đặt **trực tiếp trong `<form>`**, không lồng cột; `fixed inset-0 z-50 flex !items-center justify-center`; primitive `Modal` (`ui.tsx`) cũng chốt `!items-center` + `p-4` + `overflow-y-auto`, `ModalContent` thêm `mx-4` | `CreateCustomerForm.tsx`, `components/ui/ui.tsx` |
@@ -233,6 +233,15 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Verify | `tsc` EXIT 0 · `npm test` **66/66** · `check:docs` OK 56 files · build EXIT 0 | tool output |
 
 > **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
+
+### 16g. Footer che nội dung khi cuộn tới cùng (2026-11-23)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng | Kéo trang lên xuống, card cuối bị footer che mất phần đáy | ảnh user `/customers/new` |
+| Nguyên nhân | `<main>` (`ClientBody.tsx:454`) chỉ có `md:pb-[30px]`, trong khi footer sticky cao ~64px → nội dung cuối không cuộn được lên trên footer. Ngoài ra footer `-mx-5` chỉ kéo hết padding mobile `p-4` (16px), **không kéo hết** `md:p-[30px]` → lệch viền trên desktop | `ClientBody.tsx:454` + `CreateCustomerForm.tsx` footer |
+| Fix | Thêm spacer `h-20 md:h-[76px]` ngay sau `</footer>`; footer `-mx-4 md:-mx-[30px]` + `md:px-[30px]` để full-bleed đúng ở cả 2 breakpoint | `CreateCustomerForm.tsx` |
+| Verify | `node --test tests/customer-form-footer.test.mjs` 4/4 · `npm test` **67/67** · tsc 0 | tool output |
 
 ### 16f. Lỗi `new row violates row-level security policy for table "customers"` (2026-11-23)
 

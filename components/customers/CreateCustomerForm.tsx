@@ -628,7 +628,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           Nền: `bg-surface` (#ffffff) KHÔNG trong suốt — trước đây `bg-card/95
           backdrop-blur` để lọt chữ card khi cuộn. Bỏ hẳn mọi biến thể mờ/blur.
           `-mx-5 px-4 sm:px-5` kéo footer sát lề container; paddingBottom safe-area inline. */}
-      <footer className="sticky bottom-0 z-30 -mx-5 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-4px_12px_rgba(16,32,62,0.06)] sm:px-5"
+      <footer className="sticky bottom-0 z-30 mt-5 -mx-4 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-4px_12px_rgba(16,32,62,0.06)] sm:px-5 md:-mx-[30px] md:px-[30px]"
               style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
@@ -652,6 +652,11 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           </Button>
         </div>
       </footer>
+
+      {/* Đệm dưới footer: main (ClientBody) chỉ có pb-[30px] trên desktop trong
+          khi footer sticky cao ~64px → card cuối bị che khi cuộn tới cùng.
+          Spacer này đẩy nội dung lên, đảm bảo cuộn hết vẫn thấy được card cuối. */}
+      <div aria-hidden="true" className="h-20 md:h-[76px]" />
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
           Modal component không tự ẩn theo prop `open`, nên gate bằng && .

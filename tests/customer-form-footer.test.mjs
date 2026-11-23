@@ -32,6 +32,10 @@ test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua k
     'KHÔNG dùng nền mờ ở footer (chữ card lọt qua)',
   )
   assert.match(src, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
+  // footer full-bleed: kéo hết padding của main (p-4 mobile = 16px, md:p-[30px])
+  assert.match(src, /sticky bottom-0[^\n]*-mx-4[^\n]*md:-mx-\[30px\]/, 'footer kéo hết padding ngang 2 breakpoint')
+  // có spacer đệm dưới footer để card cuối không bị che khi cuộn tới cùng
+  assert.match(src, /<\/footer>[\s\S]{0,400}?h-20 md:h-\[76px\]/, 'có spacer đệm dưới footer')
   // footer phải nằm NGOÀI cột: chuỗi `lg:col-span-2` KHÔNG được xuất hiện
   // ở mọi className của footer (kiểm tra bằng vị trí: footer đứng sau khi grid đóng).
   const footerIdx = src.indexOf('<footer className="sticky bottom-0')
