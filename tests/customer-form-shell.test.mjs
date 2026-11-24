@@ -68,16 +68,24 @@ test('P0: modal Hủy căn giữa viewport, z-index cao hơn footer sticky', () 
   assert.match(form, /exit-confirm-modal[\s\S]{0,200}?items-center/, 'modal căn giữa dọc')
 })
 
-test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 2 lần)', () => {
-  // 2026-11-24 lần 2: footer sticky vẫn phủ nội dung ngay trên nó. Spacer phải
-  // cao ĐÚNG bằng footer (88px mobile / 96px desktop) + NỀN TRẮNG ĐỤC.
+test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', () => {
+  // Bản gốc: form là BLOCK → footer `sticky bottom-0` neo vào đáy CHÍNH NÓ,
+  // khi nội dung dài hơn nó nổi lên giữa trang và ĐÈ chữ. Tăng đệm/sửa bóng
+  // không dứt vì footer vẫn nổi.
+  // Fix: form `flex min-h-full flex-col` + wrapper `flex-1` → footer luôn bị
+  // đẩy xuống ĐÁY khung, không bao giờ nổi lên giữa trang.
+  assert.match(form, /<form[^>]*className="[^"]*min-h-full[^"]*flex-col/, 'form là flex-col + min-h-full')
+  assert.match(
+    form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('<footer className="sticky')),
+    /className="flex-1 space-y-2\.5"/,
+    'wrapper nội dung dùng flex-1 đẩy footer xuống đáy',
+  )
   const spacerIdx = form.indexOf('</footer>')
   assert.ok(spacerIdx !== -1, 'tìm thấy </footer>')
   const tail = form.slice(spacerIdx, spacerIdx + 900)
   assert.match(tail, /h-\[88px\]/, 'spacer mobile đủ cao 88px')
   assert.match(tail, /md:h-\[96px\]/, 'spacer desktop đủ cao 96px')
   assert.match(tail, /bg-\[#ffffff\]/, 'spacer có nền đục che chữ')
-  // footer vẫn giữ nền đục + full-bleed + safe-area (không được sửa mất)
   assert.match(form, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
   assert.match(form, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
 })

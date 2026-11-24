@@ -468,7 +468,10 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     : 'Chưa thiết lập'
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="mx-auto w-full max-w-[1600px]">
+    // ⚠️ flex-col + min-h-full: wrapper nội dung `flex-1` đẩy footer xuống ĐÁY
+    // khung form. Nếu form chỉ là block, footer `sticky bottom-0` neo vào đáy
+    // CHÍNH NÓ và khi nội dung dài hơn nó sẽ nổi lên giữa trang → ĐÈ chữ.
+    <form onSubmit={handleSubmit} noValidate className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col">
       {/* Header (mirror AddLeadForm: breadcrumb / h1 / subtitle) */}
       <div className="mb-3">
         <nav aria-label="Breadcrumb" className="text-[12px] font-medium text-muted-foreground">
@@ -487,10 +490,9 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </p>
       </div>
 
-      {/* Wrapper chứa grid + footer. Sticky CHỈ ăn khi nằm trong một container đủ
-          cao (cao bằng chiều cao NỘI DUNG form). Đặt footer NGAY sau wrapper (cùng
-          cấp với grid) thì container cao = toàn bộ form → sticky phủ kín vùng cuộn. */}
-      <div className="space-y-2.5">
+      {/* ── Wrapper: flex-1 đẩy footer xuống đáy; sticky chỉ "dính" khi cuộn
+          vượt chiều cao viewport, KHÔNG bao giờ nổi lên giữa trang đè nội dung. */}
+      <div className="flex-1 space-y-2.5">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_272px]">
           {/* ── Main form ───────────────────────────────────────────────────── */}
           <div className="space-y-2.5">
@@ -853,12 +855,9 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
       </footer>
 
       {/* ── ĐỆM DƯỚI FOOTER (che chữ khi cuộn tới cùng) ───────────────────────
-          Footer `sticky bottom-0` neo vào ĐÁY vùng cuộn của <main> nên nội dung
-          nằm ngay trên footer vẫn bị phủ. `h-20 md:h-[76px]` cũ KHÔNG đủ sau
-          khi topbar bị bỏ (footer cao ~72–88px tùy breakpoint) và form dùng
-          mx-auto nên spacer không tràn hết padding.
-          Fix: đệm một khối cao ĐÚNG bằng footer + NỀN TRẮNG ĐỤC, đặt SAU </footer>
-          để vùng dưới luôn bị che; footer tự đổ bóng để tách lớp. */}
+          Footer `sticky bottom-0` neo vào đáy vùng cuộn của <main> nên nội dung
+          nằm ngay trên footer vẫn bị phủ → đệm cao ĐÚNG bằng footer, nền trắng
+          đục, đặt SAU </footer>. */}
       <div aria-hidden="true" className="-mt-[1px] h-[88px] bg-[#ffffff] pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:h-[96px]" />
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
