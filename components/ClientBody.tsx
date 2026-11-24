@@ -135,8 +135,13 @@ export default function ClientBody({
    * trùng lặp và chiếm chỗ. Danh sách ĐỊNH DANH để tránh vỡ layout 24 route
    * khác (shell chỉ thay nhánh render, không đổi padding/chiều cao main).
    */
-  /** Route full-page tự có breadcrumb/h1 → bỏ topbar trùng lặp. */
+  /**
+   * Route full-page tự có breadcrumb/h1 → bỏ topbar trùng lặp.
+   * `/customers` (danh sách) cũng BỎ theo yêu cầu user 2026-11-24: màn tự có
+   * h1 "Khách hàng" + 4 KPI + toolbar, topbar chỉ trùng tên và chiếm 58px.
+   */
   const showTopbar = !(
+    pathname === '/customers' ||
     pathname === '/customers/new' ||
     (pathname.startsWith('/customers/') && pathname !== '/customers')
   )

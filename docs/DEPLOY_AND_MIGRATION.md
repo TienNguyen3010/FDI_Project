@@ -303,6 +303,20 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
 | Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
 
+## 16e. Màn quản lý khách hàng lấy chuẩn UI Lead (SoftNET CRM) + bỏ topbar (2026-11-24)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Yêu cầu user | "sửa lại UI/UX màn hình quản lý khách hàng và right sidebar lấy UI/UX màn hình quản lý Lead ở dự án SoftNET CRM làm chuẩn, đồng thời bỏ header Customers admin@fdi.local" | tin nhắn user |
+| Baseline đọc tận gốc | `/opt/data/tien_crm/src/components/leads/LeadManagementShell.tsx` (§A/§B scope tabs + smart view, KPI clickable), `LeadDetailPanel.tsx` (slide-over 480–560px: avatar + status + quick actions + "Thông tin chính" + "Hoạt động gần đây" + audit), `LeadsPageHeader.tsx`, `LeadKpiCards.tsx` | file source |
+| #1 Bỏ topbar | `ClientBody.showTopbar` ẩn thêm ở `/customers` (danh sách) — màn tự có h1 + 4 KPI + toolbar; 24 route khác giữ nguyên; mobile vẫn còn nút drawer | `components/ClientBody.tsx` |
+| #2 Right sidebar | Thay `CustomerDetailDrawer` (drawer 440px, section dài vô tổ chức) bằng **`CustomerDetailPanel`** mirror `LeadDetailPanel`: slide-over 480px (xl 560px), header avatar 12×12 + tên + **Mã** (`font-mono`) + status badge + nút X; quick actions Gọi/Email/Thêm hoạt động/Sửa (gate RBAC); nhóm **"Thông tin chính"** heading uppercase có icon; **"Hoạt động gần đây"** khung Card + relative time; dòng audit Tạo lúc/Mã | `components/customers/CustomerDetailPanel.tsx` (mới) |
+| #3 Scope / Smart view | Mirror §B Lead: underline tabs **dưới KPI** (`Tất cả khách hàng` / `Có dự án` / `Đang có ticket mở`), 3 KPI card **bấm được** chọn view (aria-pressed, active ring), tiêu đề bảng theo view, state đồng bộ URL `?view=` để back/refresh giữ lại | `app/(workspace)/customers/page.tsx` |
+| Quyết định KHÔNG bịa | Tab Lead "Lead của tôi / Tất cả Lead" scope theo **owner**, nhưng bảng `customers` **không có cột owner** → verify trực tiếp trên DB (`information_schema.columns`) chỉ có 18 cột, không có owner/assigned_to/created_by. Làm tab "của tôi" = bịa số → **loại bỏ**, thay bằng view theo project + ticket (dữ liệu thật) | query psycopg trên DB prod |
+| CSAT không cho bấm | Schema không có bảng survey/CSAT → KPI CSAT hiển thị "Chưa có dữ liệu", **không gắn onClick** (không lọc được) | `page.tsx` ghi chú |
+| Type dùng chung | Tách `components/customers/types.ts` (`Customer`/`Activity`) + `lib/relativeTime.ts` (`relativeTimeLabel`) — page và panel dùng chung, bỏ interface local trùng | 2 file mới |
+| Verify | `npm test` **92/92** · `tsc` **0** · build EXIT=0 · docs-check OK | tool output |
+
 ## 16d. Form khách hàng: bỏ topbar trùng, mã KH đọc rõ, footer/modal sửa lại (2026-11-24)
 
 | Hạng mục | Kết quả | Evidence |

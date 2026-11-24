@@ -26,7 +26,9 @@ test('P0: list hiển thị mã (font-mono), vẫn fallback — khi null', () =>
   const page = src('app/(workspace)/customers/page.tsx')
   assert.ok(page.includes('font-mono'), 'ô mã dùng font-mono')
   assert.ok(/Mã:\s*—/.test(page), 'fallback đúng là "Mã: —"')
-  assert.ok(page.includes('customer.code || \'—\''), 'drawer header vẫn hiển thị mã')
+  // 2026-11-24: right panel đã tách thành component riêng (mirror LeadDetailPanel).
+  const panel = src('components/customers/CustomerDetailPanel.tsx')
+  assert.ok(panel.includes("customer.code || '—'"), 'panel header vẫn hiển thị mã')
 })
 
 test('P0: nút Sửa hoạt động cho role có customer.update; drawer có nút Sửa', () => {
@@ -34,7 +36,7 @@ test('P0: nút Sửa hoạt động cho role có customer.update; drawer có nú
   assert.ok(page.includes("hasPermission(role, 'customer.update')"), 'phải gate bằng customer.update')
   assert.ok(page.includes('editCustomer(item.id)'), 'cột Thao tác phải gọi editCustomer')
   assert.ok(page.includes('/customers/${encodeURIComponent(id)}'), 'điều hướng tới form sửa')
-  assert.ok(page.includes('onEdit={canEdit ? editCustomer : undefined}'), 'drawer nhận onEdit có điều kiện')
+  assert.ok(page.includes('onEdit={() => editCustomer(selected.id)}'), 'panel nhận onEdit')
   // nút Sửa cũ (disabled "sẽ hỗ trợ") phải biến mất
   assert.ok(!page.includes('Sửa (sẽ hỗ trợ ở bản sau)'), 'không còn nút Sửa disabled')
 })

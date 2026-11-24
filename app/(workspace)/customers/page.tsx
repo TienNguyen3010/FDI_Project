@@ -42,30 +42,16 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import CustomerDetailPanel from '@/components/customers/CustomerDetailPanel'
 import { useProfile } from '@/lib/hooks/useProfile'
+import type { Customer, Activity } from '@/components/customers/types'
 import { hasPermission } from '@/lib/rbac/policy'
 
 /* -------------------------------------------------------------------------- */
 /*  Types — khớp contract GET /api/v1/customers                                */
 /* -------------------------------------------------------------------------- */
 
-type CustomerStatus = 'active' | 'inactive' | 'archived' | (string & {})
-
-interface Customer {
-  id: string
-  code?: string | null
-  name: string
-  phone?: string | null
-  email?: string | null
-  industry?: string | { name?: string | null } | null
-  tax_id?: string | null
-  headquarters_address?: string | null
-  primary_contact_name?: string | null
-  project_count?: number | null
-  open_ticket_count?: number | null
-  status?: CustomerStatus | null
-  created_at?: string | null
-}
+/* Customer / Activity: dùng type chung ở components/customers/types.ts */
 
 interface Comparison {
   total_customers?: number | null
@@ -165,7 +151,18 @@ function Delta({ current, previous }: { current?: number | null; previous?: numb
   )
 }
 
-function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
+/** Smart view (scope) — mirror LeadManagementShell §A/§B nhưng dùng DỮ LIỆU THẬT.
+ *  `customers` KHÔNG có cột owner (đã verify trên DB), nên KHÔNG làm tab
+ *  "của tôi / tất cả" (sẽ là số bịa). Thay bằng view theo project + ticket. */
+const SMART_VIEWS = [
+  { key: 'all', label: 'Tất cả khách hàng', hasProject: '', minOpenTickets: 0 },
+  { key: 'with_projects', label: 'Có dự án', hasProject: 'true', minOpenTickets: 0 },
+  { key: 'open_tickets', label: 'Đang có ticket mở', hasProject: '', minOpenTickets: 1 },
+] as const
+
+type SmartViewKey = (typeof SMART_VIEWS)[number]['key']
+
+function KpiCard({ label, value, icon: Icon, tone, loading, delta, active, onClick }: {
   label: string
   value: string
   icon: React.ComponentType<{ size?: number; className?: string }>
@@ -173,9 +170,22 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
   tone: string
   loading: boolean
   delta?: ReactNode
+  /** KPI bấm được để chọn smart view (mirror LeadKpiCards). */
+  active?: boolean
+  onClick?: () => void
 }) {
+  const interactive = typeof onClick === 'function'
   return (
-    <Card className="border-[var(--border)] bg-[var(--surface)]">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
+      aria-pressed={active}
+      title={interactive ? `${label} — bấm để lọc` : label}
+      className={`rounded-card border text-left transition-all ${
+        interactive ? 'cursor-pointer hover:-translate-y-px' : 'cursor-default'
+      } ${active ? 'border-[var(--primary)] ring-2 ring-[var(--primary)]/30' : 'border-[var(--border)]'} bg-[var(--surface)]`}
+    >
       <CardContent className="flex items-start justify-between gap-3 p-5">
         <div className="min-w-0">
           <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
@@ -195,7 +205,7 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
           <Icon size={20} />
         </span>
       </CardContent>
-    </Card>
+    </button>
   )
 }
 
@@ -204,24 +214,6 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta }: {
 /* -------------------------------------------------------------------------- */
 
 type ActivityStatus = 'planned' | 'done' | 'failed' | 'no_answer'
-
-interface Activity {
-  id?: string
-  entity_type?: string
-  entity_id?: string
-  activity_type?: string | null
-  channel?: string | null
-  direction?: string | null
-  status?: ActivityStatus | string | null
-  subject?: string | null
-  body?: string | null
-  occurred_at?: string | null
-  scheduled_at?: string | null
-  done_at?: string | null
-  owner_id?: string | null
-  created_at?: string | null
-  metadata?: { ui_type?: string | null } | null
-}
 
 /** Lookup `activity_types` của migration 013 (seed): call/email/meeting/note/task/other. */
 const ACTIVITY_TYPE_LABELS: Record<string, string> = {
@@ -533,243 +525,7 @@ function ActivityForm({ customerId, onDone, onCancel }: {
   )
 }
 
-function CustomerDetailDrawer({ customer, onClose, onEdit, canAddActivity = false }: {
-  customer: Customer | null
-  onClose: () => void
-  /** Mở form sửa — chỉ render khi role có `customer.update`. */
-  onEdit?: (id: string) => void
-  /** Hiện nút "Thêm hoạt động" — chỉ khi role có `customer.read` (POST cần quyền đọc KH). */
-  canAddActivity?: boolean
-}) {
-  const toast = useToast()
-  const [activities, setActivities] = useState<Activity[]>([])
-  const [activitiesLoading, setActivitiesLoading] = useState(false)
-  const [activitiesError, setActivitiesError] = useState<string | null>(null)
-  const [showActivityForm, setShowActivityForm] = useState(false)
-
-  // Escape để đóng — chỉ mount listener khi drawer mở.
-  useEffect(() => {
-    if (!customer) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [customer, onClose])
-
-  // Lịch sử hoạt động — fetch khi drawer mở (cache no-store). Reset khi đổi KH.
-  useEffect(() => {
-    // Không có khách hàng → không fetch; state đã reset khi đóng drawer.
-    if (!customer) return
-    let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- bắt buộc chạy sau khi
-    // customer thay đổi: đặt loading trước khi gọi fetch để UI hiện skeleton ngay.
-    setActivitiesLoading(true)
-    setActivitiesError(null)
-    const run = async () => {
-      try {
-        const res = await fetch(`/api/v1/customers/${customer.id}/activities`, { cache: 'no-store' })
-        if (!res.ok) {
-          const json = (await res.json().catch(() => null)) as unknown
-          throw new Error(describeActivityError(json, res.status))
-        }
-        const json = (await res.json().catch(() => null)) as unknown
-        if (cancelled) return
-        setActivities(sortActivities(normalizeActivities((json as { data?: unknown })?.data)))
-      } catch (err) {
-        if (cancelled) return
-        setActivitiesError(err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.')
-      } finally {
-        if (!cancelled) setActivitiesLoading(false)
-      }
-    }
-    void run()
-    return () => { cancelled = true }
-  }, [customer])
-
-  // Đọc lại sau khi thêm hoạt động thành công.
-  const reloadActivities = useCallback(async () => {
-    if (!customer) return
-    setActivitiesLoading(true)
-    try {
-      const res = await fetch(`/api/v1/customers/${customer.id}/activities`, { cache: 'no-store' })
-      if (!res.ok) {
-        const json = (await res.json().catch(() => null)) as unknown
-        throw new Error(describeActivityError(json, res.status))
-      }
-      const json = (await res.json().catch(() => null)) as unknown
-      setActivities(sortActivities(normalizeActivities((json as { data?: unknown })?.data)))
-      setActivitiesError(null)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.'
-      setActivitiesError(message)
-      toast.error({ title: 'Tải lịch sử hoạt động thất bại', description: message })
-    } finally {
-      setActivitiesLoading(false)
-    }
-  }, [customer, toast])
-
-  if (!customer) return null
-
-  const statusKey = customer.status || ''
-  const statusMeta = STATUS_META[statusKey] ?? { label: statusKey || '—', variant: 'default' as const }
-
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="presentation">
-      {/* Overlay mờ — click để đóng */}
-      <button
-        type="button"
-        aria-label="Đóng thông tin khách hàng"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-black/40"
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Thông tin khách hàng ${customer.name}`}
-        className="relative flex h-full w-full max-w-[440px] flex-col border-l border-[var(--border)] bg-[var(--surface)] shadow-xl"
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] p-5">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="shrink-0 rounded-lg bg-[var(--sidebar-group)] p-2 text-[var(--sidebar-icon)]">
-              <Building2 size={20} />
-            </span>
-            <div className="min-w-0">
-              <h2 className="truncate text-lg font-semibold text-[var(--text)]">{customer.name || '—'}</h2>
-              <p className="text-xs text-[var(--muted)]">Mã: {customer.code || '—'}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--sidebar-group)] hover:text-[var(--text)]"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 space-y-6 overflow-y-auto p-5">
-          <div className="flex items-center gap-2">
-            <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
-            {industryName(customer.industry) && <Badge variant="default">{industryName(customer.industry)}</Badge>}
-          </div>
-
-          <section>
-            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Thông tin doanh nghiệp</h3>
-            <dl>
-              <DetailRow label="Tên khách hàng" value={customer.name} />
-              <DetailRow label="Mã khách hàng" value={customer.code} />
-              <DetailRow label="Mã số thuế" value={customer.tax_id} />
-              <DetailRow label="Ngành nghề" value={industryName(customer.industry)} />
-              <DetailRow label="Địa chỉ trụ sở chính" value={customer.headquarters_address} />
-            </dl>
-          </section>
-
-          <section>
-            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Liên hệ chính</h3>
-            <dl>
-              <DetailRow label="Người liên hệ" value={customer.primary_contact_name} />
-              <DetailRow label="Email" value={customer.email} />
-              <DetailRow label="Điện thoại" value={customer.phone} />
-            </dl>
-          </section>
-
-          <section>
-            <h3 className="mb-1 text-sm font-semibold text-[var(--text)]">Thống kê</h3>
-            <dl>
-              <DetailRow label="Dự án" value={formatNumber(customer.project_count)} />
-              <DetailRow label="Ticket đang mở" value={formatNumber(customer.open_ticket_count)} />
-              <DetailRow label="Ngày tạo" value={asOfLabel(customer.created_at ?? null)} />
-            </dl>
-          </section>
-
-          {/* Lịch sử hoạt động — dữ liệu từ GET /api/v1/customers/[id]/activities */}
-          <section aria-label="Lịch sử hoạt động">
-            <Card className="border border-[var(--border)] bg-[var(--surface)]">
-              <CardHeader className="flex-row items-center justify-between gap-2 px-5 py-3 space-y-0">
-                <CardTitle className="flex items-center gap-2 text-[15px]">
-                  <CalendarClock className="h-4 w-4 text-[var(--muted)]" /> Lịch sử hoạt động
-                </CardTitle>
-                {canAddActivity && !showActivityForm && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowActivityForm(true)}
-                    aria-label="Thêm hoạt động"
-                  >
-                    <Plus size={14} /> Thêm hoạt động
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent className="px-5 py-3">
-                {activitiesLoading && activities.length === 0 ? (
-                  <div className="space-y-2" aria-hidden="true">
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                ) : activitiesError ? (
-                  <div className="flex flex-col items-start gap-2">
-                    <p className="text-xs text-[var(--danger)]">{activitiesError}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void reloadActivities()}
-                    >
-                      <RefreshCw size={14} /> Thử lại
-                    </Button>
-                  </div>
-                ) : activities.length === 0 ? (
-                  <EmptyState
-                    icon={<CalendarClock size={28} strokeWidth={1.5} />}
-                    title="Chưa có hoạt động nào."
-                    description="Thêm hoạt động đầu tiên cho khách hàng này."
-                  />
-                ) : (
-                  <ul className="space-y-3">
-                    {activities.map((activity) => (
-                      <ActivityTimelineItem
-                        key={activity.id ?? `${activity.activity_type}-${activity.created_at}-${activity.subject ?? ''}`}
-                        activity={activity}
-                      />
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-
-            {canAddActivity && showActivityForm && (
-              <div className="mt-3">
-                <ActivityForm
-                  customerId={customer.id}
-                  onDone={() => {
-                    setShowActivityForm(false)
-                    void reloadActivities()
-                  }}
-                  onCancel={() => setShowActivityForm(false)}
-                />
-              </div>
-            )}
-          </section>
-        </div>
-
-        <div className="flex justify-end gap-2 border-t border-[var(--border)] p-4">
-          <Button type="button" variant="outline" onClick={onClose}>Đóng</Button>
-          {onEdit && (
-            <Button
-              type="button"
-              onClick={() => onEdit(customer.id)}
-              aria-label={`Sửa khách hàng ${customer.name}`}
-            >
-              <Pencil size={16} /> Sửa
-            </Button>
-          )}
-        </div>
-      </aside>
-    </div>
-  )
-}
+// (CustomerDetailDrawer đã thay bằng component CustomerDetailPanel — mirror LeadDetailPanel)
 
 export default function CustomersPage() {
   const { role } = useProfile()
@@ -781,12 +537,45 @@ export default function CustomersPage() {
 
   const [selected, setSelected] = useState<Customer | null>(null)
 
+  /* --- Lịch sử hoạt động của khách hàng đang mở panel (right sidebar) ---------
+     Dữ liệu thật: GET /api/v1/customers/[id]/activities. */
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [activitiesError, setActivitiesError] = useState<string | null>(null)
+  const [showActivityForm, setShowActivityForm] = useState(false)
+
+  const reloadActivities = useCallback(async () => {
+    if (!selected) return
+    setActivitiesLoading(true)
+    setActivitiesError(null)
+    try {
+      const res = await fetch(`/api/v1/customers/${encodeURIComponent(selected.id)}/activities`, { cache: 'no-store' })
+      if (!res.ok) throw new Error(`Lỗi máy chủ (${res.status}).`)
+      const json = (await res.json()) as { data?: Activity[]; error?: { message?: string } }
+      setActivities(Array.isArray(json.data) ? json.data : [])
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.'
+      setActivitiesError(message)
+      toast.error({ title: 'Tải lịch sử hoạt động thất bại', description: message })
+    } finally {
+      setActivitiesLoading(false)
+    }
+  }, [selected, toast])
+
+  // Tải lại khi đổi khách hàng đang chọn.
+  useEffect(() => {
+    if (!selected) { setActivities([]); setActivitiesError(null); return }
+    void reloadActivities()
+  }, [selected, reloadActivities])
+
   const [hydrated, setHydrated] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [industry, setIndustry] = useState('')
   const [status, setStatus] = useState('')
   const [hasProject, setHasProject] = useState('')
+  /** Smart view (scope) — mirror Lead §B. Đọc từ ?view= để back/refresh giữ lại. */
+  const [smartView, setSmartView] = useState<SmartViewKey>('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [refreshTick, setRefreshTick] = useState(0)
@@ -810,6 +599,8 @@ export default function CustomersPage() {
     setIndustry(p.get('industry') ?? '')
     setStatus(p.get('status') ?? '')
     setHasProject(p.get('has_project') ?? '')
+    const v = p.get('view') ?? ''
+    setSmartView((SMART_VIEWS.some((x) => x.key === v) ? v : 'all') as SmartViewKey)
     setPage(readInt('page', 1))
     setPageSize(readInt('page_size', DEFAULT_PAGE_SIZE))
     setHydrated(true)
@@ -835,6 +626,7 @@ export default function CustomersPage() {
     if (industry) p.set('industry', industry)
     if (status) p.set('status', status)
     if (hasProject) p.set('has_project', hasProject)
+    if (smartView !== 'all') p.set('view', smartView)
     if (page !== 1) p.set('page', String(page))
     if (pageSize !== DEFAULT_PAGE_SIZE) p.set('page_size', String(pageSize))
     const qs = p.toString()
@@ -843,7 +635,7 @@ export default function CustomersPage() {
       '',
       qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
     )
-  }, [hydrated, debouncedSearch, industry, status, hasProject, page, pageSize])
+  }, [hydrated, debouncedSearch, industry, status, hasProject, smartView, page, pageSize])
 
   /* --- Fetch -------------------------------------------------------------- */
   const load = useCallback(async (signal?: AbortSignal) => {
@@ -857,7 +649,16 @@ export default function CustomersPage() {
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (industry) params.set('industry', industry)
     if (status) params.set('status', status)
-    if (hasProject) params.set('has_project', hasProject)
+
+    // Smart view (mirror Lead §B): chỉ đẩy filter khi KHÔNG phải view mặc định.
+    // `all` = không thêm gì; `with_projects` = has_project=true;
+    // `open_tickets` = server không lọc được ticket → giữ nguyên, client lọc tiếp.
+    if (smartView === 'with_projects') {
+      params.set('has_project', 'true')
+    } else if (hasProject) {
+      params.set('has_project', hasProject)
+    }
+    const onlyOpenTickets = smartView === 'open_tickets'
 
     try {
       const res = await fetch(`/api/v1/customers?${params.toString()}`, {
@@ -871,7 +672,12 @@ export default function CustomersPage() {
       const json = (await res.json()) as CustomersResponse
       if (signal?.aborted) return
 
-      const items = Array.isArray(json?.data?.items) ? json.data.items : []
+      const rawItems = Array.isArray(json?.data?.items) ? json.data.items : []
+      // View "Đang có ticket mở": API không lọc theo ticket → lọc client-side
+      // trên đúng dữ liệu `open_ticket_count` (không bịa).
+      const items = onlyOpenTickets
+        ? rawItems.filter((item) => (item.open_ticket_count ?? 0) > 0)
+        : rawItems
       setData({
         items,
         pagination: json?.data?.pagination ?? {},
@@ -895,7 +701,7 @@ export default function CustomersPage() {
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
-  }, [debouncedSearch, industry, status, hasProject, page, pageSize, refreshTick, toast])
+  }, [debouncedSearch, industry, status, hasProject, smartView, page, pageSize, refreshTick, toast])
 
   useEffect(() => {
     if (!hydrated) return
@@ -959,7 +765,7 @@ export default function CustomersPage() {
         </div>
       </header>
 
-      {/* KPI row — 4 thẻ theo thứ tự green / blue / orange / info */}
+      {/* KPI row — 4 thẻ, BẤM ĐƯỢC để chọn smart view (mirror LeadKpiCards) */}
       <section aria-label="Chỉ số khách hàng" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Tổng khách hàng"
@@ -968,6 +774,8 @@ export default function CustomersPage() {
           tone="var(--primary)"
           loading={loading && summary.total_customers == null}
           delta={<Delta current={summary.total_customers ?? null} previous={comparison?.total_customers} />}
+          active={smartView === 'all'}
+          onClick={() => { setSmartView('all'); setPage(1) }}
         />
         <KpiCard
           label="Khách hàng có dự án"
@@ -976,6 +784,8 @@ export default function CustomersPage() {
           tone="var(--kpi-projects)"
           loading={loading && summary.with_projects == null}
           delta={<Delta current={summary.with_projects ?? null} previous={comparison?.with_projects} />}
+          active={smartView === 'with_projects'}
+          onClick={() => { setSmartView((v) => (v === 'with_projects' ? 'all' : 'with_projects')); setPage(1) }}
         />
         <KpiCard
           label="Ticket đang mở"
@@ -984,7 +794,10 @@ export default function CustomersPage() {
           tone="var(--kpi-tickets)"
           loading={loading && summary.open_tickets == null}
           delta={<Delta current={summary.open_tickets ?? null} previous={comparison?.open_tickets} />}
+          active={smartView === 'open_tickets'}
+          onClick={() => { setSmartView((v) => (v === 'open_tickets' ? 'all' : 'open_tickets')); setPage(1) }}
         />
+        {/* CSAT: schema không có bảng survey/CSAT → không cho bấm (không lọc được). */}
         <KpiCard
           label="Mức độ hài lòng (CSAT)"
           value={csatValue}
@@ -994,6 +807,27 @@ export default function CustomersPage() {
           delta={<Delta current={summary.csat ?? null} previous={comparison?.csat} />}
         />
       </section>
+
+      {/* Smart-view tabs — underline tabs ĐẶT DƯỚI KPI, đúng chuẩn Lead §B.
+          Tên tab lấy từ SMART_VIEWS (single source) nên không lệch nhãn. */}
+      <div className="flex flex-wrap items-end gap-4 border-b border-[var(--border)]" role="tablist" aria-label="Phạm vi khách hàng">
+        {SMART_VIEWS.map((v) => (
+          <button
+            key={v.key}
+            type="button"
+            role="tab"
+            aria-selected={smartView === v.key}
+            onClick={() => { setSmartView(v.key); setPage(1) }}
+            className={`relative -mb-px border-b-2 px-1 pb-2 text-sm font-semibold transition-colors ${
+              smartView === v.key
+                ? 'border-[var(--sidebar-active-border)] text-[var(--sidebar-heading)]'
+                : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
 
       {/* Toolbar: 3 select + search + refresh + CTA */}
       <section className="flex flex-wrap items-center gap-3" aria-label="Bộ lọc khách hàng">
@@ -1075,6 +909,16 @@ export default function CustomersPage() {
           </Button>
         </div>
       )}
+
+      {/* Table — tiêu đề theo smart view, đúng chuẩn Lead §B */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-[var(--text)]">
+          {SMART_VIEWS.find((v) => v.key === smartView)?.label ?? 'Khách hàng'}
+        </h2>
+        <span className="text-xs text-[var(--muted)]">
+          Hiển thị {start}–{end} / {total} khách hàng
+        </span>
+      </div>
 
       {/* Table */}
       <Card className="overflow-hidden border-[var(--border)] bg-[var(--surface)]">
@@ -1239,12 +1083,23 @@ export default function CustomersPage() {
         </div>
       </Card>
 
-      <CustomerDetailDrawer
-        customer={selected}
-        onClose={() => setSelected(null)}
-        onEdit={canEdit ? editCustomer : undefined}
-        canAddActivity={canAddActivity}
-      />
+      {/* Right sidebar — mirror LeadDetailPanel (SoftNET CRM): avatar + Mã + status,
+          nút Gọi/Email/Thêm hoạt động/Sửa, "Thông tin chính", "Hoạt động gần đây",
+          dòng audit. Component tách riêng để page gọn. */}
+      {selected && (
+        <CustomerDetailPanel
+          customer={selected}
+          activities={activities}
+          activitiesLoading={activitiesLoading}
+          activitiesError={activitiesError}
+          canAddActivity={canAddActivity}
+          onReloadActivities={() => void reloadActivities()}
+          onAddActivity={() => setShowActivityForm(true)}
+          onClose={() => setSelected(null)}
+          onEdit={() => editCustomer(selected.id)}
+          canEdit={canEdit}
+        />
+      )}
     </div>
   )
 }
