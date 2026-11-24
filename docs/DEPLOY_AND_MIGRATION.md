@@ -312,8 +312,9 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Triệu chứng #2 (ảnh user) | Dòng **"Mã"** trong panel *Tóm tắt khách hàng* hiện xanh lá nhạt → không thấy mã KH | ảnh `/customers/<id>` |
 | Nguyên nhân #2 | Mã bị bọc `<Badge>{codeDisplay}</Badge>`; `badgeVariants.active` = `bg-sidebar-active text-sidebar-heading` → nền `#ddf5dc` + chữ xanh đậm → mờ | `components/ui/ui.tsx:206` (variant `active`) |
 | Fix #2 | Bỏ Badge: dòng đổi nhãn **"Mã KH"**, hiển thị thẳng bằng `font-mono font-semibold tabular-nums text-foreground`; ô input mã thêm cùng bộ class + bỏ mọi `placeholder` (tránh nhầm là chưa có mã) | `components/customers/CreateCustomerForm.tsx` |
-| Triệu chứng #3 | Footer kéo lên/xuống vẫn **che chữ** nội dung | ảnh + mô tả user |
-| Fix #3 | Đổ bóng footer lan tỏa hơn (`0_-6px_16px_rgba(16,32,62,.12)`), nền `#ffffff` đục + spacer `h-20 md:h-[76px]` giữ nguyên | `CreateCustomerForm.tsx` footer |
+| Triệu chứng #3 | Footer kéo lên/xuống vẫn **che chữ** nội dung — user báo **2 lần**, fix lần 1 (đổ bóng) không dứt | ảnh + mô tả user |
+| Nguyên nhân #3 (đã cô lập lần 2) | Spacer đệm cũ `h-20 md:h-[76px]` (80/76px) **thấp hơn chiều cao footer thật** (~88px mobile / ~96px desktop sau khi topbar bị bỏ), nên khi cuộn tới cùng phần nội dung ngay trên footer vẫn rơi vào vùng bị phủ. Đổ bóng footer không giải quyết được vì nguyên nhân là **thiếu đệm**, không phải nền nhòe | `CreateCustomerForm.tsx` spacer |
+| Fix #3 | Thay spacer bằng `h-[88px] bg-[#ffffff] pb-[safe-area] md:h-[96px]` — cao ĐÚNG bằng footer + nền trắng đục, đặt SAU `</footer>`; giữ nguyên nền/spacer `-mx` của footer (test cũ vẫn pass) | `CreateCustomerForm.tsx` + 2 test |
 | Triệu chứng #4 | Bấm **Hủy** modal xác nhận **không căn giữa** màn hình | mô tả user |
 | Fix #4 | Modal thoát đổi `z-50` → `z-[60]` (cao hơn footer sticky `z-30`), giữ `items-center justify-center`; bỏ `!items-center` thừa | `CreateCustomerForm.tsx` modal `data-testid="exit-confirm-modal"` |
 | Triệu chứng #5 | Breadcrumb **"Khách hàng"** là `<span>` chết, không quay về được danh sách | mô tả user |

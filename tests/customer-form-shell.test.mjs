@@ -68,8 +68,21 @@ test('P0: modal Hủy căn giữa viewport, z-index cao hơn footer sticky', () 
   assert.match(form, /exit-confirm-modal[\s\S]{0,200}?items-center/, 'modal căn giữa dọc')
 })
 
+test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 2 lần)', () => {
+  // 2026-11-24 lần 2: footer sticky vẫn phủ nội dung ngay trên nó. Spacer phải
+  // cao ĐÚNG bằng footer (88px mobile / 96px desktop) + NỀN TRẮNG ĐỤC.
+  const spacerIdx = form.indexOf('</footer>')
+  assert.ok(spacerIdx !== -1, 'tìm thấy </footer>')
+  const tail = form.slice(spacerIdx, spacerIdx + 900)
+  assert.match(tail, /h-\[88px\]/, 'spacer mobile đủ cao 88px')
+  assert.match(tail, /md:h-\[96px\]/, 'spacer desktop đủ cao 96px')
+  assert.match(tail, /bg-\[#ffffff\]/, 'spacer có nền đục che chữ')
+  // footer vẫn giữ nền đục + full-bleed + safe-area (không được sửa mất)
+  assert.match(form, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
+  assert.match(form, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
+})
+
 test('P1: breadcrumb "Khách hàng" bấm được → quay lại màn quản lý KH', () => {
-  // 2026-11-24 (user): chữ "Khách hàng" trong breadcrumb phải là Link tới /customers.
   assert.match(form, /<Link href="\/customers"/, 'breadcrumb dùng next/link tới /customers')
   assert.doesNotMatch(
     form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('aria-label="Breadcrumb"') + 500),
