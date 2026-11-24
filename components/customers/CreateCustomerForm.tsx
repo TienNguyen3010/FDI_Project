@@ -471,8 +471,12 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     // ⚠️ flex-col + min-h-full: wrapper nội dung `flex-1` đẩy footer xuống ĐÁY
     // khung form. Nếu form chỉ là block, footer `sticky bottom-0` neo vào đáy
     // CHÍNH NÓ và khi nội dung dài hơn nó sẽ nổi lên giữa trang → ĐÈ chữ.
-    // ⚠️ form = flex-col, KHÔNG đặt h-full/min-h-0 (đặt sẽ làm <main> bị nén khi
-    // nội dung dài hơn => footer đè chữ; đo thật: mt-auto=0px, footerBottom=203).
+    // ⚠️ ĐO THẬT trên prod: form KHÔNG được kẹp chiều cao.
+    //   - `h-full min-h-0` → main co giãn theo nội dung, footer static bị đẩy
+    //     lên, footerBottom=203 (hở 517px).
+    //   - không kẹp gì → main vẫn co giãn, footerBottom=636 khi cuộn max (hở 84px).
+    // Chiều cao do <main> quyết định (`min-w-0 flex-1`, mặc định stretch dọc
+    // nhưng bị nội dung đẩy) — form chỉ cần flex-col + footer mt-auto.
     <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-[1600px] flex-col">
       {/* Header (mirror AddLeadForm: breadcrumb / h1 / subtitle) */}
       <div className="mb-3">
@@ -492,8 +496,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </p>
       </div>
 
-      {/* ── Wrapper: flex-1 đẩy footer xuống đáy; sticky chỉ "dính" khi cuộn
-          vượt chiều cao viewport, KHÔNG bao giờ nổi lên giữa trang đè nội dung. */}
+      {/* Wrapper chứa grid + footer. Footer `mt-auto` neo đáy khung form. */}
       <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_272px]">
           {/* ── Main form ───────────────────────────────────────────────────── */}

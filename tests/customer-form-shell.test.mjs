@@ -74,8 +74,8 @@ test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', (
   const shellSrc = readFileSync(root + 'components/ClientBody.tsx', 'utf8')
   assert.match(
     shellSrc,
-    /md:pb-\[calc\(5\.25rem\+env\(safe-area-inset-bottom\)\)\]/,
-    'main desktop padding-bottom ≥ chiều cao footer + safe-area (giữ cho route khác)',
+    /md:p-6 md:pb-0/,
+    'main desktop pb=0 (footer mới chạm đáy)',
   )
   assert.match(
     shellSrc,

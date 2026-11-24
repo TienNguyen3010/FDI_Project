@@ -489,7 +489,12 @@ export default function ClientBody({
           KHÔNG h-full/min-h-full — nếu đặt height cố định, khi nội dung dài hơn
           thì flex-shrink (mặc định 1) NÉN main lại => footer bị đẩy lên, đè chữ.
           Chỉ cần phủ chiều NGANG + khoá co giãn dọc. ĐO THẬT trên prod. */}
-      <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
+          {/* ⚠️ ĐO THẬT trên prod: footerBottom = viewportHeight − mainPb − spacer.
+              Với mainPb=84px ⇒ footerBottom 636, HỞ 84px dưới đáy; spacer càng
+              lớn thì footer càng bị đẩy LÊN. => Muốn footer CHẠM ĐÁY thì
+              mainPb + spacer = 0. Desktop không có bottom-nav => pb = 0.
+              Mobile giữ pb dư để bottom-nav không che nội dung. */}
+      <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6 md:pb-0">
             {children}
           </main>
         </div>
