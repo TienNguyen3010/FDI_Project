@@ -22,10 +22,9 @@ test('Bố cục: full màn hình + gap nhỏ + header padding thấp', () => {
 })
 
 test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua khi cuộn)', () => {
-  assert.match(src, /sticky bottom-0 z-30/, 'footer không bị bottom nav che')
-  // nền đục TUYỆT ĐỐI #ffffff (2026-11-23: bg-card/bg-surface có thể nhòe khi footer
-  // nằm trong flex item bị stretch) + bị đổ bóng để tách lớp khỏi nội dung.
-  assert.match(src, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
+  // nều đục TUYỆT ĐỐI #ffffff (2026-11-23) — giữ nguyên, chỉ bỏ sticky (sticky
+  // khiến footer khựng lên và hở khe dưới đáy: đã đo 4 lần trên prod).
+  assert.match(src, /<footer className="mt-auto[^"]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
   assert.doesNotMatch(
     src.split('\n').filter((l) => l.includes('className=')).join('\n'),
     /bg-card\/95/,
@@ -33,19 +32,19 @@ test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua k
   )
   assert.match(src, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
   // footer full-bleed: kéo hết padding của main (p-4 mobile = 16px, md:p-[30px])
-  assert.match(src, /sticky bottom-0[^\n]*-mx-4[^\n]*md:-mx-\[30px\]/, 'footer kéo hết padding ngang 2 breakpoint')
-  // có spacer đệm dưới footer (h-[256px]/md:h-[280px]) để card cuối không bị che
-  assert.match(src, /<\/footer>[\s\S]{0,900}?h-\[256px\][\s\S]{0,300}?md:h-\[280px\]/, 'có spacer đệm đủ cao dưới footer')
+  assert.match(src, /mt-auto[^\n]*md:-mx-\[30px\]/, 'footer kéo hết padding ngang 2 breakpoint')
+  // footer dùng mt-auto neo đáy form (đã chuyển bỏ sticky)
+  assert.match(src, /<\/footer>[\s\S]{0,900}?mt-auto|mt-auto[^\n]*bg-\[#ffffff\]/, 'footer dùng mt-auto neo đáy form')
   // footer phải nằm NGOÀI grid (không lồng trong cột): footer xuất hiện SAU
   // khi grid 2 cột đóng. Lưu ý grid đã chuyển sang dạng `lg:grid-cols-[..._272px]`
   // (bản thiết kế lại theo Add Lead), nên KHÔNG còn chuỗi `lg:col-span-2`.
-  const footerIdx = src.indexOf('<footer className="sticky bottom-0')
+  const footerIdx = src.indexOf('<footer className="mt-auto')
   const gridOpenIdx = src.indexOf('lg:grid-cols-[minmax(0,1fr)_272px]')
-  assert.ok(footerIdx !== -1, 'tìm thấy footer sticky')
+  assert.ok(footerIdx !== -1, 'tìm thấy footer')
   assert.ok(gridOpenIdx !== -1, 'tìm thấy grid 2 cột')
   assert.ok(footerIdx > gridOpenIdx, 'footer nằm sau vùng grid')
   // footer không được mang class phân cột grid
-  assert.ok(!/sticky bottom-0[^"]*(col-span|grid-cols)/.test(src), 'footer không nằm trong cột grid')
+  assert.ok(!/mt-auto[^"]*(col-span|grid-cols)/.test(src), 'footer không nằm trong cột grid')
 })
 
 // Regression: modal xác nhận thoát thay window.confirm() native (ảnh softnet-crm).

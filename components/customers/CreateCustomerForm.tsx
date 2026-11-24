@@ -471,7 +471,11 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     // ⚠️ flex-col + min-h-full: wrapper nội dung `flex-1` đẩy footer xuống ĐÁY
     // khung form. Nếu form chỉ là block, footer `sticky bottom-0` neo vào đáy
     // CHÍNH NÓ và khi nội dung dài hơn nó sẽ nổi lên giữa trang → ĐÈ chữ.
-    <form onSubmit={handleSubmit} noValidate className="mx-auto flex min-h-full w-full max-w-[1600px] flex-col">
+    // ⚠️ h-dvh + flex-col: <main> cuộn, form CHIẾM HẾT phần còn lại của viewport.
+    // Footer `mt-auto` nằm ở ĐÁY form => luôn chạm đáy màn hình, KHÔNG dùng
+    // `sticky` (sticky chỉ neo trong phạm vi flex container cha là <main>, nên
+    // footer vẫn khựng lên và hở khe — đã đo 4 lần trên prod).
+    <form onSubmit={handleSubmit} noValidate className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-col">
       {/* Header (mirror AddLeadForm: breadcrumb / h1 / subtitle) */}
       <div className="mb-3">
         <nav aria-label="Breadcrumb" className="text-[12px] font-medium text-muted-foreground">
@@ -492,7 +496,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
 
       {/* ── Wrapper: flex-1 đẩy footer xuống đáy; sticky chỉ "dính" khi cuộn
           vượt chiều cao viewport, KHÔNG bao giờ nổi lên giữa trang đè nội dung. */}
-      <div className="flex-1 space-y-2.5">
+      <div className="flex min-h-0 flex-1 flex-col space-y-2.5">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_272px]">
           {/* ── Main form ───────────────────────────────────────────────────── */}
           <div className="space-y-2.5">
@@ -827,9 +831,11 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </div>
       </div>{/* /wrapper (grid + footer) */}
 
-      {/* Footer hành động: cố định cuối vùng cuộn, NỀN ĐỤC TUYỆT ĐỐI + full-width.
-          ⚠️ ĐÂY LÀ FIX ĐÃ CHỐT — KHÔNG ĐƯỢC SỬA nền / spacer / -mx. */}
-      <footer className="sticky bottom-0 z-30 mt-5 -mx-4 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-6px_16px_rgba(16,32,62,0.12)] sm:px-5 md:-mx-[30px] md:px-[30px]"
+      {/* ── FOOTER: mt-auto đẩy xuống ĐÁY form (form h-full) ────────────────────
+          KHÔNG dùng `sticky`: sticky chỉ neo trong phạm vi container cha là
+          <main>, nên footer vẫn khựng lên và hở khe phía dưới, chữ lọt vào khe.
+          Nền đục tuyệt đối #ffffff + full-bleed + safe-area giữ nguyên. */}
+      <footer className="mt-auto w-full border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-6px_16px_rgba(16,32,62,0.12)] sm:px-5 md:-mx-[30px] md:px-[30px]"
               style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
@@ -853,15 +859,6 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           </Button>
         </div>
       </footer>
-
-      {/* ── ĐỆM DƯỚI FOOTER: khớp cơ chế đo trên prod ───────────────────────────
-          Footer `sticky bottom-0` neo vào ĐÁY vùng cuộn của <main>. Đệm phải nằm
-          SAU footer thì footer mới được ĐẨY CHẠM ĐÁY; đệm đặt TRONG form (mx-auto)
-          không góp chiều dài cuộn cho main.
-          ĐO THẬT: spacer 96px ⇒ footerBottom 541, còn hở 179px. Vậy cần spacer
-          ≈ (hở còn lại) + footer ≈ 179+69 = 248px để footer chạm đáy tuyệt đối.
-          Làm tròn lên 256px mobile / 280px desktop. Nền trắng đục che chữ tuyệt đối. */}
-      <div aria-hidden="true" className="-mt-[1px] h-[256px] bg-[#ffffff] pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:h-[280px]" />
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
           ⚠️ GIỮ NGUYÊN: fixed inset-0 + !items-center, đặt TRỰC TIẾP trong <form>. */}

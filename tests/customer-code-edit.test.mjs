@@ -101,7 +101,7 @@ test('UI: form rộng full màn hình + footer nền đục + modal căn giữa 
   assert.ok(!/backdrop-blur/.test(classLines), 'footer không còn backdrop-blur (nền mờ)')
   // nền ĐỤC TUYỆT ĐỐI: bg-[#ffffff] (2026-11-23 — bg-card/bg-surface vẫn có thể nhòe
   // khi đặt trong cột bị stretch; chốt bằng mã màu trắng đục)
-  assert.match(classLines, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối #ffffff')
+  assert.match(classLines, /mt-auto[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối #ffffff')
   assert.ok(form.includes('safe-area-inset-bottom'), 'footer padding safe-area')
   // modal căn giữa thật (important) — trước bị lệch khi cuộn
   assert.ok(form.includes('!items-center'), 'modal có !items-center')

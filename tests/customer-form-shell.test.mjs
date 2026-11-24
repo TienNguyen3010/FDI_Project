@@ -83,21 +83,23 @@ test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', (
     'main mobile padding-bottom dư cho bottom-nav + footer',
   )
 
-  // Form flex-col vẫn giữ (đẩy footer xuống đáy khung).
-  assert.match(form, /<form[^>]*className="[^"]*min-h-full[^"]*flex-col/, 'form là flex-col + min-h-full')
-  assert.match(
-    form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('<footer className="sticky')),
-    /className="flex-1 space-y-2\.5"/,
-    'wrapper nội dung dùng flex-1 đẩy footer xuống đáy',
-  )
+  // Form flex-col + h-full (đẩy footer xuống đáy khung, không dùng sticky).
+  assert.match(form, /<form[^>]*className="[^"]*h-full[^"]*flex-col/, 'form là flex-col + h-full')
   const spacerIdx = form.indexOf('</footer>')
   assert.ok(spacerIdx !== -1, 'tìm thấy </footer>')
   const tail = form.slice(spacerIdx, spacerIdx + 900)
-  // ĐO THẬT: spacer 96px ⇒ còn hở 179px. Cần ~248px → 256/280.
-  assert.match(tail, /h-\[256px\]/, 'spacer mobile đủ cao để footer chạm đáy')
-  assert.match(tail, /md:h-\[280px\]/, 'spacer desktop đủ cao để footer chạm đáy')
-  assert.match(tail, /bg-\[#ffffff\]/, 'spacer có nền đục che chữ')
-  assert.match(form, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
+  // form h-full + wrapper cuộn: footer mt-auto luôn chạm đáy, không sticky.
+  assert.match(form, /<form[^>]*className="[^"]*h-full[^"]*flex-col/, 'form h-full flex-col')
+  assert.match(
+    form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('<footer')),
+    /className="flex min-h-0 flex-1 flex-col space-y-2\.5"/,
+    'wrapper nội dung co giãn, đẩy footer xuống đáy',
+  )
+  const footIdx = form.indexOf('<footer')
+  const footLine = form.slice(footIdx, footIdx + 200)
+  assert.match(footLine, /mt-auto/, 'footer dùng mt-auto (neo đáy)')
+  assert.doesNotMatch(footLine, /sticky bottom-0/, 'KHÔNG dùng sticky (gây hở khe)')
+  assert.match(footLine, /bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
   assert.match(form, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
 })
 
