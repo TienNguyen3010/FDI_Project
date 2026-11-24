@@ -303,6 +303,18 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
 | Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
 
+## 16f. Sửa chữ vô hình trên Badge (Ngành / Trạng thái / tag) — contrast 1.00 (2026-11-24)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng (ảnh user) | "column Ngành màu chữ đang xanh lá nhạt nên không thấy rõ" | ảnh `/customers` |
+| ĐO THẬT bằng `getComputedStyle` trên prod | Ô Ngành (Badge `default`) có **chữ `rgb(248,252,249)` y hệt nền `rgb(248,252,249)`** ⇒ **contrast ratio = 1.00** (không phải "nhạt khó đọc", mà là VÔ HÌNH). Cùng đo cell thường: `rgb(16,32,62)` trên trắng = 16.92 | tool output JS trong browser |
+| Nguyên nhân gốc | Token `--muted` = **`#b8d0ce`** (xanh nhạt), nền Badge `default` dùng `--sidebar-group` `#f8fcf9`. Chữ `#b8d0ce` trên `#f8fcf9` = 1.19, render ra 1.00. Sửa một badge không dứt vì lỗi ở TOKEN dùng chung toàn app | `app/globals.css` + `components/ui/ui.tsx:200` |
+| Fix #1 | `--muted`: `#b8d0ce` → **`#33415c`** (xanh đậm, vẫn giữ vai "phụ"). Contrast: trên trắng **10.24** · trên sidebar-group **9.89** | `app/globals.css` |
+| Fix #2 | Badge `critical` `risk/10 + risk` → `risk/15 + #b32833` (3.45 → **5.87**) · `major` `kpi-tickets/10 + kpi-tickets` → `…/15 + #a45a05` (2.23 → **4.77**). Cả hai đều đạt WCAG AA | `components/ui/ui.tsx` |
+| Phạm vi ảnh hưởng | Mọi `<Badge>` `default` (Ngành, MST trong summary, tag), mọi chữ `text-muted`/`text-muted-foreground` (nhãn label, hint, số STT, relative time, "Mã: —") — **sáng lên cả hệ thống**, đúng hướng vì trước đó những chỗ đó cũng mất chữ | repo-wide grep |
+| Verify | `node --test tests/contrast-badge.test.mjs` **3/3** (có hàm tính WCAG contrast thật) · `npm test` **95/95** · `tsc` **0** · build EXIT=0 | tool output |
+
 ## 16e. Màn quản lý khách hàng lấy chuẩn UI Lead (SoftNET CRM) + bỏ topbar (2026-11-24)
 
 | Hạng mục | Kết quả | Evidence |

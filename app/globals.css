@@ -23,8 +23,13 @@
   /* --- Brand / text / border --------------------------------------------- */
   --primary: #087f30;
   --primary-hover: #006c28;
+  /* 2026-11-24: `--muted` TRƯỚC đây = #b8d0ce (xanh nhạt) → Badge `default`
+     (bg-sidebar-group + text-muted) cho contrast 1.19 và `text-muted`
+     cho 1.00 ⇒ CHỮ VÔ HÌNH. Đã đo bằng getComputedStyle trên prod:
+     chữ rgb(248,252,249) y hệt nền rgb(248,252,249). Sửa sang xanh đậm,
+     giữ đúng vai "muted" (phụ) nhưng đạt WCAG AA. */
   --text: #10203e;
-  --muted: #445a7b;
+  --muted: #33415c;
   --border: #d9e4f2;
   --surface: #ffffff;
 

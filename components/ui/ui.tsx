@@ -200,8 +200,11 @@ export function Badge({
   const neutral = 'bg-sidebar-group text-muted border border-border'
   const styleByVariant: Record<BadgeVariant, string> = {
     default: neutral,
-    critical: 'bg-risk/10 text-risk border border-risk/20',
-    major: 'bg-kpi-tickets/10 text-kpi-tickets border border-kpi-tickets/20',
+    // ⚠️ CONTRAST (đo 2026-11-24, WCAG AA ≥ 4.5): nền /10 làm chữ nhạt mất đọc.
+    // critical trước = 3.45 ⇒ chuyển nền sang /15 + chữ risk đậm hơn (#c1323f).
+    critical: 'bg-risk/15 text-[#b32833] border border-risk/30',
+    // major KHÔNG dùng trong app; vẫn nâng lên để variant sẵn dùng được (trước 2.23).
+    major: 'bg-kpi-tickets/15 text-[#a45a05] border border-kpi-tickets/30',
     minor: 'bg-ticket-waiting/10 text-warning border border-ticket-waiting/20',
     active: 'bg-sidebar-active text-sidebar-heading border border-sidebar-active-border/20',
     inactive: neutral,
