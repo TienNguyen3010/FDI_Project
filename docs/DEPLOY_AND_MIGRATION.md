@@ -303,6 +303,23 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
 | Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
 
+## 16d. Form khách hàng: bỏ topbar trùng, mã KH đọc rõ, footer/modal sửa lại (2026-11-24)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Triệu chứng #1 (ảnh user) | Màn Sửa KH vẫn có hàng **"Customers · admin@fdi.local"** phía trên → trùng với breadcrumb/h1 của chính form | ảnh `/customers/<id>` |
+| Fix #1 | `ClientBody` thêm nhánh `showTopbar`: ẩn topbar ở `/customers/new` và `/customers/[id]` (màn full page tự có header), giữ nguyên topbar ở mọi route khác; mobile vẫn còn nút mở drawer | `components/ClientBody.tsx` (khai báo `showTopbar`, nhánh `) : (`) |
+| Triệu chứng #2 (ảnh user) | Dòng **"Mã"** trong panel *Tóm tắt khách hàng* hiện xanh lá nhạt → không thấy mã KH | ảnh `/customers/<id>` |
+| Nguyên nhân #2 | Mã bị bọc `<Badge>{codeDisplay}</Badge>`; `badgeVariants.active` = `bg-sidebar-active text-sidebar-heading` → nền `#ddf5dc` + chữ xanh đậm → mờ | `components/ui/ui.tsx:206` (variant `active`) |
+| Fix #2 | Bỏ Badge: dòng đổi nhãn **"Mã KH"**, hiển thị thẳng bằng `font-mono font-semibold tabular-nums text-foreground`; ô input mã thêm cùng bộ class + bỏ mọi `placeholder` (tránh nhầm là chưa có mã) | `components/customers/CreateCustomerForm.tsx` |
+| Triệu chứng #3 | Footer kéo lên/xuống vẫn **che chữ** nội dung | ảnh + mô tả user |
+| Fix #3 | Đổ bóng footer lan tỏa hơn (`0_-6px_16px_rgba(16,32,62,.12)`), nền `#ffffff` đục + spacer `h-20 md:h-[76px]` giữ nguyên | `CreateCustomerForm.tsx` footer |
+| Triệu chứng #4 | Bấm **Hủy** modal xác nhận **không căn giữa** màn hình | mô tả user |
+| Fix #4 | Modal thoát đổi `z-50` → `z-[60]` (cao hơn footer sticky `z-30`), giữ `items-center justify-center`; bỏ `!items-center` thừa | `CreateCustomerForm.tsx` modal `data-testid="exit-confirm-modal"` |
+| Triệu chứng #5 | Breadcrumb **"Khách hàng"** là `<span>` chết, không quay về được danh sách | mô tả user |
+| Fix #5 | Đổi sang `<Link href="/customers">` (client navigation, có focus ring/hover) + import `next/link` | `CreateCustomerForm.tsx` header breadcrumb |
+| Verify | `node --test tests/customer-form-shell.test.mjs` **6/6** · `npm test` **82/82** · `tsc` **0** · build 0 · docs-check OK | tool output |
+
 ## 15. Logout không redirect — HttpOnly cookie `sb-access-token` sót lại (2026-11-19)
 
 | Hạng mục | Kết quả |

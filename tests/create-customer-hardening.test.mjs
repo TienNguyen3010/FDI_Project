@@ -72,9 +72,10 @@ test('Label Ghi chú có htmlFor="f-notes"', () => {
   assert.ok(code.includes("fieldProps('notes')"), 'Ghi chú dùng fieldProps (id f-notes)')
 })
 
-test('summary Mã dùng <Badge>', () => {
+test('summary Mã dùng codeDisplay (không Badge)', () => {
   // Bản thiết kế lại: summary dùng <Badge>{codeDisplay}</Badge> (mã đã đủ CUS-YYYY-NNN).
-  assert.ok(code.includes('<Badge>{codeDisplay}</Badge>'), 'summary Mã dùng Badge với codeDisplay')
+  // 2026-11-24: mã KH hiển thị thẳng (không Badge) — nền xanh lá làm mã nhòe.
+  assert.ok(code.includes('{codeDisplay}'), 'summary vẫn hiển thị codeDisplay')
 })
 
 test('nút Lưu khi saving dùng <Spinner>', () => {

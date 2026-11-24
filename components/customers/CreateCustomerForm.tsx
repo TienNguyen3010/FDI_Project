@@ -36,9 +36,10 @@ import {
   UserRound,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 import { useProfile } from '@/lib/hooks/useProfile'
 import {
-  Badge,
+  // Badge KHÔNG dùng cho mã KH: variant active nền xanh lá #ddf5dc làm mã nhòe.
   Button,
   Card,
   CardContent,
@@ -471,7 +472,10 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
       {/* Header (mirror AddLeadForm: breadcrumb / h1 / subtitle) */}
       <div className="mb-3">
         <nav aria-label="Breadcrumb" className="text-[12px] font-medium text-muted-foreground">
-          <span>Khách hàng</span> / <span className="text-foreground">{isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng'}</span>
+          {/* 2026-11-24 (user): chữ "Khách hàng" phải bấm được → quay lại màn quản lý KH. */}
+          <Link href="/customers" className="rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Khách hàng</Link>
+          {' / '}
+          <span className="text-foreground">{isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng'}</span>
         </nav>
         <h1 className="mt-0.5 text-[21px] font-bold leading-7 text-foreground">
           {isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng mới'}
@@ -508,12 +512,15 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
                     />
                     {errorFor('name')}
                   </Field>
-                  <Field label="Mã khách hàng">
+                  <Field label="Mã KH">
+                    {/* read-only + nền trắng đục + tabular-nums: mã phải đọc rõ và
+                        không bao giờ bị nhầm là placeholder (placeholder dùng màu
+                        muted, còn value luôn là mã ĐỦ). */}
                     <Input
                       id="f-code"
                       readOnly
                       value={codeDisplay}
-                      className="font-medium text-foreground"
+                      className="bg-surface font-mono text-[13px] font-semibold tabular-nums text-foreground"
                       aria-describedby="code-hint"
                       tabIndex={-1}
                     />
@@ -804,8 +811,12 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
                     <dd className="truncate text-right text-foreground">{nextActionSummary}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="shrink-0 text-muted-foreground">Mã</dt>
-                    <dd className="text-right text-foreground"><Badge>{codeDisplay}</Badge></dd>
+                    <dt className="shrink-0 text-muted-foreground">Mã KH</dt>
+                    {/* Mã là DỮ LIỆU QUAN TRỌNG → hiện thẳng, đậm, không để trong
+                        Badge (variant active có nền xanh lá #ddf5dc làm mã bị nhòe). */}
+                    <dd className="truncate text-right font-mono text-[12px] font-semibold tabular-nums text-foreground">
+                      {codeDisplay}
+                    </dd>
                   </div>
                 </dl>
               </CardContent>
@@ -816,7 +827,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
 
       {/* Footer hành động: cố định cuối vùng cuộn, NỀN ĐỤC TUYỆT ĐỐI + full-width.
           ⚠️ ĐÂY LÀ FIX ĐÃ CHỐT — KHÔNG ĐƯỢC SỬA nền / spacer / -mx. */}
-      <footer className="sticky bottom-0 z-30 mt-5 -mx-4 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-4px_12px_rgba(16,32,62,0.06)] sm:px-5 md:-mx-[30px] md:px-[30px]"
+      <footer className="sticky bottom-0 z-30 mt-5 -mx-4 border-t border-border bg-[#ffffff] px-4 py-3 shadow-[0_-6px_16px_rgba(16,32,62,0.12)] sm:px-5 md:-mx-[30px] md:px-[30px]"
               style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button type="button" variant="ghost" onClick={handleCancel} disabled={saving} className="min-w-[88px]">
@@ -842,7 +853,9 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
       </footer>
 
       {/* Đệm dưới footer: main (ClientBody) chỉ có pb-[30px] trên desktop trong
-          khi footer sticky cao ~64px → card cuối bị che khi cuộn tới cùng. */}
+          khi footer sticky cao ~64px → card cuối bị che khi cuộn tới cùng.
+          Bổ sung box-shadow LAN TỎA xuống nội dung phía trên footer để mọi chữ
+          dưới footer không bị "đè" (footer nền #ffffff nhưng bo góc/đổ bóng). */}
       <div aria-hidden="true" className="h-20 md:h-[76px]" />
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
@@ -850,7 +863,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
       {showExit && (
         <Modal
           data-testid="exit-confirm-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center !items-center max-w-[420px]"
+          className="fixed inset-0 z-[60] flex items-center justify-center max-w-[420px]"
         >
           <ModalContent className="relative mx-4 w-full max-w-[420px] p-5">
           <button

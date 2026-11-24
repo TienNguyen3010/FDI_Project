@@ -129,6 +129,17 @@ export default function ClientBody({
   initialCollapsed?: boolean
 }) {
   const pathname = usePathname()
+  /*
+   * 2026-11-24: các màn hình TẠO/SỬA (full page) tự có breadcrumb + h1 trong
+   * nội dung, nên topbar toàn cục ("Customers" / email admin@fdi.local) bị
+   * trùng lặp và chiếm chỗ. Danh sách ĐỊNH DANH để tránh vỡ layout 24 route
+   * khác (shell chỉ thay nhánh render, không đổi padding/chiều cao main).
+   */
+  /** Route full-page tự có breadcrumb/h1 → bỏ topbar trùng lặp. */
+  const showTopbar = !(
+    pathname === '/customers/new' ||
+    (pathname.startsWith('/customers/') && pathname !== '/customers')
+  )
   const router = useRouter()
   const [collapsed, setCollapsed] = useState<boolean>(initialCollapsed ?? false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -416,6 +427,12 @@ export default function ClientBody({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          {/* 2026-11-24: BỎ topbar ("Customers" + admin@fdi.local) theo yêu cầu user.
+              Mỗi màn hình tự có breadcrumb/h1 ngay trong nội dung (mirror Add Lead
+              SoftNET CRM), nên thanh tiêu đề toàn cục chỉ làm hình, nhất là khi
+              trùng tên màn hình. `hideMobileNav` (chỉ set ở 2 route form khách
+              hàng) giữ lại nút mở drawer mobile. */}
+          {showTopbar ? (
           <header className="flex h-[58px] shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
@@ -447,6 +464,19 @@ export default function ClientBody({
               </span>
             </div>
           </header>
+          ) : (
+            /* Chế độ không topbar: chỉ còn nút mở drawer ở mobile, góc trên trái. */
+            <div className="flex h-12 shrink-0 items-center px-3 md:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="tap-target rounded-md text-muted-foreground transition-colors hover:bg-sidebar-group hover:text-foreground"
+                aria-label="Mở menu điều hướng"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
+          )}
 
           {/* pb-20 trên mobile để bottom nav không che nội dung; md trở lại bình thường.
               Thêm pb-[calc(4.75rem+env(safe-area-inset-bottom))] để footer form (sticky)

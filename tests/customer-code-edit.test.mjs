@@ -76,7 +76,14 @@ test('P0: mã hiển thị KHÔNG nhân đôi prefix CUS- (sửa form)', () => {
   assert.ok(form.includes('value={codeDisplay}'), 'input dùng codeDisplay')
   // Bản thiết kế lại theo Add Lead: summary hiển thị <Badge>{codeDisplay}</Badge>
   // (mã đã đủ CUS-YYYY-NNN) — hết lỗi CUS-CUS-... và hết summary trống.
-  assert.ok(form.includes('<Badge>{codeDisplay}</Badge>'), 'summary dùng codeDisplay (không bao giờ trống)')
+  // 2026-11-24: mã KH KHÔNG được để trong Badge (nền xanh lá #ddf5dc làm mã nhòe).
+  assert.ok(form.includes('{codeDisplay}'), 'summary vẫn hiển thị mã')
+  assert.doesNotMatch(
+    form,
+    /<Badge[^>]*>\{codeDisplay\}<\/Badge>/,
+    'KHÔNG bọc mã trong Badge (nền xanh lá làm mã nhòe)',
+  )
+  assert.match(form, /Mã KH/, 'nhãn dòng Mã hiển thị đúng')
 })
 
 test('P1: chế độ sửa ẩn nút "Lưu và tạo mới" (chỉ tạo mới ở form tạo)', () => {
