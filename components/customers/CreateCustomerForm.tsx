@@ -471,11 +471,9 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     // ⚠️ flex-col + min-h-full: wrapper nội dung `flex-1` đẩy footer xuống ĐÁY
     // khung form. Nếu form chỉ là block, footer `sticky bottom-0` neo vào đáy
     // CHÍNH NÓ và khi nội dung dài hơn nó sẽ nổi lên giữa trang → ĐÈ chữ.
-    // ⚠️ h-dvh + flex-col: <main> cuộn, form CHIẾM HẾT phần còn lại của viewport.
-    // Footer `mt-auto` nằm ở ĐÁY form => luôn chạm đáy màn hình, KHÔNG dùng
-    // `sticky` (sticky chỉ neo trong phạm vi flex container cha là <main>, nên
-    // footer vẫn khựng lên và hở khe — đã đo 4 lần trên prod).
-    <form onSubmit={handleSubmit} noValidate className="mx-auto flex h-full min-h-0 w-full max-w-[1600px] flex-col">
+    // ⚠️ form = flex-col, KHÔNG đặt h-full/min-h-0 (đặt sẽ làm <main> bị nén khi
+    // nội dung dài hơn => footer đè chữ; đo thật: mt-auto=0px, footerBottom=203).
+    <form onSubmit={handleSubmit} noValidate className="mx-auto flex w-full max-w-[1600px] flex-col">
       {/* Header (mirror AddLeadForm: breadcrumb / h1 / subtitle) */}
       <div className="mb-3">
         <nav aria-label="Breadcrumb" className="text-[12px] font-medium text-muted-foreground">

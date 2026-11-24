@@ -485,7 +485,11 @@ export default function ClientBody({
               scroll lại ĐẨY FOOTER LÊN (pb 100→hở 195, pb 220→hở 315) — vì đệm
               nằm GIỮA nội dung và đáy cuộn. Muốn footer chạm đáy thì đệm phải
               nằm SAU footer (xem spacer trong CreateCustomerForm). */}
-          <main className="min-h-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
+          {/* <main> là FLEX ITEM (cha `.flex-1 flex-col`): mặc định stretch dọc.
+          KHÔNG h-full/min-h-full — nếu đặt height cố định, khi nội dung dài hơn
+          thì flex-shrink (mặc định 1) NÉN main lại => footer bị đẩy lên, đè chữ.
+          Chỉ cần phủ chiều NGANG + khoá co giãn dọc. ĐO THẬT trên prod. */}
+      <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
             {children}
           </main>
         </div>

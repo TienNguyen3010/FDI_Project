@@ -83,13 +83,15 @@ test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', (
     'main mobile padding-bottom dư cho bottom-nav + footer',
   )
 
-  // Form flex-col + h-full (đẩy footer xuống đáy khung, không dùng sticky).
-  assert.match(form, /<form[^>]*className="[^"]*h-full[^"]*flex-col/, 'form là flex-col + h-full')
+  // Form flex-col, KHÔNG kẹp chiều cao.
+  assert.match(form, /<form[^>]*className="mx-auto flex w-full[^"]*flex-col"/, 'form flex-col, không kẹp chiều cao')
   const spacerIdx = form.indexOf('</footer>')
   assert.ok(spacerIdx !== -1, 'tìm thấy </footer>')
   const tail = form.slice(spacerIdx, spacerIdx + 900)
-  // form h-full + wrapper cuộn: footer mt-auto luôn chạm đáy, không sticky.
-  assert.match(form, /<form[^>]*className="[^"]*h-full[^"]*flex-col/, 'form h-full flex-col')
+  // form flex-col (không h-full/min-h-0), wrapper flex-1 đẩy footer xuống đáy.
+  assert.match(form, /<form[^>]*className="mx-auto flex w-full[^"]*flex-col"/, 'form flex-col, không kẹp chiều cao')
+  const headPart = form.slice(form.indexOf('<form'), form.indexOf('aria-label="Breadcrumb"'))
+  assert.doesNotMatch(headPart, /h-full|min-h-0/, 'KHÔNG h-full/min-h-0 (làm main bị nén)')
   assert.match(
     form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('<footer')),
     /className="flex min-h-0 flex-1 flex-col space-y-2\.5"/,
