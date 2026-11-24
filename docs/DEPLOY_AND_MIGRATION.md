@@ -1,6 +1,6 @@
 # Apply Migration & Deploy — FDI_Project v1.0
 
-> Trạng thái 2026-11-23: **Migration 006–012 đã apply (010 = `customers.code` + trigger sinh mã; 012 = sửa gốc RLS role `project_manager`); Deploy ✅ production `https://fdi-project.vercel.app`**.
+> Trạng thái 2026-11-23: **Migration 006–014 ĐÃ APPLY ĐỦ** (verify trực tiếp trên DB pooler: `schema_migrations` có 010/011/012/013/014; hàm `log_customer_activity` + `create_customer_with_activity` tồn tại) · Deploy ✅ production `https://fdi-project.vercel.app` @ `3ca30f9`.
 
 ## 1. Phát hiện quan trọng (audit thực, 2026-11-18)
 
@@ -232,7 +232,7 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Guard `scripts/docs-check.mjs` chỉ resolve path trong `docs/` → báo `migrations/011_customer_edit_scope.sql` là dangling (false positive). Thêm nhánh resolve theo repo root | `scripts/docs-check.mjs:123` |
 | Verify | `tsc` EXIT 0 · `npm test` **66/66** · `check:docs` OK 56 files · build EXIT 0 | tool output |
 
-> **Migration 012 cần apply** trên Supabase SQL Editor (sau 011). Chưa apply thì role `project_manager` vẫn không hiện mã khi sửa — lỗi này **không sửa được ở UI**.
+> **Migration 012 ĐÃ APPLY** (verify trực tiếp trên DB: `schema_migrations` có `012_customer_edit_scope_v2`; `fdi_can_read` branch toàn công ty = `('director','manager','project_manager','super_admin')`).
 
 ## 16i. Thiết kế lại form theo gốc Add Lead + bảng Activities (2026-11-23)
 
@@ -245,7 +245,7 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | DB | `migrations/013_customer_activities.sql`: bảng `activities` ĐA HÌNH (`entity_type` customer/project/site, `entity_id` không FK vật lý), lookup `activity_types`/`channels`, RLS theo `fdi_can_read`, RPC `log_activity` + `create_customer_with_activity` (nguyên tử, idempotent qua `metadata.idem_key`, kiểm `fdi_is_manager_plus`) | 013 (517 dòng) |
 | Test | `npm test` **77/77** · `tsc` 0 · `build` EXIT 0 · docs-check OK | tool output |
 
-> **Migration 013 cần apply** trên Supabase SQL Editor (sau 012). Chưa apply → form gọi RPC `create_customer_with_activity` sẽ lỗi `PGRST202`; tính năng Next Action chưa dùng được.
+> **Migration 013 ĐÃ APPLY** (verify trên DB: bảng `activities` + lookup `activity_types`/`channels` có seed đủ; RPC `create_customer_with_activity` tồn tại).
 
 ### 16j. Lịch sử hoạt động + vá lỗ hổng RLS ghi activities (2026-11-23)
 
@@ -258,7 +258,7 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | UI | Drawer chi tiết khách hàng thêm section **"Lịch sử hoạt động"**: dòng thời gian (label loại + thời gian + subject/body + badge status), empty state "Chưa có hoạt động nào.", nút **Thêm hoạt động** (form inline: Loại/Ngày giờ/Nội dung/Trạng thái), refetch sau khi thêm | `app/(workspace)/customers/page.tsx` |
 | Verify | `npm test` **77/77** · `tsc` 0 · `build` EXIT 0 | tool output |
 
-> **Migration 014 cần apply** (sau 013). Chưa apply → `POST` trả 501 kèm hướng dẫn chạy migration.
+> **Migration 014 ĐÃ APPLY** (verify trực tiếp trên DB + test RLS bằng JWT giả lập: hàm `log_customer_activity` tồn tại, có `fdi_can_read`; admin `super_admin` ghi được hoạt động, `demo.employee@fdi.local` bị chặn "khong co quyen ghi hoat dong cho doi tuong nay").
 
 ### 16h. Admin lưu KH thành công nhưng danh sách rỗng (2026-11-23)
 
