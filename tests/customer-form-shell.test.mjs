@@ -6,7 +6,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-
 const root = new URL('..', import.meta.url).pathname
 const shell = readFileSync(root + 'components/ClientBody.tsx', 'utf8')
 const form = readFileSync(root + 'components/customers/CreateCustomerForm.tsx', 'utf8')
@@ -69,11 +68,22 @@ test('P0: modal Hủy căn giữa viewport, z-index cao hơn footer sticky', () 
 })
 
 test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', () => {
-  // Bản gốc: form là BLOCK → footer `sticky bottom-0` neo vào đáy CHÍNH NÓ,
-  // khi nội dung dài hơn nó nổi lên giữa trang và ĐÈ chữ. Tăng đệm/sửa bóng
-  // không dứt vì footer vẫn nổi.
-  // Fix: form `flex min-h-full flex-col` + wrapper `flex-1` → footer luôn bị
-  // đẩy xuống ĐÁY khung, không bao giờ nổi lên giữa trang.
+  // ĐO THẬT trên prod (JS getBoundingClientRect, scrollTop = max):
+  //   pb main = 30px  → footerBottom 595 vs viewport 720 ⇒ HỞ 125px ⇒ chữ lọt dưới footer.
+  // Fix: pb phải ≥ chiều cao footer (69px) + safe-area. Cả 2 màn hình đều phải có.
+  const shellSrc = readFileSync(root + 'components/ClientBody.tsx', 'utf8')
+  assert.match(
+    shellSrc,
+    /md:pb-\[calc\(5\.25rem\+env\(safe-area-inset-bottom\)\)\]/,
+    'main desktop padding-bottom ≥ chiều cao footer + safe-area',
+  )
+  assert.match(
+    shellSrc,
+    /pb-\[calc\(6rem\+env\(safe-area-inset-bottom\)\)\]/,
+    'main mobile padding-bottom dư cho bottom-nav + footer',
+  )
+
+  // Form flex-col vẫn giữ (đẩy footer xuống đáy khung).
   assert.match(form, /<form[^>]*className="[^"]*min-h-full[^"]*flex-col/, 'form là flex-col + min-h-full')
   assert.match(
     form.slice(form.indexOf('aria-label="Breadcrumb"'), form.indexOf('<footer className="sticky')),

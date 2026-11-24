@@ -478,10 +478,11 @@ export default function ClientBody({
             </div>
           )}
 
-          {/* pb-20 trên mobile để bottom nav không che nội dung; md trở lại bình thường.
-              Thêm pb-[calc(4.75rem+env(safe-area-inset-bottom))] để footer form (sticky)
-              KHÔNG bị bottom-nav chồng lên khi cuộn tới cuối trang. */}
-          <main className="min-h-0 flex-1 overflow-auto p-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[30px]">
+          {/* pb: mobile dư để bottom-nav không che; desktop phải ≥ chiều cao footer
+              (69px) + safe-area, nếu không footer sticky bị "khựng" và đè chữ.
+              ĐO THẬT trên prod (JS getBoundingClientRect, cuộn tới max): pb=30px →
+              footerBottom 595 vs viewport 720 = HỞ 125px nên chữ lọt dưới footer. */}
+          <main className="min-h-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
             {children}
           </main>
         </div>
