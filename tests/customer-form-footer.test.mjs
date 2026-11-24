@@ -34,8 +34,8 @@ test('Footer sticky có z-index và NỀN ĐỤC (không để chữ lọt qua k
   assert.match(src, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')
   // footer full-bleed: kéo hết padding của main (p-4 mobile = 16px, md:p-[30px])
   assert.match(src, /sticky bottom-0[^\n]*-mx-4[^\n]*md:-mx-\[30px\]/, 'footer kéo hết padding ngang 2 breakpoint')
-  // có spacer đệm dưới footer (h-[88px]/md:h-[96px]) để card cuối không bị che
-  assert.match(src, /<\/footer>[\s\S]{0,400}?h-\[88px\][\s\S]{0,200}?md:h-\[96px\]/, 'có spacer đệm đủ cao dưới footer')
+  // có spacer đệm dưới footer (h-[256px]/md:h-[280px]) để card cuối không bị che
+  assert.match(src, /<\/footer>[\s\S]{0,900}?h-\[256px\][\s\S]{0,300}?md:h-\[280px\]/, 'có spacer đệm đủ cao dưới footer')
   // footer phải nằm NGOÀI grid (không lồng trong cột): footer xuất hiện SAU
   // khi grid 2 cột đóng. Lưu ý grid đã chuyển sang dạng `lg:grid-cols-[..._272px]`
   // (bản thiết kế lại theo Add Lead), nên KHÔNG còn chuỗi `lg:col-span-2`.

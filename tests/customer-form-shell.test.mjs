@@ -75,7 +75,7 @@ test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', (
   assert.match(
     shellSrc,
     /md:pb-\[calc\(5\.25rem\+env\(safe-area-inset-bottom\)\)\]/,
-    'main desktop padding-bottom ≥ chiều cao footer + safe-area',
+    'main desktop padding-bottom ≥ chiều cao footer + safe-area (giữ cho route khác)',
   )
   assert.match(
     shellSrc,
@@ -93,8 +93,9 @@ test('P0: footer KHÔNG che chữ khi cuộn tới cùng (user báo 3 lần)', (
   const spacerIdx = form.indexOf('</footer>')
   assert.ok(spacerIdx !== -1, 'tìm thấy </footer>')
   const tail = form.slice(spacerIdx, spacerIdx + 900)
-  assert.match(tail, /h-\[88px\]/, 'spacer mobile đủ cao 88px')
-  assert.match(tail, /md:h-\[96px\]/, 'spacer desktop đủ cao 96px')
+  // ĐO THẬT: spacer 96px ⇒ còn hở 179px. Cần ~248px → 256/280.
+  assert.match(tail, /h-\[256px\]/, 'spacer mobile đủ cao để footer chạm đáy')
+  assert.match(tail, /md:h-\[280px\]/, 'spacer desktop đủ cao để footer chạm đáy')
   assert.match(tail, /bg-\[#ffffff\]/, 'spacer có nền đục che chữ')
   assert.match(form, /sticky bottom-0[^\n]*bg-\[#ffffff\]/, 'footer nền đục tuyệt đối')
   assert.match(form, /safe-area-inset-bottom/, 'footer tôn trọng safe-area')

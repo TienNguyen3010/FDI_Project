@@ -854,11 +854,14 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
         </div>
       </footer>
 
-      {/* ── ĐỆM DƯỚI FOOTER (che chữ khi cuộn tới cùng) ───────────────────────
-          Footer `sticky bottom-0` neo vào đáy vùng cuộn của <main> nên nội dung
-          nằm ngay trên footer vẫn bị phủ → đệm cao ĐÚNG bằng footer, nền trắng
-          đục, đặt SAU </footer>. */}
-      <div aria-hidden="true" className="-mt-[1px] h-[88px] bg-[#ffffff] pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:h-[96px]" />
+      {/* ── ĐỆM DƯỚI FOOTER: khớp cơ chế đo trên prod ───────────────────────────
+          Footer `sticky bottom-0` neo vào ĐÁY vùng cuộn của <main>. Đệm phải nằm
+          SAU footer thì footer mới được ĐẨY CHẠM ĐÁY; đệm đặt TRONG form (mx-auto)
+          không góp chiều dài cuộn cho main.
+          ĐO THẬT: spacer 96px ⇒ footerBottom 541, còn hở 179px. Vậy cần spacer
+          ≈ (hở còn lại) + footer ≈ 179+69 = 248px để footer chạm đáy tuyệt đối.
+          Làm tròn lên 256px mobile / 280px desktop. Nền trắng đục che chữ tuyệt đối. */}
+      <div aria-hidden="true" className="-mt-[1px] h-[256px] bg-[#ffffff] pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:h-[280px]" />
 
       {/* Xác nhận thoát khi còn thay đổi chưa lưu — thay confirm() native của trình duyệt.
           ⚠️ GIỮ NGUYÊN: fixed inset-0 + !items-center, đặt TRỰC TIẾP trong <form>. */}

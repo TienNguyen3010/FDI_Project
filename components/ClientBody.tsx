@@ -478,10 +478,13 @@ export default function ClientBody({
             </div>
           )}
 
-          {/* pb: mobile dư để bottom-nav không che; desktop phải ≥ chiều cao footer
-              (69px) + safe-area, nếu không footer sticky bị "khựng" và đè chữ.
-              ĐO THẬT trên prod (JS getBoundingClientRect, cuộn tới max): pb=30px →
-              footerBottom 595 vs viewport 720 = HỞ 125px nên chữ lọt dưới footer. */}
+          {/* pb: mobile dư để bottom-nav không che. Desktop phải = CHIỀU CAO
+              FOOTER (69px) + safe-area, nếu không footer sticky "khựng" lên và hở
+              khe phía dưới, chữ lọt vào khe → nhìn như footer che chữ.
+              ⚠️ ĐO THẬT trên prod: pb=30px ⇒ hở 125px. NHƯNG pb lớn trong vùng
+              scroll lại ĐẨY FOOTER LÊN (pb 100→hở 195, pb 220→hở 315) — vì đệm
+              nằm GIỮA nội dung và đáy cuộn. Muốn footer chạm đáy thì đệm phải
+              nằm SAU footer (xem spacer trong CreateCustomerForm). */}
           <main className="min-h-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-[30px] md:pb-[calc(5.25rem+env(safe-area-inset-bottom))]">
             {children}
           </main>
