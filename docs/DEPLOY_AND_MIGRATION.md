@@ -303,6 +303,24 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
 | Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
 
+## 16g. Định vị lại PSM: lifecycle_stage thật, block Dự án, font/hit-area (2026-11-24)
+
+User chốt: **A — làm migration cột thật**, và **giữ nguyên nav Infrastructure + Assets** (2 module phát triển sau).
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Bối cảnh đổi | User làm rõ dự án là **PSM** (theo dõi dự án đang/đã triển khai + ticket + monitoring), không phải CRM bán hàng ⇒ phản biện lại, bỏ các đề xuất kiểu Zoho Account owner/dedup engine | tin nhắn user |
+| **P0-3/P0-4** | Thêm `customers.lifecycle_stage` THẬT (migration **015**) thay `status='active'` hardcode. 5 giá trị: Tiềm năng / Đang triển khai / Đang vận hành / Bảo trì / Ngừng, có CHECK constraint. Backfill theo dữ liệu `projects` thật (không suy đoán). Form + list filter đều thật | `migrations/015_customer_lifecycle_stage.sql` · distribution trên DB: `implementing=1, prospect=6` |
+| Verify RLS | JWT giả lập: đọc đúng phạm vi (`fdi_can_read`), UPDATE stage = 1 row; RPC tạo KH nhận `lifecycle_stage` và trả stage; test rác đã **rollback sạch** | tool output psycopg |
+| **P0-5** | Giữ nguyên nav Infrastructure/Assets theo chốt; KHÔNG xoá | `components/ClientBody.tsx` |
+| **P0-1** | Nhãn KPI "Ticket đang mở" → **"Ticket mở (toàn hệ thống)"** để không hiểu sai thành ticket của KH đó | `page.tsx` |
+| **P1-5** | Panel KH thêm block **"Dự án của khách hàng"**: tên dự án + badge trạng thái + progress bar (role=progressbar). Endpoint mới `GET /api/v1/customers/[id]/projects` (scoped theo RLS). `progress=null` → hiện **"—"**, KHÔNG bịa 0% | `CustomerDetailPanel.tsx` + `app/api/v1/customers/[id]/projects/route.ts` |
+| **P1-2/3** | Chuẩn hoá font: h1 **24px semibold** ở CẢ list và form (trước lệch 30 vs 21); label field **12 → 14 medium**; section heading 12 → 14 | 2 file |
+| **P1-4** | Panel phải `lg:sticky lg:top-4 self-start` — form dài cuộn xuống vẫn thấy summary | `CreateCustomerForm.tsx` |
+| **P1-7/8/9** | Bảng **9 cột** mới: `# · Tên KH · Người liên hệ · Email · Điện thoại · Dự án · Vòng đời · Ngày tạo · Thao tác`. Bỏ cột **Ngành** (PSM không cần), tách Liên hệ/Email/SĐT thành 3 cột để copy & sort được, thêm **Ngày tạo** (audit) | `page.tsx` |
+| Type/schema | `lib/types.ts` + `components/customers/types.ts`: thêm `lifecycle_stage`/`created_by`/`updated_by` + `CustomerProject`; `projects.Row` bổ sung `site_id`/`progress`/`start_date`/`end_date` (cột thật đã có) | 3 file |
+| Verify | `npm test` **105/105** (thêm `customer-psm-lifecycle.test.mjs` 9 test) · `tsc` **0** · docs-check OK | tool output |
+
 ## 16f. Sửa chữ vô hình trên Badge (Ngành / Trạng thái / tag) — contrast 1.00 (2026-11-24)
 
 | Hạng mục | Kết quả | Evidence |

@@ -46,6 +46,10 @@ export type Database = {
           notes: string | null
           consent_contact: boolean
           consent_contact_at: string | null
+          /** migration 015 (PSM) — vòng đời vận hành thật, không còn status giả. */
+          lifecycle_stage: string
+          created_by: string | null
+          updated_by: string | null
           created_at: string
           updated_at: string
         }
@@ -133,6 +137,11 @@ export type Database = {
           name: string
           status: 'draft' | 'planned' | 'active' | 'on_hold' | 'completed' | 'cancelled'
           version: number
+          /** PSM — cột thật trên DB (đã có từ migration 001). */
+          site_id?: string | null
+          progress?: number | null
+          start_date?: string | null
+          end_date?: string | null
         }
         Insert: {
           id?: string

@@ -14,8 +14,20 @@ export interface Customer {
   primary_contact_name?: string | null
   project_count?: number | null
   open_ticket_count?: number | null
+  /** PSM: vòng đời vận hành thật (migration 015). */
+  lifecycle_stage?: string | null
   status?: CustomerStatus | null
   created_at?: string | null
+}
+
+/** Dự án gắn với khách hàng — GET /api/v1/customers/[id]/projects. */
+export interface CustomerProject {
+  id: string
+  name: string | null
+  status: string | null
+  /** null = chưa có tiến độ (KHÔNG bịa 0%). */
+  progress: number | null
+  site_id: string | null
 }
 
 export interface Activity {

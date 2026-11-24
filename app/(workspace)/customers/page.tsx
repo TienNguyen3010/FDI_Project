@@ -44,7 +44,7 @@ import {
 } from 'lucide-react'
 import CustomerDetailPanel from '@/components/customers/CustomerDetailPanel'
 import { useProfile } from '@/lib/hooks/useProfile'
-import type { Customer, Activity } from '@/components/customers/types'
+import type { Customer, Activity, CustomerProject } from '@/components/customers/types'
 import { hasPermission } from '@/lib/rbac/policy'
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +64,8 @@ interface Summary {
   total_customers?: number | null
   with_projects?: number | null
   open_tickets?: number | null
+  /** PSM: đếm theo vòng đời vận hành (migration 015). */
+  by_lifecycle_stage?: Record<string, number> | null
   csat?: number | null
   comparison?: Comparison | null
 }
@@ -106,11 +108,15 @@ const EMPTY_DATA: DataState = {
 const DEFAULT_PAGE_SIZE = 20
 const SORT = '-created_at'
 
-const STATUS_META: Record<string, { label: string; variant: 'active' | 'inactive' | 'default' }> = {
-  active: { label: 'Đang hoạt động', variant: 'active' },
-  inactive: { label: 'Không hoạt động', variant: 'inactive' },
-  archived: { label: 'Đã lưu trữ', variant: 'default' },
+/** Vòng đời vận hành (PSM — migration 015). Đồng bộ với API LIFECYCLE_STAGES. */
+const LIFECYCLE_META: Record<string, { label: string; variant: 'active' | 'inactive' | 'planned' | 'ended' }> = {
+  prospect:     { label: 'Tiềm năng',       variant: 'inactive' },
+  implementing: { label: 'Đang triển khai', variant: 'planned' },
+  operating:    { label: 'Đang vận hành',   variant: 'active' },
+  maintenance:  { label: 'Bảo trì',         variant: 'ended' },
+  stopped:      { label: 'Ngừng',           variant: 'inactive' },
 }
+const LIFECYCLE_OPTIONS = Object.entries(LIFECYCLE_META).map(([value, m]) => ({ value, label: m.label }))
 
 function industryName(industry: Customer['industry']): string {
   if (!industry) return ''
@@ -543,16 +549,28 @@ export default function CustomersPage() {
   const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [activitiesError, setActivitiesError] = useState<string | null>(null)
   const [showActivityForm, setShowActivityForm] = useState(false)
+  /** Dự án gắn với KH đang mở panel (PSM). */
+  const [projects, setProjects] = useState<CustomerProject[]>([])
 
   const reloadActivities = useCallback(async () => {
     if (!selected) return
     setActivitiesLoading(true)
     setActivitiesError(null)
     try {
-      const res = await fetch(`/api/v1/customers/${encodeURIComponent(selected.id)}/activities`, { cache: 'no-store' })
-      if (!res.ok) throw new Error(`Lỗi máy chủ (${res.status}).`)
-      const json = (await res.json()) as { data?: Activity[]; error?: { message?: string } }
-      setActivities(Array.isArray(json.data) ? json.data : [])
+      const [actRes, prjRes] = await Promise.all([
+        fetch(`/api/v1/customers/${encodeURIComponent(selected.id)}/activities`, { cache: 'no-store' }),
+        fetch(`/api/v1/customers/${encodeURIComponent(selected.id)}/projects`, { cache: 'no-store' }),
+      ])
+      if (!actRes.ok) throw new Error(`Lỗi máy chủ (${actRes.status}).`)
+      const actJson = (await actRes.json()) as { data?: Activity[]; error?: { message?: string } }
+      setActivities(Array.isArray(actJson.data) ? actJson.data : [])
+      // Dự án lỗi thì bỏ qua (không chặn luồng hoạt động).
+      if (prjRes.ok) {
+        const prjJson = (await prjRes.json()) as { data?: CustomerProject[] }
+        setProjects(Array.isArray(prjJson.data) ? prjJson.data : [])
+      } else {
+        setProjects([])
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Không tải được lịch sử hoạt động.'
       setActivitiesError(message)
@@ -564,7 +582,7 @@ export default function CustomersPage() {
 
   // Tải lại khi đổi khách hàng đang chọn.
   useEffect(() => {
-    if (!selected) { setActivities([]); setActivitiesError(null); return }
+    if (!selected) { setActivities([]); setActivitiesError(null); setProjects([]); return }
     void reloadActivities()
   }, [selected, reloadActivities])
 
@@ -572,7 +590,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [industry, setIndustry] = useState('')
-  const [status, setStatus] = useState('')
+  const [lifecycleStage, setLifecycleStage] = useState('')
   const [hasProject, setHasProject] = useState('')
   /** Smart view (scope) — mirror Lead §B. Đọc từ ?view= để back/refresh giữ lại. */
   const [smartView, setSmartView] = useState<SmartViewKey>('all')
@@ -597,7 +615,7 @@ export default function CustomersPage() {
     setSearch(s)
     setDebouncedSearch(s.trim())
     setIndustry(p.get('industry') ?? '')
-    setStatus(p.get('status') ?? '')
+    setLifecycleStage(p.get('lifecycle_stage') ?? '')
     setHasProject(p.get('has_project') ?? '')
     const v = p.get('view') ?? ''
     setSmartView((SMART_VIEWS.some((x) => x.key === v) ? v : 'all') as SmartViewKey)
@@ -624,7 +642,7 @@ export default function CustomersPage() {
     const p = new URLSearchParams()
     if (debouncedSearch) p.set('search', debouncedSearch)
     if (industry) p.set('industry', industry)
-    if (status) p.set('status', status)
+    if (lifecycleStage) p.set('lifecycle_stage', lifecycleStage)
     if (hasProject) p.set('has_project', hasProject)
     if (smartView !== 'all') p.set('view', smartView)
     if (page !== 1) p.set('page', String(page))
@@ -635,7 +653,7 @@ export default function CustomersPage() {
       '',
       qs ? `${window.location.pathname}?${qs}` : window.location.pathname,
     )
-  }, [hydrated, debouncedSearch, industry, status, hasProject, smartView, page, pageSize])
+  }, [hydrated, debouncedSearch, industry, lifecycleStage, hasProject, smartView, page, pageSize])
 
   /* --- Fetch -------------------------------------------------------------- */
   const load = useCallback(async (signal?: AbortSignal) => {
@@ -648,7 +666,7 @@ export default function CustomersPage() {
     })
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (industry) params.set('industry', industry)
-    if (status) params.set('status', status)
+    if (lifecycleStage) params.set('lifecycle_stage', lifecycleStage)
 
     // Smart view (mirror Lead §B): chỉ đẩy filter khi KHÔNG phải view mặc định.
     // `all` = không thêm gì; `with_projects` = has_project=true;
@@ -701,7 +719,7 @@ export default function CustomersPage() {
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
-  }, [debouncedSearch, industry, status, hasProject, smartView, page, pageSize, refreshTick, toast])
+  }, [debouncedSearch, industry, lifecycleStage, hasProject, smartView, page, pageSize, refreshTick, toast])
 
   useEffect(() => {
     if (!hydrated) return
@@ -720,12 +738,12 @@ export default function CustomersPage() {
     setSearch('')
     setDebouncedSearch('')
     setIndustry('')
-    setStatus('')
+    setLifecycleStage('')
     setHasProject('')
     setPage(1)
   }
 
-  const hasFilters = Boolean(debouncedSearch || industry || status || hasProject)
+  const hasFilters = Boolean(debouncedSearch || industry || lifecycleStage || hasProject)
 
   /* --- Điều hướng sang form sửa (id trong URL; form tự fetch qua API) --------- */
   const router = useRouter()
@@ -758,7 +776,7 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[30px] font-semibold text-[var(--text)]">Khách hàng</h1>
+          <h1 className="text-[24px] font-semibold text-[var(--text)]">Khách hàng</h1>
           <p className="text-sm text-[var(--muted)]">
             Quản lý hồ sơ khách hàng, thông tin liên hệ, dự án và hỗ trợ dịch vụ.
           </p>
@@ -788,7 +806,7 @@ export default function CustomersPage() {
           onClick={() => { setSmartView((v) => (v === 'with_projects' ? 'all' : 'with_projects')); setPage(1) }}
         />
         <KpiCard
-          label="Ticket đang mở"
+          label="Ticket mở (toàn hệ thống)"
           value={formatNumber(summary.open_tickets)}
           icon={Ticket}
           tone="var(--kpi-tickets)"
@@ -844,15 +862,15 @@ export default function CustomersPage() {
         </Select>
 
         <Select
-          aria-label="Lọc theo trạng thái"
-          value={status}
-          onChange={(e) => { setStatus(e.target.value); setPage(1) }}
+          aria-label="Lọc theo vòng đời vận hành"
+          value={lifecycleStage}
+          onChange={(e) => { setLifecycleStage(e.target.value); setPage(1) }}
           className="min-w-[180px]"
         >
-          <option value="">Tất cả trạng thái</option>
-          <option value="active">Đang hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-          <option value="archived">Đã lưu trữ</option>
+          <option value="">Tất cả vòng đời</option>
+          {LIFECYCLE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
         </Select>
 
         <Select
@@ -927,7 +945,7 @@ export default function CustomersPage() {
             <table className="w-full min-w-[1080px] text-sm text-[var(--text)]">
               <thead className="bg-[var(--sidebar-group)] text-xs text-[var(--muted)]">
                 <tr>
-                  {['#', 'Tên khách hàng', 'Liên hệ chính', 'Ngành', 'Dự án', 'Ticket mở', 'Trạng thái', 'Thao tác'].map((head) => (
+                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Email', 'Điện thoại', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => (
                     <th key={head} scope="col" className="h-11 whitespace-nowrap px-4 text-left font-medium">
                       {head}
                     </th>
@@ -937,7 +955,7 @@ export default function CustomersPage() {
               <tbody className="bg-[var(--surface)]">
                 {loading && !items.length && Array.from({ length: 5 }).map((_, i) => (
                   <tr key={`skeleton-${i}`} className="border-b border-[var(--border)]">
-                    {Array.from({ length: 8 }).map((__, c) => (
+                    {Array.from({ length: 9 }).map((__, c) => (
                       <td key={c} className="h-14 px-4"><Skeleton className="h-4 w-full max-w-[120px]" /></td>
                     ))}
                   </tr>
@@ -947,12 +965,11 @@ export default function CustomersPage() {
                   const name = item.name || '—'
                   const code = item.code || '—'
                   const contactName = item.primary_contact_name || '—'
-                  const contactLines = [item.email, item.phone].filter((v): v is string => Boolean(v))
-                  const industryLabel = industryName(item.industry) || '—'
-                  const statusKey = item.status || ''
-                  const statusMeta = STATUS_META[statusKey] ?? {
-                    label: statusKey || '—',
-                    variant: 'default' as const,
+                  // PSM: vòng đời vận hành thật (migration 015), không còn status='active' giả.
+                  const lifecycleKey = item.lifecycle_stage || 'prospect'
+                  const lifecycleMeta = LIFECYCLE_META[lifecycleKey] ?? {
+                    label: lifecycleKey || '—',
+                    variant: 'inactive' as const,
                   }
                   return (
                     <tr
@@ -975,16 +992,23 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </td>
+                      {/* P1-8: tách Liên hệ / Email / Điện thoại thành 3 cột để copy & sort được */}
                       <td className="h-14 px-4">
-                        <p className="whitespace-nowrap">{contactName}</p>
-                        <p className="text-xs text-[var(--muted)]">
-                          {contactLines.length ? contactLines.join(' · ') : '—'}
-                        </p>
+                        <span className="whitespace-nowrap">{contactName}</span>
                       </td>
-                      <td className="h-14 px-4"><Badge variant="default">{industryLabel}</Badge></td>
+                      <td className="h-14 px-4">
+                        <span className="block max-w-[190px] truncate text-[var(--muted)]" title={item.email ?? undefined}>
+                          {item.email || '—'}
+                        </span>
+                      </td>
+                      <td className="h-14 px-4">
+                        <span className="whitespace-nowrap text-[var(--muted)]">{item.phone || '—'}</span>
+                      </td>
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.project_count)}</td>
-                      <td className="h-14 px-4 tabular-nums">{formatNumber(item.open_ticket_count)}</td>
-                      <td className="h-14 px-4"><Badge variant={statusMeta.variant}>{statusMeta.label}</Badge></td>
+                      <td className="h-14 px-4"><Badge variant={lifecycleMeta.variant}>{lifecycleMeta.label}</Badge></td>
+                      <td className="h-14 whitespace-nowrap px-4 text-[var(--muted)]">
+                        {item.created_at ? asOfLabel(item.created_at) ?? '—' : '—'}
+                      </td>
                       <td className="h-14 px-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           {canEdit && (
@@ -1098,6 +1122,7 @@ export default function CustomersPage() {
           onClose={() => setSelected(null)}
           onEdit={() => editCustomer(selected.id)}
           canEdit={canEdit}
+          projects={projects}
         />
       )}
     </div>

@@ -22,10 +22,14 @@ const OPEN_TICKET_STATUS_SET = new Set<string>(OPEN_TICKET_STATUSES)
 
 const SEARCH_FIELDS = ['name', 'phone', 'email', 'industry', 'tax_id', 'code'] as const
 
-type SortField = 'name' | 'created_at' | 'industry' | 'project_count' | 'open_ticket_count'
+type SortField = 'name' | 'created_at' | 'industry' | 'project_count' | 'open_ticket_count' | 'lifecycle_stage'
 const SORT_WHITELIST = new Set<string>([
-  'name', 'created_at', 'industry', 'project_count', 'open_ticket_count',
+  'name', 'created_at', 'industry', 'project_count', 'open_ticket_count', 'lifecycle_stage',
 ])
+
+/** Vòng đời vận hành (PSM) — migration 015. Thứ tự hiển thị trong filter. */
+const LIFECYCLE_STAGES = ['prospect', 'implementing', 'operating', 'maintenance', 'stopped'] as const
+type LifecycleStage = (typeof LIFECYCLE_STAGES)[number]
 
 interface CustomerItem {
   id: string
@@ -41,8 +45,8 @@ interface CustomerItem {
   primary_contact_name: string | null
   project_count: number
   open_ticket_count: number
-  /** DB không có cột `customers.status` → mặc định 'active' (xem DATA_DICTIONARY.md:34). */
-  status: 'active'
+  /** PSM — vòng đời vận hành THẬT (migration 015). Bỏ `status='active'` giả. */
+  lifecycle_stage: LifecycleStage
   created_at: string
 }
 
@@ -114,7 +118,7 @@ export async function GET(request: Request) {
 
   let customersQuery = auth.supabase
     .from('customers')
-    .select('id, name, code, phone, email, industry, tax_id, headquarters_address, primary_contact_name, created_at')
+    .select('id, name, code, phone, email, industry, tax_id, headquarters_address, primary_contact_name, lifecycle_stage, created_at')
   // `customers` dùng PK `id` (KHÔNG có cột `customer_id`), nên không thể dùng
   // scoped() trực tiếp ở đây — scoped() lọc theo cột `customer_id`. Áp grant bằng `id`:
   if (scope.customer_ids !== null) {
@@ -160,9 +164,12 @@ export async function GET(request: Request) {
     tax_id: c.tax_id,
     headquarters_address: c.headquarters_address,
     primary_contact_name: c.primary_contact_name,
+    // PSM: vòng đời vận hành thật (migration 015). NULL cũ → 'prospect', KHÔNG bịa.
+    lifecycle_stage: (LIFECYCLE_STAGES as readonly string[]).includes(c.lifecycle_stage ?? '')
+      ? (c.lifecycle_stage as LifecycleStage)
+      : 'prospect',
     project_count: projectCount.get(c.id) ?? 0,
     open_ticket_count: ticketCount.get(c.id) ?? 0,
-    status: 'active', // DB không có cột status → mặc định 'active'.
     created_at: c.created_at,
   }))
 
@@ -181,11 +188,10 @@ export async function GET(request: Request) {
     items = items.filter((item) => (item.industry ?? '').toLowerCase() === industry)
   }
 
-  const status = (url.searchParams.get('status') ?? '').trim().toLowerCase()
-  if (status) {
-    // Không có cột status thật: mọi item là 'active' → status=active giữ tất cả,
-    // giá trị khác trả rỗng (không bịa trạng thái).
-    items = items.filter((item) => item.status === status)
+  const lifecycleStage = (url.searchParams.get('lifecycle_stage') ?? '').trim().toLowerCase()
+  if (lifecycleStage) {
+    // Chỉ nhận giá trị hợp lệ (ràng buộc DB cùng danh sách này).
+    items = items.filter((item) => item.lifecycle_stage === lifecycleStage)
   }
 
   const hasProject = (url.searchParams.get('has_project') ?? '').trim().toLowerCase()
@@ -223,6 +229,11 @@ export async function GET(request: Request) {
     total_customers: total,
     with_projects: items.filter((item) => item.project_count > 0).length,
     open_tickets: items.reduce((sum, item) => sum + item.open_ticket_count, 0),
+    // PSM: đếm theo vòng đời (dữ liệu thật, không bịa).
+    by_lifecycle_stage: LIFECYCLE_STAGES.reduce<Record<string, number>>((acc, s) => {
+      acc[s] = items.filter((item) => item.lifecycle_stage === s).length
+      return acc
+    }, {}),
     // Schema không có bảng survey/CSAT → null; client sẽ hiện 'Chưa có dữ liệu'.
     csat: null,
     // Không có baseline trước đó → không bịa delta.

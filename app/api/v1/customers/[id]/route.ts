@@ -33,6 +33,8 @@ const UPDATABLE = [
   'name', 'phone', 'email', 'industry', 'tax_id', 'headquarters_address',
   'primary_contact_name', 'primary_contact_position', 'notes',
   'consent_contact', 'consent_contact_at',
+  // PSM (migration 015): vòng đời vận hành thật.
+  'lifecycle_stage',
 ] as const
 
 type UpdatableField = (typeof UPDATABLE)[number]
@@ -60,6 +62,8 @@ export async function GET(
       'headquarters_address', 'primary_contact_name', 'primary_contact_position',
       'notes', 'consent_contact', 'consent_contact_at',
       'contact_technical', 'contact_commercial', 'contact_emergency', 'created_at',
+      // PSM (migration 015)
+      'lifecycle_stage',
     ].join(','))
     .eq('id', id)
     .maybeSingle()

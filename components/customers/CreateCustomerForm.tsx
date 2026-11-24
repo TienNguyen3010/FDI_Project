@@ -74,6 +74,7 @@ type FieldKey =
   | 'contact_commercial'
   | 'contact_emergency'
   | 'notes'
+  | 'lifecycle_stage'
 
 type FormState = Record<FieldKey, string>
 
@@ -94,6 +95,8 @@ export interface CustomerFormInitial {
   contact_technical?: string | null
   contact_commercial?: string | null
   contact_emergency?: string | null
+  /** PSM (migration 015). */
+  lifecycle_stage?: string | null
 }
 
 // ── Hằng số ───────────────────────────────────────────────────────────────────
@@ -111,7 +114,17 @@ const EMPTY: FormState = {
   contact_commercial: '',
   contact_emergency: '',
   notes: '',
+  lifecycle_stage: 'prospect',
 }
+
+/** Vòng đời vận hành (PSM — migration 015). Đồng bộ API LIFECYCLE_STAGES. */
+const LIFECYCLE_OPTIONS = [
+  { value: 'prospect', label: 'Tiềm năng' },
+  { value: 'implementing', label: 'Đang triển khai' },
+  { value: 'operating', label: 'Đang vận hành' },
+  { value: 'maintenance', label: 'Bảo trì' },
+  { value: 'stopped', label: 'Ngừng' },
+]
 
 const INDUSTRIES = [
   { value: 'Manufacturing', label: 'Sản xuất' },
@@ -164,6 +177,7 @@ const LABELS: Record<FieldKey, string> = {
   contact_commercial: 'Liên hệ thương mại',
   contact_emergency: 'Liên hệ khẩn cấp',
   notes: 'Ghi chú',
+  lifecycle_stage: 'Vòng đời vận hành',
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -230,6 +244,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     contact_technical: initial.contact_technical ?? '',
     contact_commercial: initial.contact_commercial ?? '',
     contact_emergency: initial.contact_emergency ?? '',
+    lifecycle_stage: initial.lifecycle_stage ?? 'prospect',
   } : EMPTY)
   const [errors, setErrors] = useState<Partial<Record<FieldKey | 'nextActivityType' | 'nextActivityAt', string>>>({})
   const [saving, setSaving] = useState(false)
@@ -374,6 +389,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
     const { data: created, error: rpcError } = await db.rpc('create_customer_with_activity', {
       p_customer: customerPayload,
       p_activity: activityPayload,
+      // ⚠️ Chữ ký hàm trên DB là (jsonb, jsonb, uuid) — idem_key PHẢI là UUID.
       p_idem_key: crypto.randomUUID(),
     })
 
@@ -486,7 +502,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
           {' / '}
           <span className="text-foreground">{isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng'}</span>
         </nav>
-        <h1 className="mt-0.5 text-[21px] font-bold leading-7 text-foreground">
+        <h1 className="mt-0.5 text-[24px] font-semibold leading-8 text-foreground">
           {isEdit ? 'Sửa khách hàng' : 'Thêm khách hàng mới'}
         </h1>
         <p className="text-[13px] text-muted-foreground">
@@ -549,6 +565,23 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
                         <option key={i.value} value={i.value}>{i.label}</option>
                       ))}
                     </Select>
+                  </Field>
+                  {/* PSM (migration 015): vòng đời vận hành THẬT, thay status='active' giả.
+                      Đây là field quyết định cách phân loại KH trong mô hình PSM. */}
+                  <Field label="Vòng đời vận hành" required>
+                    <Select
+                      {...fieldProps('lifecycle_stage')}
+                      aria-describedby="lifecycle-hint"
+                      className={errors.lifecycle_stage ? 'border-destructive' : undefined}
+                    >
+                      {LIFECYCLE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </Select>
+                    <p id="lifecycle-hint" className="text-xs text-muted-foreground">
+                      Tiềm năng · Đang triển khai · Đang vận hành · Bảo trì · Ngừng
+                    </p>
+                    {errorFor('lifecycle_stage')}
                   </Field>
                   <Field label="Địa chỉ trụ sở chính" required className="md:col-span-2">
                     <Input
@@ -740,8 +773,10 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
             </Card>
           </div>
 
-          {/* ── Right panel (mirror AddLeadForm: 3 card, thay card "Lưu ý") ─── */}
-          <div className="space-y-2.5">
+          {/* ── Right panel (mirror AddLeadForm: 3 card, thay card "Lưu ý") ───
+              P1-4: `sticky top-4` để form dài cuộn xuống thì panel vẫn hiện,
+              không phải cuộn lên mới thấy. */}
+          <div className="space-y-2.5 self-start lg:sticky lg:top-4">
             {/* a) Kiểm tra trùng lặp */}
             <Card className="border border-border">
               <CardHeader className="px-5 py-3">
@@ -764,7 +799,7 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
               </CardHeader>
               <CardContent className="px-5 py-3">
                 <div className="rounded-lg border bg-muted/30 p-3">
-                  <h3 className="mb-2 text-xs font-semibold text-muted-foreground">Kiểm tra dữ liệu</h3>
+                  <h3 className="mb-2 text-[14px] font-semibold text-muted-foreground">Kiểm tra dữ liệu</h3>
                   <div className="space-y-1.5">
                     {([
                       ['Tên đã nhập', completeness.name],
@@ -918,7 +953,7 @@ function Field({ label, required, className, children }: {
 }) {
   return (
     <div className={className}>
-      <Label className="mb-1 block text-[12px] font-semibold text-foreground">
+      <Label className="mb-1 block text-[14px] font-medium text-foreground">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}

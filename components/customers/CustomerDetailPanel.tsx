@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/ui/ui'
 import { relativeTimeLabel } from '@/lib/relativeTime'
-import type { Customer, Activity } from './types'
+import type { Customer, Activity, CustomerProject } from './types'
 
 type Props = {
   customer: Customer
@@ -40,6 +40,8 @@ type Props = {
   onEdit: () => void
   /** RBAC — form sửa cần quyền. */
   canEdit: boolean
+  /** Dự án gắn với khách hàng (GET /api/v1/customers/[id]/projects). */
+  projects?: CustomerProject[]
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -61,6 +63,19 @@ function initialsOf(name: string): string {
   return parts.map((p) => p[0]).join('').toUpperCase().slice(0, 2)
 }
 
+/** Nhãn trạng thái dự án — không bịa, rỗng → '—'. */
+function projectStatusLabel(status: string | null): string {
+  switch ((status || '').toLowerCase()) {
+    case 'planned': return 'Kế hoạch'
+    case 'active': return 'Đang triển khai'
+    case 'in_progress': return 'Đang triển khai'
+    case 'deployed': return 'Đã triển khai'
+    case 'completed': return 'Hoàn thành'
+    case 'closed': return 'Đóng'
+    default: return status || '—'
+  }
+}
+
 /** `industry` có thể là chuỗi HOẶC object {name} tùy nguồn dữ liệu. */
 function industryLabel(industry: Customer['industry']): string {
   if (!industry) return ''
@@ -79,6 +94,7 @@ export default function CustomerDetailPanel({
   onClose,
   onEdit,
   canEdit,
+  projects = [],
 }: Props) {
   const statusLabel = STATUS_LABEL[customer.status || ''] ?? customer.status ?? '—'
   const fullName = customer.name?.trim() || '—'
@@ -181,6 +197,52 @@ export default function CustomerDetailPanel({
               <Row icon={<History className="h-4 w-4" />} label="Ticket đang mở" value={String(customer.open_ticket_count ?? 0)} />
             </div>
           </div>
+
+          {/* (3b) DỰ ÁN CỦA KHÁCH HÀNG — PSM: ý nghĩa cốt lõi là theo dõi dự án
+              đang triển khai / đã triển khai. Dữ liệu thật từ API, progress null
+              → '—', KHÔNG bịa 0%. */}
+          <section aria-label="Dự án của khách hàng">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Dự án của khách hàng
+            </h3>
+            {projects.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-[var(--border)] p-3 text-sm text-[var(--muted)]">
+                Chưa có dự án nào.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {projects.map((p) => {
+                  const pct = typeof p.progress === 'number' ? Math.round(p.progress) : null
+                  return (
+                    <li key={p.id} className="rounded-md border border-[var(--border)] px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-medium">{p.name || '—'}</span>
+                        <Badge variant="default">{projectStatusLabel(p.status)}</Badge>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div
+                          className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--sidebar-group)]"
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={pct ?? undefined}
+                          aria-label={`Tiến độ ${p.name ?? 'dự án'}`}
+                        >
+                          <div
+                            className="h-full rounded-full bg-[var(--kpi-progress)]"
+                            style={{ width: `${Math.min(100, Math.max(0, pct ?? 0))}%` }}
+                          />
+                        </div>
+                        <span className="shrink-0 text-xs tabular-nums text-[var(--muted)]">
+                          {pct === null ? '—' : `${pct}%`}
+                        </span>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
 
           {/* (4) Hoạt động gần đây — đúng khung card của Lead */}
           <section aria-label="Lịch sử hoạt động">
