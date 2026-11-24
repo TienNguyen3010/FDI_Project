@@ -156,6 +156,15 @@ body {
   min-width: 44px;
 }
 
+/* 2026-11-24: bổ sung utility `.text-muted` — TRƯỚC đây class này KHÔNG có rule
+   trong bản build (Tailwind chỉ sinh `.text-muted-foreground`), nên mọi chỗ dùng
+   `text-muted` rơi về màu kế thừa. Trên Badge `default` nó tình cờ TRÙNG nền
+   rgb(248,252,249) ⇒ contrast 1.00 (chữ vô hình, đo bằng getComputedStyle trên prod).
+   Định nghĩa tương đương `text-muted-foreground` để một token --muted quản lý tất cả. */
+.text-muted {
+  color: var(--muted);
+}
+
 /* Bảng dữ liệu cho máy đọc màn hình (accessible chart data table). */
 .sr-only-table {
   position: absolute;

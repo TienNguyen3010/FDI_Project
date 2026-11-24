@@ -309,11 +309,12 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 |---|---|---|
 | Triệu chứng (ảnh user) | "column Ngành màu chữ đang xanh lá nhạt nên không thấy rõ" | ảnh `/customers` |
 | ĐO THẬT bằng `getComputedStyle` trên prod | Ô Ngành (Badge `default`) có **chữ `rgb(248,252,249)` y hệt nền `rgb(248,252,249)`** ⇒ **contrast ratio = 1.00** (không phải "nhạt khó đọc", mà là VÔ HÌNH). Cùng đo cell thường: `rgb(16,32,62)` trên trắng = 16.92 | tool output JS trong browser |
-| Nguyên nhân gốc | Token `--muted` = **`#b8d0ce`** (xanh nhạt), nền Badge `default` dùng `--sidebar-group` `#f8fcf9`. Chữ `#b8d0ce` trên `#f8fcf9` = 1.19, render ra 1.00. Sửa một badge không dứt vì lỗi ở TOKEN dùng chung toàn app | `app/globals.css` + `components/ui/ui.tsx:200` |
-| Fix #1 | `--muted`: `#b8d0ce` → **`#33415c`** (xanh đậm, vẫn giữ vai "phụ"). Contrast: trên trắng **10.24** · trên sidebar-group **9.89** | `app/globals.css` |
-| Fix #2 | Badge `critical` `risk/10 + risk` → `risk/15 + #b32833` (3.45 → **5.87**) · `major` `kpi-tickets/10 + kpi-tickets` → `…/15 + #a45a05` (2.23 → **4.77**). Cả hai đều đạt WCAG AA | `components/ui/ui.tsx` |
-| Phạm vi ảnh hưởng | Mọi `<Badge>` `default` (Ngành, MST trong summary, tag), mọi chữ `text-muted`/`text-muted-foreground` (nhãn label, hint, số STT, relative time, "Mã: —") — **sáng lên cả hệ thống**, đúng hướng vì trước đó những chỗ đó cũng mất chữ | repo-wide grep |
-| Verify | `node --test tests/contrast-badge.test.mjs` **3/3** (có hàm tính WCAG contrast thật) · `npm test` **95/95** · `tsc` **0** · build EXIT=0 | tool output |
+| Nguyên nhân gốc (lộ ra khi deploy bản vá đầu) | **`.text-muted` KHÔNG có rule CSS trong bản build** — Tailwind chỉ sinh `.text-muted-foreground`. Mọi chỗ dùng `text-muted` (Badge, Button tabs, Spinner, divider, icon) rơi về màu **kế thừa**, tình cờ TRÙNG nền `rgb(248,252,249)` ⇒ contrast 1.00. Bản vá `--muted` đầu tiên không ăn vì class không hề trỏ token đó | `getComputedStyle` trên prod: probe `.text-muted` → `rgb(248,252,249)`, không rule nào khớp |
+| Fix #1 | `--muted`: `#b8d0ce` → **`#33415c`** (xanh đậm, giữ vai "phụ"). Contrast trên trắng **10.24** · trên sidebar-group **9.89** | `app/globals.css` |
+| Fix #2 | Badge `critical` `risk/10 + risk` → `risk/15 + #b32833` (3.45 → **5.87**) · `major` `kpi-tickets/10 + kpi-tickets` → `…/15 + #a45a05` (2.23 → **4.77**). Cả hai đạt WCAG AA | `components/ui/ui.tsx` |
+| Fix #3 (đóng gốc) | Khai báo utility `.text-muted { color: var(--muted) }` trong `globals.css` — một chỗ vá được cả 5 chỗ dùng `text-muted`, đồng bộ về một token | `app/globals.css` |
+| Phạm vi ảnh hưởng | Mọi `<Badge>` `default` (Ngành, MST trong summary, tag), Button tab, Spinner, divider, icon muted — **sáng lên cả hệ thống**; đúng hướng vì trước đó những chỗ đó cũng mất chữ | grep repo: 5 file dùng `text-muted` |
+| Verify | `tests/contrast-badge.test.mjs` **4/4** (tính WCAG contrast thật + chặn `.text-muted` phải có rule) · `npm test` **96/96** · `tsc` **0** · build EXIT=0 · đo lại prod | tool output |
 
 ## 16e. Màn quản lý khách hàng lấy chuẩn UI Lead (SoftNET CRM) + bỏ topbar (2026-11-24)
 

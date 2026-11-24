@@ -197,6 +197,8 @@ export function Badge({
   variant = 'default',
   ...props
 }: React.HTMLAttributes<HTMLSpanElement> & { variant?: BadgeVariant }) {
+  // `text-muted` — khai báo trong globals.css (= --muted). Trước đây class này
+  // không có rule nên Badge rơi về màu kế thừa, trùng nền ⇒ contrast 1.00.
   const neutral = 'bg-sidebar-group text-muted border border-border'
   const styleByVariant: Record<BadgeVariant, string> = {
     default: neutral,

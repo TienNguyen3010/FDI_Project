@@ -47,6 +47,13 @@ test('P0: Badge default có chữ tương phản với nền của chính nó', 
   assert.ok(contrast(muted, '#f8fcf9') >= 4.5, 'Badge default phải đọc được')
 })
 
+test('P0: utility .text-muted PHẢI có rule (trước: không có → màu kế thừa trùng nền)', () => {
+  // Nguyên nhân gốc thật: Tailwind chỉ sinh `.text-muted-foreground`, không sinh
+  // `.text-muted`. Mọi chỗ dùng `text-muted` rơi về màu kế thừa ⇒ Badge vô hình.
+  assert.match(css, /\.text-muted\s*\{\s*color:\s*var\(--muted\)/,
+              '.text-muted phải được khai báo, trỏ vào --muted')
+})
+
 test('P1: variant critical / major đạt AA (trước: 3.45 và 2.23)', () => {
   // critical: chữ #b32833 trên risk/15 (~#fdf2f3)
   assert.match(badge, /critical: 'bg-risk\/15 text-\[#b32833\]/)
