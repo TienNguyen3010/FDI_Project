@@ -106,7 +106,14 @@ const EMPTY_DATA: DataState = {
 }
 
 const DEFAULT_PAGE_SIZE = 20
-const SORT = '-created_at'
+/** Cột sort được + nhãn. Khớp SORT_WHITELIST ở API route. */
+type SortCol = 'name' | 'created_at' | 'project_count' | 'lifecycle_stage'
+const SORTABLE: { col: SortCol; label: string }[] = [
+  { col: 'name', label: 'Tên khách hàng' },
+  { col: 'project_count', label: 'Dự án' },
+  { col: 'lifecycle_stage', label: 'Vòng đời' },
+  { col: 'created_at', label: 'Ngày tạo' },
+]
 
 /** Vòng đời vận hành (PSM — migration 015). Đồng bộ với API LIFECYCLE_STAGES. */
 const LIFECYCLE_META: Record<string, { label: string; variant: 'active' | 'inactive' | 'planned' | 'ended' }> = {
@@ -594,6 +601,8 @@ export default function CustomersPage() {
   const [hasProject, setHasProject] = useState('')
   /** Smart view (scope) — mirror Lead §B. Đọc từ ?view= để back/refresh giữ lại. */
   const [smartView, setSmartView] = useState<SmartViewKey>('all')
+  /** P1-9: sort bằng click header. `-` = giảm dần. */
+  const [sortRaw, setSortRaw] = useState('-created_at')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [refreshTick, setRefreshTick] = useState(0)
@@ -662,7 +671,7 @@ export default function CustomersPage() {
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
-      sort: SORT,
+      sort: sortRaw,
     })
     if (debouncedSearch) params.set('search', debouncedSearch)
     if (industry) params.set('industry', industry)
@@ -719,7 +728,7 @@ export default function CustomersPage() {
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
-  }, [debouncedSearch, industry, lifecycleStage, hasProject, smartView, page, pageSize, refreshTick, toast])
+  }, [debouncedSearch, industry, lifecycleStage, hasProject, smartView, sortRaw, page, pageSize, refreshTick, toast])
 
   useEffect(() => {
     if (!hydrated) return
@@ -744,6 +753,13 @@ export default function CustomersPage() {
   }
 
   const hasFilters = Boolean(debouncedSearch || industry || lifecycleStage || hasProject)
+
+  /** P1-9: bấm lần đầu = giảm dần; bấm lại = tăng dần; reset về mặc định. */
+  const toggleSort = (col: SortCol) => {
+    const next = sortRaw === `-${col}` ? col : `-${col}`
+    setSortRaw(next)
+    setPage(1)
+  }
 
   /* --- Điều hướng sang form sửa (id trong URL; form tự fetch qua API) --------- */
   const router = useRouter()
@@ -945,11 +961,41 @@ export default function CustomersPage() {
             <table className="w-full min-w-[1080px] text-sm text-[var(--text)]">
               <thead className="bg-[var(--sidebar-group)] text-xs text-[var(--muted)]">
                 <tr>
-                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Email', 'Điện thoại', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => (
-                    <th key={head} scope="col" className="h-11 whitespace-nowrap px-4 text-left font-medium">
-                      {head}
-                    </th>
-                  ))}
+                  {/* P1-9: bấm tiêu đề cột để sort (trạng thái `aria-sort`).
+                      Cột không nằm trong SORTABLE (#, Email, Điện thoại, Thao tác)
+                      giữ nguyên văn bản. */}
+                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Email', 'Điện thoại', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => {
+                    const col = SORTABLE.find((s) => s.label === head)?.col
+                    if (!col) {
+                      return (
+                        <th key={head} scope="col" className="h-11 whitespace-nowrap px-4 text-left font-medium">
+                          {head}
+                        </th>
+                      )
+                    }
+                    const active = sortRaw.replace(/^-/, '') === col
+                    const desc = sortRaw.startsWith('-')
+                    return (
+                      <th
+                        key={head}
+                        scope="col"
+                        aria-sort={active ? (desc ? 'descending' : 'ascending') : 'none'}
+                        className="h-11 whitespace-nowrap px-4 text-left font-medium"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(col)}
+                          title={`Sắp xếp theo ${head}`}
+                          className="inline-flex items-center gap-1 rounded-sm hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {head}
+                          <span aria-hidden className="text-[10px] text-[var(--muted)]">
+                            {active ? (desc ? '▼' : '▲') : '↕'}
+                          </span>
+                        </button>
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody className="bg-[var(--surface)]">

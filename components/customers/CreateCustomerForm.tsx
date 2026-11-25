@@ -156,6 +156,24 @@ function dbActivityType(uiType: string): string {
   return uiType
 }
 
+/** KH trùng — RPC fdi_find_customer_duplicates (migration 016). */
+interface DuplicateCustomer {
+  id: string
+  code: string | null
+  name: string | null
+  phone: string | null
+  email: string | null
+  tax_id: string | null
+  match_on: string | null
+}
+
+function matchOnLabel(m: string | null): string {
+  if (m === 'tax_id') return 'mã số thuế'
+  if (m === 'email') return 'email'
+  if (m === 'phone') return 'điện thoại'
+  return 'thông tin'
+}
+
 const REQUIRED: FieldKey[] = [
   'name',
   'headquarters_address',
@@ -263,6 +281,11 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
   const [consentContact, setConsentContact] = useState(Boolean(initial?.consent_contact))
   // Confirm-exit: thay hộp thoại confirm() native của trình duyệt bằng modal UI.
   const [showExit, setShowExit] = useState(false)
+
+  /* P0-4 — tra cứu khách hàng trùng THẬT (RPC migration 016), phạm vi fdi_can_read.
+     Debounce 500ms để không gọi mỗi phím. Chế độ sửa loại trừ chính bản ghi. */
+  const [duplicates, setDuplicates] = useState<DuplicateCustomer[]>([])
+  const [dupLoading, setDupLoading] = useState(false)
 
   // ── Next Action (chỉ ở chế độ TẠO — gốc AddLeadForm cũng không thêm khi sửa) ──
   const [createNextAction, setCreateNextAction] = useState(!isEdit)
@@ -482,6 +505,38 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
   const nextActionSummary = nextActivityAt
     ? `${nextActivityAt} · ${NEXT_ACTIVITY_TYPES.find((t) => t.value === nextActivityType)?.label ?? ''}`
     : 'Chưa thiết lập'
+
+  /* Tra cứu trùng khi email/SĐT/MST đổi (debounce). Không tra khi thiếu cả 3. */
+  useEffect(() => {
+    const email = form.email.trim().toLowerCase()
+    const phone = form.phone.trim()
+    const taxId = form.tax_id.trim()
+    if (!email && !phone && !taxId) {
+      setDuplicates([])
+      setDupLoading(false)
+      return
+    }
+    let cancelled = false
+    setDupLoading(true)
+    const timer = setTimeout(async () => {
+      try {
+        const q = new URLSearchParams()
+        if (email) q.set('email', email)
+        if (phone) q.set('phone', phone)
+        if (taxId) q.set('tax_id', taxId)
+        if (initial?.id) q.set('exclude_id', initial.id)
+        const res = await fetch(`/api/v1/customers/duplicates?${q.toString()}`, { cache: 'no-store' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = (await res.json()) as { data?: DuplicateCustomer[] }
+        if (!cancelled) setDuplicates(Array.isArray(json.data) ? json.data : [])
+      } catch {
+        if (!cancelled) setDuplicates([])   // lỗi thì không cảnh báo giả
+      } finally {
+        if (!cancelled) setDupLoading(false)
+      }
+    }, 500)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [form.email, form.phone, form.tax_id, initial?.id])
 
   return (
     // ⚠️ flex-col + min-h-full: wrapper nội dung `flex-1` đẩy footer xuống ĐÁY
@@ -785,8 +840,40 @@ export default function CreateCustomerForm({ initial }: { initial?: CustomerForm
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-5 py-3">
-                <p className="text-[12px] text-muted-foreground">Chưa đủ dữ liệu để kiểm tra</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">Kiểm tra theo Email và Điện thoại</p>
+                {/* P0-4 (migration 016): tra cứu THẬT qua RPC, chỉ trong phạm vi fdi_can_read.
+                    Chưa nhập email/SĐT/MST → nói rõ chưa có gì để tra (không báo giả).
+                    Có kết quả → liệt kê KH trùng + lý do trùng. */}
+                {dupLoading ? (
+                  <p className="text-[12px] text-muted-foreground">Đang kiểm tra…</p>
+                ) : duplicates.length === 0 ? (
+                  <>
+                    <p className="text-[12px] text-muted-foreground">
+                      {!form.email.trim() && !form.phone.trim() && !form.tax_id.trim()
+                        ? 'Chưa có thông tin để kiểm tra'
+                        : 'Không tìm thấy khách hàng trùng'}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Kiểm tra theo Mã số thuế, Email và Điện thoại
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-1.5">
+                    <p className="text-[12px] font-medium text-destructive">
+                      Tìm thấy {duplicates.length} khách hàng trùng
+                    </p>
+                    <ul className="space-y-1">
+                      {duplicates.map((d) => (
+                        <li key={d.id} className="rounded-md border border-[var(--border)] px-2 py-1 text-[12px]">
+                          <span className="font-medium">{d.name || '—'}</span>{' '}
+                          <span className="font-mono text-[var(--muted)]">{d.code || '—'}</span>
+                          <span className="ml-1 text-[var(--muted)]">
+                            · trùng {matchOnLabel(d.match_on)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

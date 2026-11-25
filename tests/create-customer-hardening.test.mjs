@@ -84,7 +84,9 @@ test('nút Lưu khi saving dùng <Spinner>', () => {
   assert.ok(code.includes('Đang lưu...'), 'giữ text Đang lưu...')
 })
 
-test('error text dùng text-destructive', () => {
+test('error text dùng token destructive (cho phép cả --danger)', () => {
   assert.ok(code.includes('text-destructive'), 'dùng token text-destructive')
-  assert.ok(!code.includes('text-[var(--danger)]'), 'không còn text-[var(--danger)]')
+  // 2026-11-24: --danger đã sửa contrast (xem docs §16f) nên hợp lệ, nhưng form
+  // vẫn chuẩn hoá về `text-destructive`.
+  assert.ok(!code.includes('text-[var(--danger)]'), 'form chuẩn hoá text-destructive')
 })

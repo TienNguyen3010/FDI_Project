@@ -303,6 +303,20 @@ curl -s -o /dev/null -w "%{http_code}" https://<domain>/dashboard
 | Phụ | Chế độ sửa ẩn nút "Lưu và tạo mới" (không có nghĩa khi đang sửa 1 bản ghi) | `CreateCustomerForm.tsx` footer |
 | Verify | test `customer-code-edit.test.mjs` 9/9 (thêm 2 case chặn regression) · tsc 0 · build 0 | tool output |
 
+## 16h. Tra cứu trùng KH thật + sort bằm tiêu đề cột (2026-11-24)
+
+| Hạng mục | Kết quả | Evidence |
+|---|---|---|
+| Vấn đề | Panel form từng chỉ hiện text tĩnh "Chưa đủ dữ liệu để kiểm tra" → **không bao giờ** chặn được KH trùng. Trong khi DB thật đã có trùng | ảnh user + query DB |
+| Chứng minh trùng trên DB | 2 KH **'SoftNET'** cùng SĐT `0976995641` (CUS-2026-002 / CUS-2026-007); 2 KH cùng SĐT `0912345678` (CUS-2026-003 / CUS-2026-004) | query `group by` trên `customers` |
+| Giải pháp | RPC **`fdi_find_customer_duplicates(email, phone, tax_id, exclude_id)`** (migration **016**, đã APPLY) + endpoint `GET /api/v1/customers/duplicates` + panel form hiển thị danh sách trùng | `migrations/016_customer_duplicate_lookup.sql`, `app/api/v1/customers/duplicates/route.ts` |
+| Rào quyền | RPC là `SECURITY DEFINER` nhưng **tự rào `fdi_can_read(...)`** cho từng dòng → không lộ KH ngoài phạm vi; hàm `STABLE`, chỉ đọc | đo bằng JWT giả lập: trả đúng 2 KH theo SĐT |
+| Hành vi khi thiếu dữ liệu | 3 field đều rỗng → API trả `data: []`, form hiện "Chưa có thông tin để kiểm tra" (**không báo giả**) | route.ts |
+| Hành vi khi lỗi | fetch lỗi → `setDuplicates([])`, **không cảnh báo giả**; debounce 500ms | `CreateCustomerForm.tsx` |
+| Chế độ sửa | gửi `exclude_id` = id bản ghi → không tự cảnh báo chính mình | form effect |
+| P1-9 sort | Header cột `Tên / Dự án / Vòng đời / Ngày tạo` thành `<button>` bấm được, `aria-sort` (ascending/descending/none), mũi tên ▲▼↕, đảo chiều khi bấm lại, đẩy `sort` lên API (whitelist sẵn có). Cột `# / Email / Điện thoại / Thao tác` giữ thẻ `<th>` thường | `page.tsx` |
+| Verify | `npm test` **111/111** (thêm `customer-duplicates-sort.test.mjs` 6 test) · `tsc` **0** · build EXIT=0 · đo RPC bằng JWT trên DB thật | tool output |
+
 ## 16g. Định vị lại PSM: lifecycle_stage thật, block Dự án, font/hit-area (2026-11-24)
 
 User chốt: **A — làm migration cột thật**, và **giữ nguyên nav Infrastructure + Assets** (2 module phát triển sau).
