@@ -1011,6 +1011,7 @@ export default function CustomersPage() {
                 {!loading && !error && items.map((item, index) => {
                   const name = item.name || '—'
                   const code = item.code || '—'
+                  const primaryContactName = item.primary_contact_name || '—'
                   // PSM: vòng đời vận hành thật (migration 015), không còn status='active' giả.
                   const lifecycleKey = item.lifecycle_stage || 'prospect'
                   const lifecycleMeta = LIFECYCLE_META[lifecycleKey] ?? {
@@ -1038,9 +1039,15 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </td>
-                      {/* 2026-11-25: gộp cột Email + Điện thoại thành MỘT cột "Liên hệ"
-                          (SĐT tel: + copy, email mailto: + copy) — xem helper
-                          components/customers/contact.ts. */}
+                      {/* 2026-11-25: cột "Người liên hệ" hiện TÊN người liên hệ
+                          (primary_contact_name từ API), cột "Liên hệ" hiển thị
+                          SĐT tel:+ + email mailto: + nút copy. */}
+                      <td className="h-14 px-4">
+                        <div className="flex items-center gap-2">
+                          <Users size={16} className="shrink-0 text-[var(--muted)]" aria-hidden />
+                          <p className="truncate font-medium">{primaryContactName}</p>
+                        </div>
+                      </td>
                       <td className="h-14 px-4">
                         <ContactCell phone={item.phone} email={item.email} />
                       </td>
