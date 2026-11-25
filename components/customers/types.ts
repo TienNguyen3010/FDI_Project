@@ -12,6 +12,10 @@ export interface Customer {
   tax_id?: string | null
   headquarters_address?: string | null
   primary_contact_name?: string | null
+  /** 3 kênh liên hệ bổ sung (right sidebar). */
+  contact_technical?: string | null
+  contact_commercial?: string | null
+  contact_emergency?: string | null
   project_count?: number | null
   open_ticket_count?: number | null
   /** PSM: vòng đời vận hành thật (migration 015). */

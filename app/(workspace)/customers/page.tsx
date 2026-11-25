@@ -43,6 +43,7 @@ import {
   X,
 } from 'lucide-react'
 import CustomerDetailPanel from '@/components/customers/CustomerDetailPanel'
+import { ContactCell } from '@/components/customers/contact'
 import { useProfile } from '@/lib/hooks/useProfile'
 import type { Customer, Activity, CustomerProject } from '@/components/customers/types'
 import { hasPermission } from '@/lib/rbac/policy'
@@ -962,9 +963,9 @@ export default function CustomersPage() {
               <thead className="bg-[var(--sidebar-group)] text-xs text-[var(--muted)]">
                 <tr>
                   {/* P1-9: bấm tiêu đề cột để sort (trạng thái `aria-sort`).
-                      Cột không nằm trong SORTABLE (#, Email, Điện thoại, Thao tác)
+                      Cột không nằm trong SORTABLE (#, Liên hệ, Thao tác)
                       giữ nguyên văn bản. */}
-                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Email', 'Điện thoại', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => {
+                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Liên hệ', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => {
                     const col = SORTABLE.find((s) => s.label === head)?.col
                     if (!col) {
                       return (
@@ -1010,7 +1011,6 @@ export default function CustomersPage() {
                 {!loading && !error && items.map((item, index) => {
                   const name = item.name || '—'
                   const code = item.code || '—'
-                  const contactName = item.primary_contact_name || '—'
                   // PSM: vòng đời vận hành thật (migration 015), không còn status='active' giả.
                   const lifecycleKey = item.lifecycle_stage || 'prospect'
                   const lifecycleMeta = LIFECYCLE_META[lifecycleKey] ?? {
@@ -1038,17 +1038,11 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </td>
-                      {/* P1-8: tách Liên hệ / Email / Điện thoại thành 3 cột để copy & sort được */}
+                      {/* 2026-11-25: gộp cột Email + Điện thoại thành MỘT cột "Liên hệ"
+                          (SĐT tel: + copy, email mailto: + copy) — xem helper
+                          components/customers/contact.ts. */}
                       <td className="h-14 px-4">
-                        <span className="whitespace-nowrap">{contactName}</span>
-                      </td>
-                      <td className="h-14 px-4">
-                        <span className="block max-w-[190px] truncate text-[var(--muted)]" title={item.email ?? undefined}>
-                          {item.email || '—'}
-                        </span>
-                      </td>
-                      <td className="h-14 px-4">
-                        <span className="whitespace-nowrap text-[var(--muted)]">{item.phone || '—'}</span>
+                        <ContactCell phone={item.phone} email={item.email} />
                       </td>
                       <td className="h-14 px-4 tabular-nums">{formatNumber(item.project_count)}</td>
                       <td className="h-14 px-4"><Badge variant={lifecycleMeta.variant}>{lifecycleMeta.label}</Badge></td>

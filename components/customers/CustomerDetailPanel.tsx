@@ -11,7 +11,7 @@
  *
  * Dữ liệu thật: API GET /api/v1/customers/[id]/activities + RPC do UI tự gọi.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   X,
   Mail,
@@ -26,6 +26,14 @@ import {
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/ui/ui'
 import { relativeTimeLabel } from '@/lib/relativeTime'
 import type { Customer, Activity, CustomerProject } from './types'
+import {
+  normalizePhone,
+  phoneDisplay,
+  isEmailLike,
+  emailHref,
+  splitContactText,
+  CopyButton,
+} from '@/components/customers/contact'
 
 type Props = {
   customer: Customer
@@ -98,6 +106,12 @@ export default function CustomerDetailPanel({
 }: Props) {
   const statusLabel = STATUS_LABEL[customer.status || ''] ?? customer.status ?? '—'
   const fullName = customer.name?.trim() || '—'
+  /** Cả 3 kênh liên hệ bổ sung đều trống → hiện empty state thay vì 3 dòng "—". */
+  const hasExtraContact = Boolean(
+    customer.contact_technical?.trim() ||
+      customer.contact_commercial?.trim() ||
+      customer.contact_emergency?.trim(),
+  )
   const [showAllActivities, setShowAllActivities] = useState(false)
 
   const shownActivities = useMemo(
@@ -184,8 +198,49 @@ export default function CustomerDetailPanel({
             <div className="space-y-3 text-sm text-[var(--text)]">
               <Row icon={<Building2 className="h-4 w-4" />} label="Tên khách hàng" value={customer.name} />
               <Row icon={<MapPin className="h-4 w-4" />} label="Địa chỉ trụ sở" value={customer.headquarters_address} />
-              <Row icon={<Mail className="h-4 w-4" />} label="Email" value={customer.email} />
-              <Row icon={<Phone className="h-4 w-4" />} label="Điện thoại" value={customer.phone} />
+              <Row
+                icon={<Mail className="h-4 w-4" />}
+                label="Email"
+                value={customer.email}
+                actions={
+                  isEmailLike(customer.email) ? (
+                    <CopyButton text={customer.email ?? ''} label={`Sao chép email của ${fullName}`} />
+                  ) : undefined
+                }
+                valueNode={
+                  isEmailLike(customer.email) ? (
+                    <a
+                      href={emailHref(customer.email)}
+                      className="text-[var(--primary)] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]"
+                    >
+                      {customer.email?.trim()}
+                    </a>
+                  ) : undefined
+                }
+              />
+              <Row
+                icon={<Phone className="h-4 w-4" />}
+                label="Điện thoại"
+                value={customer.phone}
+                actions={
+                  normalizePhone(customer.phone) ? (
+                    <CopyButton
+                      text={normalizePhone(customer.phone)}
+                      label={`Sao chép số điện thoại của ${fullName}`}
+                    />
+                  ) : undefined
+                }
+                valueNode={
+                  normalizePhone(customer.phone) ? (
+                    <a
+                      href={`tel:${normalizePhone(customer.phone)}`}
+                      className="text-[var(--primary)] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]"
+                    >
+                      {phoneDisplay(customer.phone)}
+                    </a>
+                  ) : undefined
+                }
+              />
               <Row icon={<Building2 className="h-4 w-4" />} label="Mã số thuế" value={customer.tax_id} />
               <Row icon={<Building2 className="h-4 w-4" />} label="Ngành nghề" value={industryLabel(customer.industry)} />
               <Row
@@ -197,6 +252,40 @@ export default function CustomerDetailPanel({
               <Row icon={<History className="h-4 w-4" />} label="Ticket đang mở" value={String(customer.open_ticket_count ?? 0)} />
             </div>
           </div>
+
+          {/* (3a) LIÊN HỆ BỔ SUNG — contact_technical / contact_commercial /
+              contact_emergency: giá trị user nhập tự do ("tên + số", email,
+              hoặc SĐT) nên PHẢI parse bằng splitContactText, không in thẳng. */}
+          <section aria-label="Liên hệ bổ sung">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Liên hệ bổ sung
+            </h3>
+            {!customer.contact_technical?.trim() &&
+            !customer.contact_commercial?.trim() &&
+            !customer.contact_emergency?.trim() ? (
+              <div className="rounded-lg border border-dashed border-[var(--border)] p-3 text-sm text-[var(--muted)]">
+                Chưa có thông tin liên hệ bổ sung.
+              </div>
+            ) : (
+              <div className="space-y-3 text-sm text-[var(--text)]">
+                <ExtraContactRow
+                  icon={<Phone className="h-4 w-4" />}
+                  label="Liên hệ kỹ thuật"
+                  raw={customer.contact_technical}
+                />
+                <ExtraContactRow
+                  icon={<Mail className="h-4 w-4" />}
+                  label="Liên hệ thương mại"
+                  raw={customer.contact_commercial}
+                />
+                <ExtraContactRow
+                  icon={<AlertCircle className="h-4 w-4" />}
+                  label="Liên hệ khẩn cấp"
+                  raw={customer.contact_emergency}
+                />
+              </div>
+            )}
+          </section>
 
           {/* (3b) DỰ ÁN CỦA KHÁCH HÀNG — PSM: ý nghĩa cốt lõi là theo dõi dự án
               đang triển khai / đã triển khai. Dữ liệu thật từ API, progress null
@@ -323,13 +412,105 @@ export default function CustomerDetailPanel({
   )
 }
 
-function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string | null }) {
+function Row({
+  icon,
+  label,
+  value,
+  actions,
+  valueNode,
+}: {
+  icon: ReactNode
+  label: string
+  value?: string | null
+  /** Nút hành động (vd CopyButton) — chèn cùng dòng, giữ hit-area h-7/h-8. */
+  actions?: ReactNode
+  /** Hiển thị thay cho `value` khi có link (tel:/mailto:) — optional. */
+  valueNode?: ReactNode
+}) {
+  const text = value?.trim()
   return (
     <div className="flex items-start gap-2">
       <span className="mt-0.5 shrink-0 text-[var(--muted)]" aria-hidden>{icon}</span>
       <div className="min-w-0">
         <span className="text-[var(--muted)]">{label}: </span>
-        <span className={value ? '' : 'text-[var(--muted)]'}>{value?.trim() || '—'}</span>
+        {valueNode ?? <span className={text ? '' : 'text-[var(--muted)]'}>{text || '—'}</span>}
+        {actions && <span className="ml-1.5 inline-flex shrink-0 align-middle">{actions}</span>}
+      </div>
+    </div>
+  )
+}
+
+const LINK_CLASS =
+  'text-[var(--primary)] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]'
+
+/** Link tel:/mailto: có thể bấm được; không bịa khi rỗng. */
+function ContactLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} className={LINK_CLASS}>
+      {children}
+    </a>
+  )
+}
+
+/**
+ * Một dòng "Liên hệ bổ sung": nhãn + tên (dòng chính) + SĐT/email (dòng phụ
+ * text-xs muted, dạng link + copy). Rỗng hết → '—'.
+ */
+function ExtraContactRow({
+  icon,
+  label,
+  raw,
+}: {
+  icon: ReactNode
+  label: string
+  raw?: string | null
+}) {
+  const parsed = splitContactText(raw)
+  const phone = normalizePhone(parsed.phone)
+  const email = isEmailLike(parsed.email) ? parsed.email.trim() : ''
+  const name = parsed.name.trim()
+  if (!raw?.trim()) {
+    return (
+      <div className="flex items-start gap-2">
+        <span className="mt-0.5 shrink-0 text-[var(--muted)]" aria-hidden>{icon}</span>
+        <div className="min-w-0">
+          <span className="text-[var(--muted)]">{label}: </span>
+          <span className="text-[var(--muted)]">—</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-0.5 shrink-0 text-[var(--muted)]" aria-hidden>{icon}</span>
+      <div className="min-w-0">
+        <span className="text-[var(--muted)]">{label}: </span>
+        {/* Raw chỉ là SĐT/email (không có tên) → đẩy giá trị lên dòng chính,
+            không để "—" trong khi dòng phụ lại có số. */}
+        <span>{name || phoneDisplay(parsed.phone) || email || '—'}</span>
+        {(phone || email) && (
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
+            {phone && (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <Phone className="h-3 w-3" aria-hidden />
+                  <ContactLink href={`tel:${phone}`}>{phoneDisplay(parsed.phone)}</ContactLink>
+                </span>
+                <CopyButton text={phone} label={`Sao chép số điện thoại (${label})`} />
+              </>
+            )}
+            {email && (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <Mail className="h-3 w-3" aria-hidden />
+                  <ContactLink href={emailHref(email)}>{email}</ContactLink>
+                </span>
+                <CopyButton text={email} label={`Sao chép email (${label})`} />
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

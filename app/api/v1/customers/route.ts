@@ -20,7 +20,8 @@ const CUSTOMER_PROJECT_STATUSES = new Set<string>(['active', 'in_progress', 'dep
  */
 const OPEN_TICKET_STATUS_SET = new Set<string>(OPEN_TICKET_STATUSES)
 
-const SEARCH_FIELDS = ['name', 'phone', 'email', 'industry', 'tax_id', 'code'] as const
+// Gồm cả 3 kênh liên hệ bổ sung: PSM cần search theo số hotline kỹ thuật/khẩn cấp.
+const SEARCH_FIELDS = ['name', 'phone', 'email', 'industry', 'tax_id', 'code', 'contact_technical', 'contact_commercial', 'contact_emergency'] as const
 
 type SortField = 'name' | 'created_at' | 'industry' | 'project_count' | 'open_ticket_count' | 'lifecycle_stage'
 const SORT_WHITELIST = new Set<string>([
@@ -43,6 +44,10 @@ interface CustomerItem {
   tax_id: string | null
   headquarters_address: string | null
   primary_contact_name: string | null
+  /** 3 kênh liên hệ bổ sung (kỹ thuật / thương mại / khẩn cấp) — hiển thị right sidebar. */
+  contact_technical: string | null
+  contact_commercial: string | null
+  contact_emergency: string | null
   project_count: number
   open_ticket_count: number
   /** PSM — vòng đời vận hành THẬT (migration 015). Bỏ `status='active'` giả. */
@@ -118,7 +123,7 @@ export async function GET(request: Request) {
 
   let customersQuery = auth.supabase
     .from('customers')
-    .select('id, name, code, phone, email, industry, tax_id, headquarters_address, primary_contact_name, lifecycle_stage, created_at')
+    .select('id, name, code, phone, email, industry, tax_id, headquarters_address, primary_contact_name, contact_technical, contact_commercial, contact_emergency, lifecycle_stage, created_at')
   // `customers` dùng PK `id` (KHÔNG có cột `customer_id`), nên không thể dùng
   // scoped() trực tiếp ở đây — scoped() lọc theo cột `customer_id`. Áp grant bằng `id`:
   if (scope.customer_ids !== null) {
@@ -164,6 +169,9 @@ export async function GET(request: Request) {
     tax_id: c.tax_id,
     headquarters_address: c.headquarters_address,
     primary_contact_name: c.primary_contact_name,
+    contact_technical: c.contact_technical ?? null,
+    contact_commercial: c.contact_commercial ?? null,
+    contact_emergency: c.contact_emergency ?? null,
     // PSM: vòng đời vận hành thật (migration 015). NULL cũ → 'prospect', KHÔNG bịa.
     lifecycle_stage: (LIFECYCLE_STAGES as readonly string[]).includes(c.lifecycle_stage ?? '')
       ? (c.lifecycle_stage as LifecycleStage)

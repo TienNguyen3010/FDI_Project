@@ -34,7 +34,8 @@
 |---|---|---|---|
 | `#` | index trang | `app/(workspace)/customers/page.tsx:527-529` | `(currentPage-1)*effectivePageSize + index + 1` |
 | Tên khách hàng | `name` + icon `Building2` + `Mã: {code}` | `app/(workspace)/customers/page.tsx:530-538` | `code` null → `—` (`:516`) |
-| Liên hệ chính | `primary_contact_name` + `email · phone` | `app/(workspace)/customers/page.tsx:539-544` | select `route.ts:117,161-162`; không có contact → `—` |
+| Liên hệ chính | `primary_contact_name` | `app/(workspace)/customers/page.tsx:1047-1050` | không có contact → `—` |
+| Liên hệ | `ContactCell({ phone, email })` — SĐT link `tel:` + copy, Email link `mailto:` + copy | `components/customers/contact.ts`; render tại `app/(workspace)/customers/page.tsx:1045` | **2026-11-25 gộp** từ 2 cột `Email`/`Điện thoại`; rỗng cả hai → `—`. Xem `CUSTOMERS_CONTACT_CHANNELS_STANDARD.md` |
 | Ngành | `industry` (Badge) | `app/(workspace)/customers/page.tsx:519,545` | select `route.ts:117,159`; rỗng → `—` |
 | Dự án | `project_count` | `app/(workspace)/customers/page.tsx:546` | đếm theo scope: `route.ts:141-145,163` |
 | Ticket mở | `open_ticket_count` | `app/(workspace)/customers/page.tsx:547` | đếm theo scope: `route.ts:147-151,164` |
@@ -101,7 +102,8 @@
 
 - Bấm vào **bất kỳ ô nào của row** (trừ cột Thao tác) → mở drawer phải `CustomerDetailDrawer` — `app/(workspace)/customers/page.tsx:200-312,638-642`; action cell `stopPropagation` nên nút Sửa/Lưu trữ không mở drawer — `:665`.
 - Drawer = overlay mờ + `aside role="dialog" aria-modal="true"`, đóng bằng nút X, nút "Đóng", click overlay, hoặc phím **Escape** — `:212-260`.
-- Nội dung lấy **trực tiếp từ `Customer` item đã fetch** (KHÔNG fetch riêng, KHÔNG bịa): header tên + mã + badge trạng thái/ngành; 3 nhóm **Thông tin doanh nghiệp** (name, code, tax_id, industry, headquarters_address), **Liên hệ chính** (primary_contact_name, email, phone), **Thống kê** (project_count, open_ticket_count, created_at) — `:262-308`. Trống → `—`.
+- Nội dung lấy **trực tiếp từ `Customer` item đã fetch** (KHÔNG fetch riêng, KHÔNG bịa): header tên + mã + badge trạng thái/ngành; nhóm **Thông tin chính**, khối **Liên hệ bổ sung** (3 kênh kỹ thuật / thương mại / khẩn cấp), **Dự án của khách hàng**, **Hoạt động gần đây**, audit Tạo/Cập nhật. Trống → `—`.
+- **Liên hệ bổ sung (2026-11-25):** ba dòng `ExtraContactRow` đọc `customer.contact_technical` / `contact_commercial` / `contact_emergency`; giá trị là **text tự do** nên parse bằng `splitContactText()` rồi hiển thị tên (dòng chính) + SĐT/email (dòng phụ) dạng link `tel:`/`mailto:` kèm `CopyButton`. Cả ba trống → empty state `Chưa có liên hệ bổ sung.` (không cảnh báo giả). API list phải select 3 cột này — xem `CUSTOMERS_CONTACT_CHANNELS_STANDARD.md`.
 - `Customer` interface bổ sung `headquarters_address` để khớp contract API — `:54`. Regression: `tests/customer-detail-drawer.test.mjs` (3/3).
 - **Không** dùng modal: drawer giữ ngữ cảnh danh sách, đúng yêu cầu "right sidebar thông tin khách hàng".
 - Footer drawer: nút **Đóng** + nút **Sửa** (chỉ render khi role có `customer.update`) — `page.tsx:301-316`.

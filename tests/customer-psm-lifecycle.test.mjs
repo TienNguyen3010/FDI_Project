@@ -79,11 +79,15 @@ test('P1-4: panel phải sticky khi cuộn', () => {
   assert.match(form, /lg:sticky lg:top-4/, 'panel dùng sticky top-4')
 })
 
-test('P1-7/8/9: bỏ cột Ngành, tách Liên hệ/Email/SĐT, thêm Ngày tạo', () => {
+test('P1-7/8/9: bỏ cột Ngành, gộp Email+Điện thoại thành Liên hệ, thêm Ngày tạo', () => {
+  // 2026-11-25: user yêu cầu GỘP Email + Điện thoại thành một cột "Liên hệ"
+  // (SĐT click tel:, email click mailto:, mỗi giá trị có nút copy) — xem
+  // CUSTOMERS_CONTACT_CHANNELS_STANDARD.md và tests/customer-contact-merge.test.mjs.
   const heads = [
-    '#', 'Tên khách hàng', 'Người liên hệ', 'Email', 'Điện thoại',
+    '#', 'Tên khách hàng', 'Người liên hệ', 'Liên hệ',
     'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác',
-  ].join('\', \'')
-  assert.ok(page.includes(heads), 'đúng 9 cột theo thứ tự mới')
+  ].join("', '")
+  assert.ok(page.includes(heads), 'đúng 8 tiêu đề theo thứ tự mới')
   assert.doesNotMatch(page, /'Ngành', 'Dự án'/, 'bỏ cột Ngành (PSM không cần)')
+  assert.doesNotMatch(page, /'Email', 'Điện thoại'/, 'bỏ 2 cột Email/Điện thoại riêng')
 })
