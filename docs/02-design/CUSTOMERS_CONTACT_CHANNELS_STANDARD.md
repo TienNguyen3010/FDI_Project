@@ -65,3 +65,28 @@
 
 `tests/customer-contact-merge.test.mjs` — 9 test: cột bảng, helper tel/mailto/copy,
 API select 3 cột, type, panel hiển thị + parse + a11y.
+
+## 2.5 Benchmark standard – customer mẫu (dùng làm chuẩn cho modules sau)
+
+Dữ liệu mẫu dưới đây dùng làm chuẩn cho **Product / Asset / Project / Ticket**
+khi có module mới cần trỏ khách hàng. Giá trị lấy từ DB thật; KHÔNG bịa.
+
+| Cột | Giá trị chuẩn | Lưu ý |
+|---|---|---|
+| `name` | Khải Thiên Media | 2–255 ký tự, trim |
+| `code` | CUS-2026-006 | DB sinh (migration 010), KHÔNG tự suy |
+| `phone` | 0900000000 | chuẩn E.164 khi có country code, trim |
+| `email` | sales@ktm.example | lowercase domain |
+| `industry` | Manufacturing | TEXT, gợi ý từ dữ liệu thật |
+| `primary_contact_name` | Đỗ Quang Hiểu | cột "Người liên hệ" màn bảng |
+| `contact_technical` | Kỹ thuật Demo | text tự do, parse bằng splitContactText |
+| `contact_commercial` | Kinh doanh Demo | text tự do |
+| `contact_emergency` | Hotline Demo | text tự do, hotline 24/7 |
+| `headquarters_address` | (có) | text tự do |
+| `notes` | (có) | maxLength=500 |
+| `consent_contact` | false | DNC: không được liên hệ |
+| `lifecycle_stage` | prospect / active / closed | PSM mốc thật |
+
+Những giá trị này phải hiện thực trong migration benchmark
+(`migrations/017_customer_benchmark.sql`) trước khi các module sau
+(product/asset/project/ticket) tạo liên kết tới customer này.
