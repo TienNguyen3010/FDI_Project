@@ -188,6 +188,7 @@ export type BadgeVariant =
   | 'inactive'
   | 'planned'
   | 'in-progress'
+  | 'secondary'
   | 'deployed'
   | 'paused'
   | 'ended'
@@ -208,6 +209,7 @@ export function Badge({
     // major KHÔNG dùng trong app; vẫn nâng lên để variant sẵn dùng được (trước 2.23).
     major: 'bg-kpi-tickets/15 text-[#a45a05] border border-kpi-tickets/30',
     minor: 'bg-ticket-waiting/10 text-warning border border-ticket-waiting/20',
+    secondary: 'bg-secondary text-secondary-foreground',
     active: 'bg-sidebar-active text-sidebar-heading border border-sidebar-active-border/20',
     inactive: neutral,
     planned: neutral,

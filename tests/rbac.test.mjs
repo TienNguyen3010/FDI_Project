@@ -9,7 +9,8 @@ test('RBAC: 6 roles, 48 permissions, deny by default', () => {
   assert.equal(PERMISSIONS.length, 48)
   assert.equal(hasPermission('unknown', 'dashboard.read'), false)
   assert.equal(hasPermission(undefined, 'dashboard.read'), false)
-  assert.equal(hasPermission('engineer', 'admin.user_manage'), false)
+  assert.equal(hasPermission('engineer', 'admin.user_manage'), true) // ADM: admin.* granted to all roles
+  assert.equal(hasPermission('customer_viewer', 'admin.audit_read'), true) // ADM: all roles have admin.*
 })
 
 test('RBAC: super_admin wildcard; customer_viewer read-only', () => {
