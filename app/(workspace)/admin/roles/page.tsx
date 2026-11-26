@@ -1,8 +1,6 @@
+// FDI_Project — ADM-02: /admin/roles (role & permission matrix management)
+// Requires admin.role_manage permission.
 'use client'
-
-// FDI_Project — §4 #11: UI Export/Import cấu hình quyền (role config).
-// Chỉ Manager/Director mới thấy trang (RBAC mềm qua useProfile; RBAC cứng ở
-// proxy.ts chặn /admin, và API route tự kiểm tra lại role).
 
 import { useRef, useState, type ChangeEvent } from 'react'
 import { useProfile } from '@/lib/hooks/useProfile'
@@ -25,10 +23,7 @@ import {
 } from '@/components/ui/ui'
 import { Download, Upload, ShieldCheck, FileJson } from 'lucide-react'
 
-/**
- * Ma trận quyền (docs/rbac_matrix.md §3) — hiển thị nhiều nhất trên trang.
- * Giữ đồng bộ với app/api/admin/roles/route.ts (ROLE_MATRIX).
- */
+/** Role matrix (docs/rbac_matrix.md §3) — shown for manager/director. */
 const ROLE_MATRIX: {
   feature: string
   employee: string
@@ -74,7 +69,7 @@ export default function RolesPage() {
 
   const allowed = role === 'manager' || role === 'director'
 
-  // --- Export: GET → download JSON ---
+  // --- Export ---
   const handleExport = async () => {
     setExporting(true)
     try {
@@ -85,7 +80,7 @@ export default function RolesPage() {
       }
       const blob = await res.blob()
       const disposition = res.headers.get('Content-Disposition') ?? ''
-      const match = disposition.match(/filename="?([^";]+)"?/)
+      const match = disposition.match(/filename=\"?([^\";]+)\"?/)
       const filename = match?.[1] ?? `fdi-role-config-${new Date().toISOString().slice(0, 10)}.json`
 
       const url = URL.createObjectURL(blob)
@@ -111,7 +106,7 @@ export default function RolesPage() {
     }
   }
 
-  // --- Import: đọc JSON → POST → toast ---
+  // --- Import ---
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -119,188 +114,116 @@ export default function RolesPage() {
     setImporting(true)
     try {
       const text = await file.text()
-      let parsed: unknown
-      try {
-        parsed = JSON.parse(text)
-      } catch {
-        throw new Error('File không phải JSON hợp lệ.')
-      }
-      const payload =
-        typeof parsed === 'object' && parsed !== null && 'users' in parsed
-          ? parsed
-          : { users: Array.isArray(parsed) ? parsed : [] }
-
+      const data = JSON.parse(text)
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(data),
       })
-      const data = (await res.json().catch(() => ({}))) as ImportResult
+      const result: ImportResult = await res.json()
       if (!res.ok) {
-        const invalid = (data as { invalid?: string[] }).invalid
-        throw new Error(
-          data.error ?? `HTTP ${res.status}` + (invalid?.length ? `: ${invalid.slice(0, 3).join('; ')}` : '')
-        )
+        throw new Error(result.error ?? `HTTP ${res.status}`)
       }
-      const skippedCount = data.skipped?.length ?? 0
       toast.success({
-        title: 'Import cấu hình thành công',
-        description: `Cập nhật ${data.updated}/${data.total ?? data.updated} user.${skippedCount ? ` Bỏ qua ${skippedCount} dòng.` : ''}`,
+        title: 'Nhập cấu hình thành công',
+        description: `Cập nhật ${result.updated} bản ghi.`,
       })
-      if (skippedCount > 0) {
-        toast.warning({
-          title: 'Một số dòng bị bỏ qua',
-          description: (data.skipped ?? []).slice(0, 2).map((s) => `${s.email}: ${s.reason}`).join('; '),
-        })
-      }
     } catch (err) {
       toast.error({
-        title: 'Import thất bại',
+        title: 'Nhập cấu hình thất bại',
         description: err instanceof Error ? err.message : 'Lỗi không xác định.',
       })
     } finally {
       setImporting(false)
-      // Cho phép chọn lại cùng 1 file sau khi import.
-      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
-  if (profileLoading) {
-    return (
-      <div className="flex items-center gap-2 p-6 text-[var(--text-secondary)]">
-        <Spinner /> Đang kiểm tra quyền…
-      </div>
-    )
-  }
-
-  if (!allowed) {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Không có quyền truy cập</CardTitle>
-            <CardDescription>
-              Chỉ Manager/Director được export/import cấu hình quyền.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Vai trò truy cập</h1>
+          <p className="text-sm text-muted-foreground">
+            Ma trận quyền so sánh giữa DIRECTOR và SYS_ADMIN.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+          <Download className="h-4 w-4" /> Xuất
+        </Button>
+      </div>
+
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-          Cấu hình quyền (Role Config)
-        </h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Xuất cấu hình vai trò của người dùng ra JSON, nhập lại để cập nhật hàng loạt.
-          Mọi thay đổi được ghi vào nhật ký hoạt động (audit log).
-        </p>
-      </div>
-
-      {/* Export / Import */}
-      <div className="grid gap-4 md:grid-cols-2">
+        <h2 className="mb-3 text-lg font-semibold">Ma trận quyền dành cho ADM-02</h2>
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download size={18} /> Xuất cấu hình
-            </CardTitle>
-            <CardDescription>
-              Tải file JSON gồm danh sách user (email, role, team, active) và ma trận quyền.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleExport} disabled={exporting}>
-              {exporting ? <Spinner label="Đang xuất" /> : <FileJson size={16} />}
-              {exporting ? 'Đang xuất…' : 'Xuất cấu hình'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload size={18} /> Nhập cấu hình
-            </CardTitle>
-            <CardDescription>
-              Chọn file JSON (có khóa <code>users</code>). Cập nhật theo email, role hợp lệ:
-              employee, leader, manager, director.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json,.json"
-              onChange={handleFileChange}
-              disabled={importing}
-              aria-label="Chọn file cấu hình quyền JSON"
-              className="block w-full text-sm text-[var(--text-secondary)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--bg-secondary)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-[var(--text-primary)]"
-            />
-            {importing && (
-              <span className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-                <Spinner label="Đang nhập" /> Đang nhập cấu hình…
-              </span>
-            )}
-            {fileName && !importing && (
-              <span className="text-xs text-[var(--text-secondary)]">File đã chọn: {fileName}</span>
-            )}
-            <p className="text-xs text-[var(--text-secondary)]">
-              Lưu ý: chỉ cập nhật user đã tồn tại. Không tự hạ quyền của chính mình.
-            </p>
+          <CardContent className="p-4">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 pr-4 text-left font-medium">Tính năng</th>
+                    <th className="py-2 px-4 text-center font-medium">EMPLOYEE</th>
+                    <th className="py-2 px-4 text-center font-medium">LEADER</th>
+                    <th className="py-2 px-4 text-center font-medium">MANAGER</th>
+                    <th className="py-2 pl-4 text-center font-medium">DIRECTOR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ROLE_MATRIX.map((r) => (
+                    <tr key={r.feature} className="border-b last:border-0">
+                      <td className="py-2 pr-4 font-medium">{r.feature}</td>
+                      <td className="py-2 px-4 text-center">{r.employee}</td>
+                      <td className="py-2 px-4 text-center">{r.leader}</td>
+                      <td className="py-2 px-4 text-center">{r.manager}</td>
+                      <td className="py-2 pl-4 text-center">{r.director}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Ma trận quyền */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck size={18} /> Ma trận quyền theo vai trò
-          </CardTitle>
-          <CardDescription>
-            Tham khảo từ <code>docs/rbac_matrix.md</code> — 4 vai trò × 9 tính năng.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tính năng</TableHead>
-                {(['employee', 'leader', 'manager', 'director'] as const).map((r) => (
-                  <TableHead key={r}>{ROLE_LABEL[r]}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ROLE_MATRIX.map((row) => (
-                <TableRow key={row.feature}>
-                  <TableCell className="font-medium">{row.feature}</TableCell>
-                  {(['employee', 'leader', 'manager', 'director'] as const).map((r) => {
-                    const value = row[r]
-                    const denied = value === '❌'
-                    return (
-                      <TableCell key={r}>
-                        {denied ? (
-                          <Badge variant="critical">Không</Badge>
-                        ) : (
-                          <span className="text-sm text-[var(--text-secondary)]">{value}</span>
-                        )}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <p className="text-xs text-[var(--text-secondary)]">
-        Vai trò hiện tại của bạn: <Badge>{ROLE_LABEL[role] ?? role}</Badge>
-      </p>
+      <div className="mt-6">
+        <h2 className="mb-3 text-lg font-semibold">Import/Export cấu hình quyền</h2>
+        <Card>
+          <CardContent className="space-y-4">
+            <div className="flex gap-3">
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+                id="import-file"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileRef.current?.click()}
+                disabled={importing}
+              >
+                <Upload className="h-4 w-4" /> Tải file
+              </Button>
+              {fileName && <span className="text-sm text-muted-foreground">{fileName}</span>}
+            </div>
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-muted/30 p-3 text-xs text-muted-foreground">
+              {JSON.stringify({
+                note: 'Export/Import qua API /api/admin/roles',
+                permissions: [
+                  'admin.user_manage',
+                  'admin.role_manage',
+                  'admin.templates.read',
+                  'admin.templates.create',
+                  'admin.templates.update',
+                  'admin.templates.publish',
+                  'admin.audit_read',
+                  'admin.audit.export',
+                ],
+              }, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
