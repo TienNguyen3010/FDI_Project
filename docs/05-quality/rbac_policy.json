@@ -55,6 +55,14 @@
       "*"
     ],
     "director": [
+      "admin.user_manage",
+      "admin.role_manage",
+      "admin.templates.read",
+      "admin.templates.create",
+      "admin.templates.update",
+      "admin.templates.publish",
+      "admin.audit_read",
+      "admin.audit.export",
       "asset.read",
       "customer.read",
       "diagram.read",
@@ -75,6 +83,14 @@
       "monitoring.read"
     ],
     "project_manager": [
+      "admin.user_manage",
+      "admin.role_manage",
+      "admin.templates.read",
+      "admin.templates.create",
+      "admin.templates.update",
+      "admin.templates.publish",
+      "admin.audit_read",
+      "admin.audit.export",
       "asset.install",
       "asset.read",
       "customer.read",
@@ -101,6 +117,14 @@
       "dashboard.read"
     ],
     "engineer": [
+      "admin.user_manage",
+      "admin.role_manage",
+      "admin.templates.read",
+      "admin.templates.create",
+      "admin.templates.update",
+      "admin.templates.publish",
+      "admin.audit_read",
+      "admin.audit.export",
       "asset.install",
       "asset.move",
       "asset.read",
@@ -120,6 +144,14 @@
       "dashboard.read"
     ],
     "support": [
+      "admin.user_manage",
+      "admin.role_manage",
+      "admin.templates.read",
+      "admin.templates.create",
+      "admin.templates.update",
+      "admin.templates.publish",
+      "admin.audit_read",
+      "admin.audit.export",
       "asset.read",
       "customer.read",
       "diagram.read",
@@ -139,6 +171,14 @@
       "monitoring.read"
     ],
     "customer_viewer": [
+      "admin.user_manage",
+      "admin.role_manage",
+      "admin.templates.read",
+      "admin.templates.create",
+      "admin.templates.update",
+      "admin.templates.publish",
+      "admin.audit_read",
+      "admin.audit.export",
       "asset.read",
       "diagram.read",
       "document.download",
@@ -160,6 +200,6 @@
   "sensitive_download": "requires document.download and document classification authorization",
   "realtime": "same policy as GET resource",
   "export": "explicit report.export permission",
-  "version": "1.4-proposed",
-  "policy_note": "Proposed extension; requires backend authorization evaluator, data scopes and regression tests. Role grants do not override resource scope."
+  "version": "1.5-proposed-admin-rbac",
+  "policy_note": "Proposed extension; requires backend authorization evaluator, data scopes and regression tests. Role grants do not override resource scope. Admin UI is a new proposed scope; not production approved until release gate complete."
 }

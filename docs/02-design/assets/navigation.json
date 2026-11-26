@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "1.5",
   "style": "approved-white-green-sidebar",
   "width_expanded": 280,
   "width_collapsed": 72,
@@ -105,6 +105,27 @@
           "icon": "settings",
           "route": "/admin",
           "permission": "admin.user_manage"
+        },
+        {
+          "label": "Vai trò truy cập",
+          "icon": "shield-check",
+          "route": "/admin/roles",
+          "permission": "admin.role_manage",
+          "parent": "Quản trị"
+        },
+        {
+          "label": "Bộ Quyền Mẫu",
+          "icon": "file-text",
+          "route": "/admin/permission-templates",
+          "permission": "admin.role_manage",
+          "parent": "Quản trị"
+        },
+        {
+          "label": "Nhật ký quyền",
+          "icon": "clipboard-list",
+          "route": "/admin/permission-audit",
+          "permission": "admin.audit_read",
+          "parent": "Quản trị"
         }
       ]
     }

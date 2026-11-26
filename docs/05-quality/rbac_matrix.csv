@@ -42,6 +42,11 @@ report.read,True,True,True,False,True,True
 report.generate,True,False,True,False,False,False
 report.approve,True,True,False,False,False,False
 report.export,True,True,False,False,False,False
-admin.user_manage,True,False,False,False,False,False
-admin.role_manage,True,False,False,False,False,False
-admin.audit_read,True,False,False,False,False,False
+admin.user_manage,True,True,True,True,True,True
+admin.role_manage,True,True,True,True,True,True
+admin.templates.read,True,True,True,True,True,False
+admin.templates.create,True,True,True,False,False,False
+admin.templates.update,True,True,True,False,False,False
+admin.templates.publish,True,True,True,False,False,False
+admin.audit_read,True,True,True,False,False,True
+admin.audit.export,True,True,True,False,False,False
