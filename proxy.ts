@@ -139,13 +139,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // RBAC cứng tầng edge: /admin chỉ cho manager + director.
+  // RBAC cứng tầng edge: /admin chỉ cho manager + director + super_admin.
   // Role lấy từ app_metadata trong JWT; token đã được verify ở isAuthenticated.
   if (user && pathname.startsWith('/admin')) {
     const payload = decodeJwtPayload(accessToken!)
     const appMeta = payload?.app_metadata as Record<string, unknown> | undefined
     const rawRole = appMeta?.role
-    if (rawRole !== 'manager' && rawRole !== 'director') {
+    if (rawRole !== 'manager' && rawRole !== 'director' && rawRole !== 'super_admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
