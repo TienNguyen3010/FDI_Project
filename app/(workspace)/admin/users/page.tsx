@@ -1,5 +1,7 @@
 // FDI_Project — ADM-01: /admin/users (users CRUD)
-// Uses CrudPage with users table; members of super_admin / director / manager / project_manager can manage.
+// 'use client' — CrudPage + useProfile() are client components; server component
+// cannot call a client hook directly.
+'use client'
 
 import { CrudPage, type CrudConfig } from '@/components/crud/CrudPage'
 import { useProfile } from '@/lib/hooks/useProfile'

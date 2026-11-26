@@ -1,5 +1,8 @@
 // FDI_Project — ADM-03: /admin/templates (permission templates list)
-// Requires admin.role_manage permission.
+// 'use client' — CrudPage + useProfile() are client components; server component
+// cannot call a client hook directly.
+
+'use client'
 
 import { useProfile } from '@/lib/hooks/useProfile'
 import { CrudPage, type CrudConfig } from '@/components/crud/CrudPage'

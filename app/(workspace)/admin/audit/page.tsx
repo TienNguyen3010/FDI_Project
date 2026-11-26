@@ -1,5 +1,7 @@
 // FDI_Project — ADM-04: /admin/audit (permission audit log)
-// Server Component; requires admin.audit_read permission.
+// 'use client' — CrudPage + useProfile() are client components; server component
+// cannot call a client hook directly.
+'use client'
 
 import { CrudPage, type CrudConfig } from '@/components/crud/CrudPage'
 import { useProfile } from '@/lib/hooks/useProfile'
