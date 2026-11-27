@@ -15,14 +15,15 @@
   --canvas: #f7fafc;
   --sidebar: #ffffff;
   --sidebar-group: #f8fcf9;
-  --sidebar-active: #ddf5dc;
-  --sidebar-active-border: #008b21;
-  --sidebar-icon: #07872b;
-  --sidebar-heading: #08752a;
+  --sidebar-active: #EAF6EE;
+  --sidebar-active-border: #16834B;
+  --sidebar-icon: #16834B;
+  --sidebar-heading: #16834B;
 
   /* --- Brand / text / border --------------------------------------------- */
-  --primary: #087f30;
-  --primary-hover: #006c28;
+  /* v2.5: primary green #16834B (from DESIGN_SYSTEM v2.7) */
+  --primary: #16834B;
+  --primary-hover: #0E6638;
   /* 2026-11-24: `--muted` TRƯỚC đây = #b8d0ce (xanh nhạt) → Badge `default`
      (bg-sidebar-group + text-muted) cho contrast 1.19 và `text-muted`
      cho 1.00 ⇒ CHỮ VÔ HÌNH. Đã đo bằng getComputedStyle trên prod:
@@ -73,7 +74,7 @@
   --space-8: 48px;
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 14px;
+  --radius-lg: 12px;
   --duration-fast: 150ms;
   --duration-normal: 300ms;
 }
@@ -119,10 +120,10 @@
   --color-ticket-new: var(--ticket-new);
   --color-risk: var(--risk);
 
-  --radius-card: 14px;
+  --radius-card: 12px;
   --radius-section: 16px;
   --text-h1: 30px;
-  --text-kpi: 34px;
+  --text-kpi: 30px;
   --text-section: 12px;
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 }

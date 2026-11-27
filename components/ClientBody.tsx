@@ -503,7 +503,7 @@ export default function ClientBody({
               trùng tên màn hình. `hideMobileNav` (chỉ set ở 2 route form khách
               hàng) giữ lại nút mở drawer mobile. */}
           {showTopbar ? (
-          <header className="flex h-[58px] shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 sm:px-5">
+          <header className="flex h-[64px] shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 sm:px-5">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
                 type="button"
@@ -564,7 +564,7 @@ export default function ClientBody({
               lớn thì footer càng bị đẩy LÊN. => Muốn footer CHẠM ĐÁY thì
               mainPb + spacer = 0. Desktop không có bottom-nav => pb = 0.
               Mobile giữ pb dư để bottom-nav không che nội dung. */}
-          <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6 md:pb-0">
+          <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(4rem+env(safe-area-inset-bottom))] md:p-6 md:pb-0">
             {children}
           </main>
         </div>

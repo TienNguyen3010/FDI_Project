@@ -112,17 +112,19 @@ type SortCol = 'name' | 'created_at' | 'project_count' | 'lifecycle_stage'
 const SORTABLE: { col: SortCol; label: string }[] = [
   { col: 'name', label: 'Tên khách hàng' },
   { col: 'project_count', label: 'Dự án' },
-  { col: 'lifecycle_stage', label: 'Vòng đời' },
-  { col: 'created_at', label: 'Ngày tạo' },
+  { col: 'lifecycle_stage', label: 'Trạng thái' },
 ]
 
 /** Vòng đời vận hành (PSM — migration 015). Đồng bộ với API LIFECYCLE_STAGES. */
-const LIFECYCLE_META: Record<string, { label: string; variant: 'active' | 'inactive' | 'planned' | 'ended' }> = {
-  prospect:     { label: 'Tiềm năng',       variant: 'inactive' },
+const LIFECYCLE_META: Record<
+  string,
+  { label: string; variant: 'active' | 'inactive' | 'planned' | 'ended' }
+> = {
+  prospect: { label: 'Tiềm năng', variant: 'inactive' },
   implementing: { label: 'Đang triển khai', variant: 'planned' },
-  operating:    { label: 'Đang vận hành',   variant: 'active' },
-  maintenance:  { label: 'Bảo trì',         variant: 'ended' },
-  stopped:      { label: 'Ngừng',           variant: 'inactive' },
+  operating: { label: 'Đang vận hành', variant: 'active' },
+  maintenance: { label: 'Bảo trì', variant: 'ended' },
+  stopped: { label: 'Ngừng', variant: 'inactive' },
 }
 const LIFECYCLE_OPTIONS = Object.entries(LIFECYCLE_META).map(([value, m]) => ({ value, label: m.label }))
 
@@ -196,7 +198,7 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta, active, onCli
       disabled={!interactive}
       aria-pressed={active}
       title={interactive ? `${label} — bấm để lọc` : label}
-      className={`rounded-card border text-left transition-all ${
+      className={`rounded-card border text-left transition-all ${`
         interactive ? 'cursor-pointer hover:-translate-y-px' : 'cursor-default'
       } ${active ? 'border-[var(--primary)] ring-2 ring-[var(--primary)]/30' : 'border-[var(--border)]'} bg-[var(--surface)]`}
     >
@@ -207,7 +209,7 @@ function KpiCard({ label, value, icon: Icon, tone, loading, delta, active, onCli
             <Skeleton className="mt-2 h-9 w-20" />
           ) : (
             <p
-              className={`mt-1 leading-none ${value.length > 10 ? 'text-lg font-semibold' : 'text-[34px] font-semibold'}`}
+              className={`mt-1 leading-none ${value.length > 10 ? 'text-lg font-semibold' : 'text-[30px] font-semibold'}`}
               style={{ color: tone }}
             >
               {value}
@@ -755,13 +757,6 @@ export default function CustomersPage() {
 
   const hasFilters = Boolean(debouncedSearch || industry || lifecycleStage || hasProject)
 
-  /** P1-9: bấm lần đầu = giảm dần; bấm lại = tăng dần; reset về mặc định. */
-  const toggleSort = (col: SortCol) => {
-    const next = sortRaw === `-${col}` ? col : `-${col}`
-    setSortRaw(next)
-    setPage(1)
-  }
-
   /* --- Điều hướng sang form sửa (id trong URL; form tự fetch qua API) --------- */
   const router = useRouter()
   const editCustomer = useCallback((id: string) => {
@@ -823,7 +818,7 @@ export default function CustomersPage() {
           onClick={() => { setSmartView((v) => (v === 'with_projects' ? 'all' : 'with_projects')); setPage(1) }}
         />
         <KpiCard
-          label="Ticket mở (toàn hệ thống)"
+          label="Ticket đang mở"
           value={formatNumber(summary.open_tickets)}
           icon={Ticket}
           tone="var(--kpi-tickets)"
@@ -853,7 +848,7 @@ export default function CustomersPage() {
             role="tab"
             aria-selected={smartView === v.key}
             onClick={() => { setSmartView(v.key); setPage(1) }}
-            className={`relative -mb-px border-b-2 px-1 pb-2 text-sm font-semibold transition-colors ${
+            className={`relative -mb-px border-b-2 px-1 pb-2 text-sm font-semibold transition-colors ${`
               smartView === v.key
                 ? 'border-[var(--sidebar-active-border)] text-[var(--sidebar-heading)]'
                 : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
@@ -879,12 +874,12 @@ export default function CustomersPage() {
         </Select>
 
         <Select
-          aria-label="Lọc theo vòng đời vận hành"
+          aria-label="Lọc theo trạng thái"
           value={lifecycleStage}
           onChange={(e) => { setLifecycleStage(e.target.value); setPage(1) }}
           className="min-w-[180px]"
         >
-          <option value="">Tất cả vòng đời</option>
+          <option value="">Tất cả trạng thái</option>
           {LIFECYCLE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
@@ -945,7 +940,7 @@ export default function CustomersPage() {
         </div>
       )}
 
-      {/* Table — tiêu đề theo smart view, đúng chuẩn Lead §B */}
+      {/* Table — 9 cột: # / Tên khách hàng / Người liên hệ / Liên hệ / Ngành / Dự án / Ticket mở / Trạng thái / Thao tác */}
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-[var(--text)]">
           {SMART_VIEWS.find((v) => v.key === smartView)?.label ?? 'Khách hàng'}
@@ -962,10 +957,7 @@ export default function CustomersPage() {
             <table className="w-full min-w-[1080px] text-sm text-[var(--text)]">
               <thead className="bg-[var(--sidebar-group)] text-xs text-[var(--muted)]">
                 <tr>
-                  {/* P1-9: bấm tiêu đề cột để sort (trạng thái `aria-sort`).
-                      Cột không nằm trong SORTABLE (#, Liên hệ, Thao tác)
-                      giữ nguyên văn bản. */}
-                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Liên hệ', 'Dự án', 'Vòng đời', 'Ngày tạo', 'Thao tác'].map((head) => {
+                  {['#', 'Tên khách hàng', 'Người liên hệ', 'Liên hệ', 'Ngành', 'Dự án', 'Ticket mở', 'Trạng thái', 'Thao tác'].map((head) => {
                     const col = SORTABLE.find((s) => s.label === head)?.col
                     if (!col) {
                       return (
