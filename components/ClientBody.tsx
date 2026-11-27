@@ -165,6 +165,7 @@ export default function ClientBody({
   const [role, setRole] = useState<V1Role | null>(null)
   const [user, setUser] = useState<{ email: string; fullName?: string } | null>(null)
   const drawerNavRef = useRef<HTMLElement | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [moreBelow, setMoreBelow] = useState(false)
 
   /** Cập nhật mũi tên "cuộn xem thêm" trong drawer mobile. */
@@ -243,17 +244,6 @@ export default function ClientBody({
     [visibleGroups],
   )
 
-  // Đóng drawer khi chuyển trang (microtask tránh cascade render).
-  useEffect(() => {
-    let cancelled = false
-    void Promise.resolve().then(() => {
-      if (!cancelled) setMobileOpen(false)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [pathname])
-
   // Escape + khoá cuộn nền khi drawer mở.
   useEffect(() => {
     if (!mobileOpen) return
@@ -273,6 +263,18 @@ export default function ClientBody({
       document.body.style.overflow = previousOverflow
     }
   }, [mobileOpen, updateMoreBelow])
+
+  // Đóng drawer khi chuyển trang (microtask tránh cascade render).
+  useEffect(() => {
+    setExpanded(null)
+    let cancelled = false
+    void Promise.resolve().then(() => {
+      if (!cancelled) setMobileOpen(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [pathname])
 
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
@@ -346,49 +348,55 @@ export default function ClientBody({
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
                     const hasChildren = Array.isArray(item.children) && item.children.length > 0
-                    const active = hasChildren ? false : isActive(item.href!)
+                    const isExpanded = expanded === item.label
                     const Icon = item.icon
                     return (
                       <div key={item.href ?? item.label}>
                         {!compact && hasChildren ? (
                           <button
                             type="button"
-                            onClick={() => onNavigate?.()}
-                            aria-expanded={active}
+                            onClick={() => {
+                              onNavigate?.()
+                              setExpanded(isExpanded ? null : item.label)
+                            }}
+                            aria-expanded={isExpanded}
                             aria-haspopup="true"
-                            className={`w-full flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                            className={`w-full flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${isExpanded ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
                           >
-                            <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            <Icon size={18} className={`shrink-0 text-sidebar-icon ${isExpanded ? 'text-sidebar-heading' : ''}`} aria-hidden="true" />
                             <span className="min-w-0 truncate text-left">{item.label}</span>
-                            <ChevronDown size={14} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+                            <ChevronDown size={14} className={`shrink-0 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                           </button>
                         ) : hasChildren && compact ? (
                           <button
                             type="button"
-                            onClick={() => onNavigate?.()}
-                            aria-expanded={active}
+                            onClick={() => {
+                              onNavigate?.()
+                              setExpanded(isExpanded ? null : item.label)
+                            }}
+                            aria-expanded={isExpanded}
                             aria-haspopup="true"
-                            className={`mt-1 flex items-center gap-2 rounded-md px-2 py-1 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                            className={`mt-1 flex items-center gap-2 rounded-md px-2 py-1 text-sidebarItem transition-colors ${isExpanded ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
                           >
-                            <Icon size={16} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            <Icon size={16} className={`shrink-0 text-sidebar-icon ${isExpanded ? 'text-sidebar-heading' : ''}`} aria-hidden="true" />
                             <span className="text-left text-xs truncate">{item.label}</span>
-                            <ChevronDown size={10} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+                            <ChevronDown size={10} className={`shrink-0 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                           </button>
                         ) : (
                           <Link
                             key={item.href!}
                             href={item.href!}
                             onClick={onNavigate}
-                            aria-current={active ? 'page' : undefined}
+                            aria-current={isActive(item.href!) ? 'page' : undefined}
                             title={compact ? item.label : undefined}
-                            className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                            className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${isActive(item.href!) ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
                           >
-                            <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            <Icon size={18} className={`shrink-0 text-sidebar-icon ${isActive(item.href!) ? 'text-sidebar-heading' : ''}`} aria-hidden="true" />
                             {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
                           </Link>
                         )}
                         {hasChildren && !compact && (
-                          <div className={`ml-8 space-y-0.5 border-l border-border pl-3 ${active ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                          <div className={`ml-8 space-y-0.5 border-l border-border pl-3 ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                             {item.children!.map((child) => {
                               const childActive = isActive(child.href!)
                               const ChildIcon = child.icon
@@ -400,7 +408,7 @@ export default function ClientBody({
                                   aria-current={childActive ? 'page' : undefined}
                                   className={`tap-target flex items-center gap-3 rounded-md px-3 py-2 text-sidebarItem transition-colors ${childActive ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
                                 >
-                                  <ChildIcon size={16} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                                  <ChildIcon size={16} className={`shrink-0 text-sidebar-icon ${childActive ? 'text-sidebar-heading' : ''}`} aria-hidden="true" />
                                   <span className="min-w-0 truncate text-left">{child.label}</span>
                                 </Link>
                               )
