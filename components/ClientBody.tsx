@@ -23,6 +23,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   X,
+  Users as ShieldCheck,
+  Files as FileCode,
+  ClipboardCheck,
   type LucideIcon,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -39,9 +42,10 @@ import { ToastProvider } from '@/components/ui/ui'
 
 interface NavItem {
   label: string
-  href: string
+  href?: string
   icon: LucideIcon
-  permission: Permission
+  permission?: Permission
+  children?: NavItem[]
 }
 
 interface NavGroup {
@@ -104,13 +108,20 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'HỆ THỐNG',
     items: [
-      { label: 'Admin', href: '/admin', icon: ICONS.settings, permission: 'admin.user_manage' },
+      {
+        label: 'Admin',
+        icon: ICONS.settings,
+        permission: 'admin.user_manage',
+        children: [
+          { label: 'Người dùng', href: '/admin/users', icon: Users, permission: 'admin.user_manage' },
+          { label: 'Vai trò', href: '/admin/roles', icon: ShieldCheck, permission: 'admin.role_manage' },
+          { label: 'Bộ quyền', href: '/admin/templates', icon: FileCode, permission: 'admin.templates.read' },
+          { label: 'Nhật ký', href: '/admin/audit', icon: ClipboardCheck, permission: 'admin.audit_read' },
+        ],
+      },
     ],
   },
 ]
-
-/* Điều hướng nhanh dưới cùng trên mobile (mục đã có permission). */
-const BOTTOM_NAV_HREFS = ['/dashboard', '/projects', '/tickets', '/reports']
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: 'Quản trị hệ thống',
@@ -120,6 +131,9 @@ const ROLE_LABEL: Record<string, string> = {
   support: 'Hỗ trợ',
   customer_viewer: 'Khách hàng',
 }
+
+/* Điều hướng nhanh dưới cùng trên mobile (mục đã có permission). */
+const BOTTOM_NAV_HREFS = ['/dashboard', '/projects', '/tickets', '/reports']
 
 export default function ClientBody({
   children,
@@ -216,7 +230,7 @@ export default function ClientBody({
     () =>
       NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => can(item.permission)),
+        items: group.items.filter((item) => item.permission !== undefined && can(item.permission!)),
       })).filter((group) => group.items.length > 0),
     [can],
   )
@@ -225,7 +239,7 @@ export default function ClientBody({
     () =>
       visibleGroups
         .flatMap((group) => group.items)
-        .filter((item) => BOTTOM_NAV_HREFS.includes(item.href)),
+        .filter((item) => item.href !== undefined && BOTTOM_NAV_HREFS.includes(item.href!)),
     [visibleGroups],
   )
 
@@ -288,7 +302,7 @@ export default function ClientBody({
 
   const pageTitle = useMemo(() => {
     const all = NAV_GROUPS.flatMap((g) => g.items)
-    return all.find((i) => isActive(i.href))?.label ?? pathname.split('/').pop() ?? 'Trang'
+    return all.find((i) => isActive(i.href!))?.label ?? pathname.split('/').pop() ?? 'Trang'
   }, [isActive, pathname])
 
   /* Sidebar content dùng chung cho desktop + drawer (giữ geometry). */
@@ -331,24 +345,69 @@ export default function ClientBody({
                 )}
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
-                    const active = isActive(item.href)
+                    const hasChildren = Array.isArray(item.children) && item.children.length > 0
+                    const active = hasChildren ? false : isActive(item.href!)
                     const Icon = item.icon
                     return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={onNavigate}
-                        aria-current={active ? 'page' : undefined}
-                        title={compact ? item.label : undefined}
-                        className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${
-                          active
-                            ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading'
-                            : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'
-                        }`}
-                      >
-                        <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
-                        {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
-                      </Link>
+                      <div key={item.href ?? item.label}>
+                        {!compact && hasChildren ? (
+                          <button
+                            type="button"
+                            onClick={() => onNavigate?.()}
+                            aria-expanded={active}
+                            aria-haspopup="true"
+                            className={`w-full flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                          >
+                            <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            <span className="min-w-0 truncate text-left">{item.label}</span>
+                            <ChevronDown size={14} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+                          </button>
+                        ) : hasChildren && compact ? (
+                          <button
+                            type="button"
+                            onClick={() => onNavigate?.()}
+                            aria-expanded={active}
+                            aria-haspopup="true"
+                            className={`mt-1 flex items-center gap-2 rounded-md px-2 py-1 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                          >
+                            <Icon size={16} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            <span className="text-left text-xs truncate">{item.label}</span>
+                            <ChevronDown size={10} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+                          </button>
+                        ) : (
+                          <Link
+                            key={item.href!}
+                            href={item.href!}
+                            onClick={onNavigate}
+                            aria-current={active ? 'page' : undefined}
+                            title={compact ? item.label : undefined}
+                            className={`tap-target flex items-center gap-3 rounded-md border-l-[3px] px-3 py-2 text-sidebarItem transition-colors ${active ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                          >
+                            <Icon size={18} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                            {!compact && <span className="min-w-0 truncate text-left">{item.label}</span>}
+                          </Link>
+                        )}
+                        {hasChildren && !compact && (
+                          <div className={`ml-8 space-y-0.5 border-l border-border pl-3 ${active ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                            {item.children!.map((child) => {
+                              const childActive = isActive(child.href!)
+                              const ChildIcon = child.icon
+                              return (
+                                <Link
+                                  key={child.href!}
+                                  href={child.href!}
+                                  onClick={onNavigate}
+                                  aria-current={childActive ? 'page' : undefined}
+                                  className={`tap-target flex items-center gap-3 rounded-md px-3 py-2 text-sidebarItem transition-colors ${childActive ? 'border-sidebar-active-border bg-sidebar-active font-medium text-sidebar-heading' : 'border-transparent text-muted-foreground hover:bg-sidebar-group hover:text-sidebar-heading'}`}
+                                >
+                                  <ChildIcon size={16} className="shrink-0 text-sidebar-icon" aria-hidden="true" />
+                                  <span className="min-w-0 truncate text-left">{child.label}</span>
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -423,9 +482,7 @@ export default function ClientBody({
       <div className="flex h-dvh bg-canvas text-foreground">
         {/* Sidebar desktop — 280px expanded / 72px collapsed */}
         <aside
-          className={`hidden h-dvh shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-normal md:flex ${
-            collapsed ? 'w-[72px]' : 'w-[280px]'
-          }`}
+          className={`hidden h-dvh shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-normal md:flex ${collapsed ? 'w-[72px]' : 'w-[280px]'}`}
           aria-label="Thanh điều hướng"
         >
           {renderSidebarContent(collapsed)}
@@ -499,7 +556,7 @@ export default function ClientBody({
               lớn thì footer càng bị đẩy LÊN. => Muốn footer CHẠM ĐÁY thì
               mainPb + spacer = 0. Desktop không có bottom-nav => pb = 0.
               Mobile giữ pb dư để bottom-nav không che nội dung. */}
-      <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6 md:pb-0">
+          <main className="min-w-0 flex-1 overflow-auto p-4 pb-[calc(6rem+env(safe-area-inset-bottom))] md:p-6 md:pb-0">
             {children}
           </main>
         </div>
@@ -533,12 +590,12 @@ export default function ClientBody({
           aria-label="Điều hướng nhanh"
         >
           {bottomItems.map((item) => {
-            const active = isActive(item.href)
+            const active = isActive(item.href!)
             const Icon = item.icon
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.href!}
+                href={item.href!}
                 aria-current={active ? 'page' : undefined}
                 aria-label={item.label}
                 className={`tap-target flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] transition-colors ${
