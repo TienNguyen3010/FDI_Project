@@ -214,6 +214,71 @@ export function ContactCell({
     return createElement('span', { className: 'text-[var(--muted)]' }, '—')
   }
 
+  const [touched, setTouched] = useState(false)
+
+  useEffect(() => {
+    if (!touched) return
+    const t = setTimeout(() => setTouched(false), 1200)
+    return () => clearTimeout(t)
+  }, [touched])
+
+  const touch = () => setTouched(true)
+
+  const stop = (e: ReactMouseEvent<HTMLElement>) => e.stopPropagation()
+
+  const rows: ReturnType<typeof createElement>[] = []
+  if (tel) {
+    rows.push(
+      createElement(
+        'span',
+        { key: 'phone', className: 'flex items-center gap-1.5' },
+        createElement(
+          'a',
+          {
+            href: `tel:${tel}`,
+            title: telLabel,
+            className: 'truncate text-[var(--muted)] hover:text-[var(--primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
+            onClick: (e: ReactMouseEvent<HTMLElement>) => {
+              e.stopPropagation()
+              touch()
+            },
+          },
+          createElement('span', { className: 'max-w-[180px] truncate' }, telLabel),
+        ),
+        touched ? createElement(CopyButton, { text: tel, label: 'Sao chép số điện thoại' }) : null,
+      ),
+    )
+  }
+  if (mail) {
+    rows.push(
+      createElement(
+        'span',
+        { key: 'email', className: 'flex items-center gap-1.5' },
+        createElement(
+          'a',
+          {
+            href: mail,
+            title: emailValue,
+            className: 'truncate text-[var(--muted)] hover:text-[var(--primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
+            onClick: (e: ReactMouseEvent<HTMLElement>) => {
+              e.stopPropagation()
+              touch()
+            },
+          },
+          createElement('span', { className: 'max-w-[180px] truncate' }, emailValue),
+        ),
+        touched ? createElement(CopyButton, { text: emailValue, label: 'Sao chép email' }) : null,
+      ),
+    )
+  }
+
+  return createElement(
+    'div',
+    { className: 'flex flex-col gap-1 py-1', onClick: stop },
+    ...rows,
+  )
+}
+
   const stop = (e: ReactMouseEvent<HTMLElement>) => e.stopPropagation()
 
   const rows: ReturnType<typeof createElement>[] = []
