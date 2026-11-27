@@ -348,7 +348,7 @@ export default function ClientBody({
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
                     const hasChildren = Array.isArray(item.children) && item.children.length > 0
-                    const isExpanded = expanded === item.label
+                    const isExpanded = expanded === item.label || (hasChildren && (isActive(item.href!) || pathname.startsWith(`${item.href!}/`)))
                     const Icon = item.icon
                     return (
                       <div key={item.href ?? item.label}>
